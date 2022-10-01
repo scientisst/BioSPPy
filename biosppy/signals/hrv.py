@@ -48,3 +48,23 @@ def compute_rri(rpeaks, sampling_rate=1000.):
         warnings.warn("RR-intervals appear to be out of normal parameters. Check input values.")
 
     return rri
+
+
+def filter_rri(rri=None, threshold=1200):
+    """
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (default: ms).
+    threshold : int, float, optional
+        Maximum rri value to accept (ms).
+    """
+
+    # ensure input format
+    rri = np.array(rri)
+
+    # filter rri values
+    rri_filt = rri[np.where(rri < threshold)]
+
+    return rri_filt
