@@ -117,7 +117,7 @@ def hrv_timedomain(rri, duration=None):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 10:
-        raise ValueError("Signal must be longer than 10 seconds to compute time-domain features.")
+        raise ValueError("Signal duration must be greater than 10 seconds to compute time-domain features.")
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
