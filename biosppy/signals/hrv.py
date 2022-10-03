@@ -19,9 +19,27 @@ from __future__ import absolute_import, division, print_function
 # 3rd party
 import numpy as np
 import warnings
+from scipy.interpolate import interp1d
+from scipy.signal import welch
 
 # local
+import biosppy.utils
 from .. import utils
+
+# Global variables
+FBANDS = {'ulf': [0, 0.003],
+          'vlf': [0.003, 0.04],
+          'lf': [0.04, 0.15],
+          'hf': [0.15, 0.4],
+          'vhf': [0.4, 0.5]
+          }
+
+SPECTRUM_COLORS = {'ulf': '#e6eff6',
+                   'vlf': '#89b4c4',
+                   'lf': '#548999',
+                   'hf': '#f1d3a1',
+                   'vhf': '#e3dbd9'
+                   }
 
 
 def compute_rri(rpeaks, sampling_rate=1000.):
@@ -158,3 +176,139 @@ def hrv_timedomain(rri, duration=None):
 
     return out
 
+
+def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None):
+    """Computes the frequency domain HRV features from a sequence of RR intervals.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    duration : int, optional
+        Duration of the signal (s).
+    freq_method : str, optional
+        Method for spectral estimation. If 'FFT' uses Welch's method.
+    fbands : dict, optional
+        Dictionary specifying the desired HRV frequency bands.
+
+    Returns
+    -------
+    vlf_peak : float
+        Peak frequency (Hz) of the very-low-frequency band (0.0033–0.04 Hz) in
+        normal units.
+    vlf_pwr : float
+        Relative power of the very-low-frequency band (0.0033–0.04 Hz) in
+        normal units.
+    lf_peak : float
+        Peak frequency (Hz) of the low-frequency band (0.04–0.15 Hz).
+    lf_pwr : float
+        Relative power of the low-frequency band (0.04–0.15 Hz) in normal
+        units.
+    hf_peak : float
+        Peak frequency (Hz)  of the high-frequency band (0.15–0.4 Hz).
+    hf_pwr : float
+        Relative power of the high-frequency band (0.15–0.4 Hz) in normal
+        units.
+    lf_hf : float
+        Ratio of LF-to-HF power.
+    total_pwr : float
+        Total power.
+    """
+
+    # check inputs
+    if rri is None:
+        raise ValueError("Please specify an RRI list or array.")
+
+    freq_methods = ['FFT']
+    if freq_method not in freq_methods:
+        raise ValueError(f"'{freq_method}' is not an available input. Choose one from: {freq_methods}.")
+
+    if fbands is None:
+        fbands = FBANDS
+
+    # ensure numpy
+    rri = np.array(rri, dtype=float)
+
+    # ensure minimal duration
+    if duration is None:
+        duration = np.sum(rri) / 1000.  # seconds
+
+    if duration < 20:
+        raise IOError("Signal duration must be greater than 20 seconds to compute frequency-domain features.")
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    # resampling with cubic interpolation for equidistant samples
+    fs = 1
+    t = np.cumsum(rri)
+    t -= t[0]
+    f_inter = interp1d(t, rri, 'cubic')
+    t_inter = np.arange(t[0], t[-1], 1000. / fs)
+    rri_inter = f_inter(t_inter)
+
+    if duration >= 20:
+
+        # compute frequencies and powers
+        if freq_method == 'FFT':
+            frequencies, powers = welch(rri_inter, fs=fs, scaling='density', nperseg=300)
+
+        # compute frequency bands
+        fb_out = compute_fbands(frequencies=frequencies, powers=powers)
+
+        out = out.join(fb_out)
+
+        # compute LF/HF ratio
+        lf_hf = fb_out['lf_pwr'] / fb_out['hf_pwr']
+
+        out = out.append(lf_hf, 'lf_hf')
+
+    return out
+
+
+def compute_fbands(frequencies, powers, fbands=None):
+    """ Computes frequency domain features for the specified frequency bands.
+
+    Parameters
+    ----------
+    frequencies : array
+        Frequency axis.
+    powers : array
+        Power spectrum values for the frequency axis-
+    fbands : dict, optional
+        Dictionary containing the limits of the frequency bands.
+
+    Returns
+    -------
+    _peak : float
+        Peak frequency of the frequency band (Hz).
+    _pwr : float
+        Absolute power of the frequency band (ms^2).
+    _rpwr : float
+        Relative power of the frequency band (nu).
+    """
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    df = frequencies[1] - frequencies[0]  # frequency resolution
+    total_pwr = np.sum(powers) * df
+
+    if fbands is None:
+        fbands = FBANDS
+
+    # compute power, peak and relative power for each frequency band
+    for fband in fbands.keys():
+        band = np.argwhere((frequencies >= fbands[fband][0]) & (frequencies <= fbands[fband][-1])).reshape(-1)
+
+        # check if it's possible to compute the frequency band
+        if len(band) == 0:
+            continue
+
+        pwr = np.sum(powers[band]) * df
+        peak = frequencies[band][np.argmax(powers[band])]
+        rpwr = pwr / total_pwr
+
+        out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak', fband + '_rpwr'])
+
+    return out
