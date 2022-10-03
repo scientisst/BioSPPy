@@ -312,3 +312,93 @@ def compute_fbands(frequencies, powers, fbands=None):
         out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak', fband + '_rpwr'])
 
     return out
+
+
+def hrv_nonlinear(rri=None, duration=None):
+    """ Computes the non-linear HRV features from a sequence of RR intervals.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    duration : int, optional
+        Duration of the signal (s).
+
+    Returns
+    -------
+    s : float
+        S - Area of the ellipse of the Poincaré plot (ms^2).
+    sd1 : float
+        SD1 - Poincaré plot standard deviation perpendicular to the identity
+        line (ms).
+    sd2 : float
+        SD2 - Poincaré plot standard deviation along the identity line (ms).
+    sd12 : float
+        SD1/SD2 - SD1 to SD2 ratio.
+    """
+
+    if rri is None:
+        raise TypeError("Please specify an RRI list or array.")
+
+    # ensure numpy
+    rri = np.array(rri, dtype=float)
+
+    if duration is None:
+        duration = np.sum(rri) / 1000.  # seconds
+
+    if duration < 90:
+        raise IOError("Signal duration must be greater than 90 seconds to compute non-linear features.")
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    if duration >= 90:
+        # compute SD1, SD2, SD1/SD2 and S
+        cp = compute_poincare(rri=rri)
+
+        out = out.join(cp)
+
+    return out
+
+
+def compute_poincare(rri):
+    """ Compute the Poincaré features from a sequence of RR intervals.
+
+    Parameters
+    ----------
+     rri : array
+        RR-intervals (ms).
+
+    Returns
+    -------
+    s : float
+        S - Area of the ellipse of the Poincaré plot (ms^2).
+    sd1 : float
+        SD1 - Poincaré plot standard deviation perpendicular to the identity
+        line (ms).
+    sd2 : float
+        SD2 - Poincaré plot standard deviation along the identity line (ms).
+    sd12 : float
+        SD1/SD2 - SD1 to SD2 ratio.
+    """
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    x = rri[:-1]
+    y = rri[1:]
+
+    # compute SD1, SD2 and S
+    x1 = (x - y) / np.sqrt(2)
+    x2 = (x + y) / np.sqrt(2)
+    sd1 = x1.std()
+    sd2 = x2.std()
+    s = np.pi * sd1 * sd2
+
+    # compute sd1/sd2 ratio
+    sd12 = sd1 / sd2
+
+    # output
+    out = out.append([s, sd1, sd2, sd12], ['s', 'sd1', 'sd2', 'sd12'])
+
+    return out
