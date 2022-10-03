@@ -1,3 +1,5 @@
+:warning: **This branch is still under development and the HRV features are not validated.**
+
 # BioSPPy - Biosignal Processing in Python
 
 *A toolbox for biosignal processing written in Python.*
