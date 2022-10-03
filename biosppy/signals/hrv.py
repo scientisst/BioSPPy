@@ -25,6 +25,7 @@ from scipy.signal import welch
 # local
 import biosppy.utils
 from .. import utils
+from .. import plotting
 
 # Global variables
 FBANDS = {'ulf': [0, 0.003],
@@ -361,13 +362,15 @@ def hrv_nonlinear(rri=None, duration=None):
     return out
 
 
-def compute_poincare(rri):
+def compute_poincare(rri, show=False):
     """ Compute the Poincaré features from a sequence of RR intervals.
 
     Parameters
     ----------
      rri : array
         RR-intervals (ms).
+    show : bool, optional
+        If True, show a the Poincaré plot.
 
     Returns
     -------
@@ -401,4 +404,8 @@ def compute_poincare(rri):
     # output
     out = out.append([s, sd1, sd2, sd12], ['s', 'sd1', 'sd2', 'sd12'])
 
+    if show:
+        plotting.plot_poincare(rri, x=x, y=y, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
+
     return out
+
