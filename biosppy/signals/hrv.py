@@ -23,7 +23,6 @@ from scipy.interpolate import interp1d
 from scipy.signal import welch
 
 # local
-import biosppy.utils
 from .. import utils
 from .. import plotting
 

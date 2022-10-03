@@ -27,7 +27,7 @@ import numpy as np
 
 # local
 from . import utils
-from biosppy.signals import tools as st
+from .signals import tools as st
 from .signals import hrv
 
 # Globals
