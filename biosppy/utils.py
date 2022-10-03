@@ -512,7 +512,7 @@ class ReturnTuple(tuple):
 
         """
 
-        if isinstance(new_tuple, ReturnTuple):
+        if not isinstance(new_tuple, ReturnTuple):
             raise TypeError('new_tuple must be a ReturnTuple object.')
 
         values = self + new_tuple
