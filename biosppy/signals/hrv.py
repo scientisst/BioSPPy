@@ -266,6 +266,53 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None)
     return out
 
 
+def hrv_nonlinear(rri=None, duration=None):
+    """ Computes the non-linear HRV features from a sequence of RR intervals.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    duration : int, optional
+        Duration of the signal (s).
+
+    Returns
+    -------
+    s : float
+        S - Area of the ellipse of the Poincaré plot (ms^2).
+    sd1 : float
+        SD1 - Poincaré plot standard deviation perpendicular to the identity
+        line (ms).
+    sd2 : float
+        SD2 - Poincaré plot standard deviation along the identity line (ms).
+    sd12 : float
+        SD1/SD2 - SD1 to SD2 ratio.
+    """
+
+    if rri is None:
+        raise TypeError("Please specify an RRI list or array.")
+
+    # ensure numpy
+    rri = np.array(rri, dtype=float)
+
+    if duration is None:
+        duration = np.sum(rri) / 1000.  # seconds
+
+    if duration < 90:
+        raise IOError("Signal duration must be greater than 90 seconds to compute non-linear features.")
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    if duration >= 90:
+        # compute SD1, SD2, SD1/SD2 and S
+        cp = compute_poincare(rri=rri)
+
+        out = out.join(cp)
+
+    return out
+
+
 def compute_fbands(frequencies, powers, fbands=None):
     """ Computes frequency domain features for the specified frequency bands.
 
@@ -310,53 +357,6 @@ def compute_fbands(frequencies, powers, fbands=None):
         rpwr = pwr / total_pwr
 
         out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak', fband + '_rpwr'])
-
-    return out
-
-
-def hrv_nonlinear(rri=None, duration=None):
-    """ Computes the non-linear HRV features from a sequence of RR intervals.
-
-    Parameters
-    ----------
-    rri : array
-        RR-intervals (ms).
-    duration : int, optional
-        Duration of the signal (s).
-
-    Returns
-    -------
-    s : float
-        S - Area of the ellipse of the Poincaré plot (ms^2).
-    sd1 : float
-        SD1 - Poincaré plot standard deviation perpendicular to the identity
-        line (ms).
-    sd2 : float
-        SD2 - Poincaré plot standard deviation along the identity line (ms).
-    sd12 : float
-        SD1/SD2 - SD1 to SD2 ratio.
-    """
-
-    if rri is None:
-        raise TypeError("Please specify an RRI list or array.")
-
-    # ensure numpy
-    rri = np.array(rri, dtype=float)
-
-    if duration is None:
-        duration = np.sum(rri) / 1000.  # seconds
-
-    if duration < 90:
-        raise IOError("Signal duration must be greater than 90 seconds to compute non-linear features.")
-
-    # initialize outputs
-    out = utils.ReturnTuple((), ())
-
-    if duration >= 90:
-        # compute SD1, SD2, SD1/SD2 and S
-        cp = compute_poincare(rri=rri)
-
-        out = out.join(cp)
 
     return out
 
