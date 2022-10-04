@@ -115,6 +115,8 @@ def hrv_timedomain(rri, duration=None, show=False):
         Difference between the highest and the lowest heart rate (bpm).
     hr_avg : float
         Average heart rate (bpm).
+    rr_mean : float
+        Mean value of RR intervals (ms).
     rmssd : float
         RMSSD - Root mean square of successive RR interval differences (ms).
     nn50 : int
@@ -156,10 +158,11 @@ def hrv_timedomain(rri, duration=None, show=False):
         out = out.append([hr, hr_min, hr_max, hr_minmax, hr_avg],
                          ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_avg'])
 
-        # compute RMSSD
+        # compute RRI features
+        rr_mean = rri.mean()
         rmssd = (rri_diff ** 2).mean() ** 0.5
 
-        out = out.append(rmssd, 'rmssd')
+        out = out.append([rr_mean, rmssd], ['rr_mean', 'rmssd'])
 
     if duration >= 20:
         # compute NN50 and pNN50
