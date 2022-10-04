@@ -22,6 +22,8 @@ import numpy as np
 import scipy.signal as ss
 from scipy import interpolate, optimize
 from scipy.stats import stats
+from scipy.sparse import spdiags, eye, csr_matrix
+
 
 # local
 from .. import utils
@@ -2189,3 +2191,51 @@ def median_waves(data=None, size=None, step=None):
     waves = np.array(waves)
 
     return utils.ReturnTuple((waves,), ("waves",))
+
+
+def detrend_smoothness_priors(signal, smoothing_factor=10):
+    """ Detrending method based on smoothness priors applied to HRV signal analysis.
+
+    Follows the approach by Tarvainen et al. [Tarivainen2002].
+
+    Parameters
+    ----------
+    signal : array
+        Signal to be detrended.
+    smoothing_factor : int, float, optional
+        Smoothing parameter lambda. Default: 10.
+
+    Returns
+    -------
+    detrended : array
+        Detrended signal.
+    trend : array
+        The trend component of the signal.
+
+    References
+    ----------
+    .. [Tarivainen2002] M. P. Tarvainen, P. O. Ranta-aho and P. A. Karjalainen,
+     "An advanced detrending method with application to HRV analysis," in IEEE
+     Transactions on Biomedical Engineering, vol. 49, no. 2, pp. 172-175, Feb.
+     2002, doi: 10.1109/10.979357.
+
+    """
+
+    # variables
+    t = len(signal)
+    identity = eye(t)
+
+    # first computation (D2)
+    aux1 = np.dot(np.ones((t, 1)), np.array([[1, -2, 1]]))
+    d2 = spdiags(aux1.T, [0, 1, 2], t-2, t)
+
+    # second computation (z_stat)
+    aux2 = smoothing_factor ** 2 * d2.T * d2
+    inv = np.linalg.inv(csr_matrix(identity) + aux2.todense())
+    z_stat = csr_matrix(identity - inv) * signal
+
+    # detrending
+    z_trend = np.asarray(signal - z_stat)
+    z_detrended = np.array(signal) - z_trend
+
+    return utils.ReturnTuple((z_detrended.T, z_trend.T), ('detrended', 'trend'))
