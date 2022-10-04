@@ -408,3 +408,86 @@ def compute_poincare(rri, show=False):
 
     return out
 
+
+def compute_geometrical(rri, binsize=1/128, show=False, detailed=False):
+    """ Computes the geometrical features from a sequence of RR intervals.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    binsize : float, optional
+        Binsize for RRI histogram (s). Default: 1/128 s.
+    show : bool, optional
+        If True, show the RRI histogram. Default: False.
+    detailed : bool, optional
+        If True, returns the histogram variables (for plotting purposes).
+
+    Returns
+    -------
+    hti : float
+        HTI - HRV triangular index - Integral of the density of the RR interval
+        histogram divided by its height.
+    tinn : float
+        TINN - Baseline width of RR interval histogram (ms).
+
+    """
+    binsize = binsize * 1000  # to ms
+
+    # create histogram
+    tmin = rri.min()
+    tmax = rri.max()
+    bins = np.arange(tmin, tmax + binsize, binsize)
+    nn_hist = np.histogram(rri, bins)
+
+    # histogram peak
+    max_count = np.max(nn_hist[0])
+    peak_hist = np.argmax(nn_hist[0])
+
+    # compute HTI
+    hti = len(rri) / max_count
+
+    # possible N and M values
+    n_values = bins[:peak_hist]
+    m_values = bins[peak_hist + 1:]
+
+    # find triangle with base N and M that best approximates the distribution
+    error_min = np.inf
+    n = 0
+    m = 0
+    q_hist = None
+
+    for n_ in n_values:
+
+        for m_ in m_values:
+
+            t = np.array([tmin, n_, nn_hist[1][peak_hist], m_, tmax + binsize])
+            y = np.array([0, 0, max_count, 0, 0])
+            q = interp1d(x=t, y=y, kind='linear')
+            q = q(bins)
+
+            # compute the sum of squared differences
+            error = np.sum((nn_hist[0] - q[:-1]) ** 2)
+
+            if error < error_min:
+                error_min = error
+                n, m, q_hist = n_, m_, q
+
+    # compute TINN
+    tinn = m - n
+
+    # plot
+    if show:
+        plotting.plot_hrv_hist(rri=rri,
+                  bins=bins,
+                  hist=q_hist,
+                  hti=hti,
+                  tinn=tinn)
+
+    # output
+    out = utils.ReturnTuple([hti, tinn], ['hti', 'tinn'])
+
+    if detailed:
+        out = utils.ReturnTuple([bins, q_hist, hti, tinn], ['bins', 'hist', 'hti', 'tinn'])
+
+    return out

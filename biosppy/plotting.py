@@ -1840,3 +1840,33 @@ def plot_poincare(rri, **kwargs):
 
     # show
     plt.show()
+
+
+def plot_hrv_hist(rri, **kwargs):
+    """ Plots the RRI histogram with the corresponding geometrical HRV features.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+
+    """
+
+    # compute histogram and geometrical features
+    if kwargs is None:
+        bins, hist, hti, tinn = hrv.compute_geometrical(rri, detailed=True)
+    else:
+        bins, hist, hti, tinn = kwargs['bins'], kwargs['hist'], kwargs['hti'], kwargs['tinn']
+
+    # plot histogram and triangle
+    fig, ax = plt.subplots()
+    ax.hist(rri, bins, facecolor='#85B3D1FF', edgecolor='0.2', label='HTI: %.1f' % hti)
+    ax.plot(bins, hist, color='#A13941FF', linewidth=1.5, label='TINN: %.1f ms' % tinn)
+    ax.set_title('RRI Distribution')
+    ax.set_xlabel('RR Interval (ms)')
+    ax.set_ylabel('Count')
+    ax.locator_params(axis='y', integer=True)
+    ax.legend(loc='upper right')
+
+    # show
+    plt.show()
