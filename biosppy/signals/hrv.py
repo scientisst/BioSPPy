@@ -91,7 +91,7 @@ def filter_rri(rri=None, threshold=1200):
     return rri_filt
 
 
-def hrv_timedomain(rri, duration=None):
+def hrv_timedomain(rri, duration=None, show=False):
     """ Computes the time domain HRV features from a sequence of RR intervals in milliseconds.
 
     Parameters
@@ -100,6 +100,8 @@ def hrv_timedomain(rri, duration=None):
         RR-intervals (ms).
     duration : int, optional
         Duration of the signal (s).
+    show : bool, optional
+        Controls the plotting calls.
 
     Returns
     -------
@@ -173,6 +175,12 @@ def hrv_timedomain(rri, duration=None):
         sdnn = rri.std()
 
         out = out.append(sdnn, 'sdnn')
+
+    if duration >= 90:
+        # compute geometrical features (histogram)
+        hti, tinn = compute_geometrical(rri=rri, show=show)
+
+        out = out.append([hti, tinn], ['hti', 'tinn'])
 
     return out
 
