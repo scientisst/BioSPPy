@@ -239,7 +239,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
     # check inputs
     if rri is None:
-        raise ValueError("Please specify an RRI list or array.")
+        raise TypeError("Please specify an RRI list or array.")
 
     freq_methods = ['FFT']
     if freq_method not in freq_methods:
@@ -256,7 +256,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 20:
-        raise IOError("Signal duration must be greater than 20 seconds to compute frequency-domain features.")
+        raise ValueError("Signal duration must be greater than 20 seconds to compute frequency-domain features.")
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
@@ -329,7 +329,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 90:
-        raise IOError("Signal duration must be greater than 90 seconds to compute non-linear features.")
+        raise ValueError("Signal duration must be greater than 90 seconds to compute non-linear features.")
 
     # detrend
     if detrend:
@@ -549,7 +549,7 @@ def detrend_window(rri, win_len=2000, **kwargs):
     win_len = int(win_len)
 
     # extract parameters
-    if kwargs is None:
+    if len(kwargs) == 0:
         smoothing_factor = 500
     else:
         smoothing_factor = kwargs['smoothing_factor']

@@ -1755,7 +1755,7 @@ def plot_poincare(rri, **kwargs):
     """
 
     # compute poincare features to plot
-    if kwargs is None:
+    if len(kwargs) == 0:
         x, y = rri[:-1], rri[1:]
         s, sd1, sd2, sd12 = hrv.compute_poincare(rri)
     else:
@@ -1853,7 +1853,7 @@ def plot_hrv_hist(rri, **kwargs):
     """
 
     # compute histogram and geometrical features
-    if kwargs is None:
+    if len(kwargs) == 0:
         bins, hist, hti, tinn = hrv.compute_geometrical(rri, detailed=True)
     else:
         bins, hist, hti, tinn = kwargs['bins'], kwargs['hist'], kwargs['hti'], kwargs['tinn']
