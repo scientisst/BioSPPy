@@ -25,6 +25,7 @@ from scipy.signal import welch
 # local
 from .. import utils
 from .. import plotting
+from . import tools
 
 # Global variables
 FBANDS = {'ulf': [0, 0.003],
@@ -502,3 +503,51 @@ def compute_geometrical(rri, binsize=1/128, show=False, detailed=False):
         out = utils.ReturnTuple([bins, q_hist, hti, tinn], ['bins', 'hist', 'hti', 'tinn'])
 
     return out
+
+
+def detrend_window(rri, win_len=2000, **kwargs):
+    """ Facilitates RRI detrending method using a signal window.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    win_len : int, optional
+        Length of the window to detrend the RRI signal. Default: 2000.
+    kwargs : dict, optional
+        Parameters of the detrending method.
+    Returns
+    -------
+    rri_det : array
+        Detrended RRI signal.
+
+    """
+
+    # check input type
+    win_len = int(win_len)
+
+    # extract parameters
+    if kwargs is None:
+        smoothing_factor = 500
+    else:
+        smoothing_factor = kwargs['smoothing_factor']
+
+    # detrend signal
+    if len(rri) > win_len:
+        # split the signal
+        splits = int(len(rri)/win_len)
+        rri_splits = np.array_split(rri, splits)
+
+        # compute the detrended signal for each split
+        rri_det = []
+        for split in rri_splits:
+            split_det = tools.detrend_smoothness_priors(split, smoothing_factor)['detrended']
+            rri_det.append(split_det)
+
+        # concantenate detrended splits
+        rri_det = np.concatenate(rri_det)
+
+    else:
+        rri_det = tools.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
+
+    return rri_det
