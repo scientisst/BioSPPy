@@ -35,13 +35,6 @@ FBANDS = {'ulf': [0, 0.003],
           'vhf': [0.4, 0.5]
           }
 
-SPECTRUM_COLORS = {'ulf': '#e6eff6',
-                   'vlf': '#89b4c4',
-                   'lf': '#548999',
-                   'hf': '#f1d3a1',
-                   'vhf': '#e3dbd9'
-                   }
-
 
 def compute_rri(rpeaks, sampling_rate=1000.):
     """ Computes RR intervals in milliseconds from a list of R-peak indexes.
@@ -197,7 +190,7 @@ def hrv_timedomain(rri, duration=None, show=False, detrend=True):
     return out
 
 
-def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend=True):
+def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend=True, show=False):
     """Computes the frequency domain HRV features from a sequence of RR intervals.
 
     Parameters
@@ -212,6 +205,8 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         Dictionary specifying the desired HRV frequency bands.
     detrend : bool, optional
         Whether to detrend the input signal. Default: True.
+    show : bool, optional
+        Whether to show the power spectrum plot. Default: False.
 
     Returns
     -------
@@ -280,7 +275,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
             frequencies, powers = welch(rri_inter, fs=fs, scaling='density', nperseg=300)
 
         # compute frequency bands
-        fb_out = compute_fbands(frequencies=frequencies, powers=powers)
+        fb_out = compute_fbands(frequencies=frequencies, powers=powers, show=False)
 
         out = out.join(fb_out)
 
@@ -288,6 +283,11 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         lf_hf = fb_out['lf_pwr'] / fb_out['hf_pwr']
 
         out = out.append(lf_hf, 'lf_hf')
+
+        # plot
+        if show:
+            legends = {'LF/HF': lf_hf}
+            plotting.plot_hrv_fbands(frequencies, powers, fbands, freq_method, legends)
 
     return out
 
@@ -347,7 +347,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True):
     return out
 
 
-def compute_fbands(frequencies, powers, fbands=None):
+def compute_fbands(frequencies, powers, fbands=None, method_name=None, show=False, legends=None):
     """ Computes frequency domain features for the specified frequency bands.
 
     Parameters
@@ -355,9 +355,15 @@ def compute_fbands(frequencies, powers, fbands=None):
     frequencies : array
         Frequency axis.
     powers : array
-        Power spectrum values for the frequency axis-
+        Power spectrum values for the frequency axis.
     fbands : dict, optional
         Dictionary containing the limits of the frequency bands.
+    method_name : str, optional
+        Method that was used to compute the power spectrum. Default: None.
+    show : bool, optional
+        Whether to show the power spectrum plot. Default: False.
+    legends : dict, optional
+        Additional legend elements when plotting.
 
     Returns
     -------
@@ -391,6 +397,10 @@ def compute_fbands(frequencies, powers, fbands=None):
         rpwr = pwr / total_pwr
 
         out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak', fband + '_rpwr'])
+
+    # plot
+    if show:
+        plotting.plot_hrv_fbands(frequencies, powers, fbands, method_name, legends)
 
     return out
 

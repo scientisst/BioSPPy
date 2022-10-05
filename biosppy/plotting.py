@@ -1870,3 +1870,62 @@ def plot_hrv_hist(rri, **kwargs):
 
     # show
     plt.show()
+
+
+def plot_hrv_fbands(frequencies, powers, fbands, method_name=None, legends=None):
+    """ Plots the power spectrum and highlights the defined frequency bands.
+
+    Parameters
+    ----------
+    frequencies : array
+        Frequency axis.
+    powers : array
+        Power spectrum values for the frequency axis.
+    fbands : dict, optional
+        Dictionary containing the limits of the frequency bands.
+    method_name : str, optional
+        Method that was used to compute the power spectrum.
+    legends : dict, optional
+        Additional legend elements.
+    """
+
+    spectrum_colors = {'ulf': '#e6eff6',
+                       'vlf': '#89b4c4',
+                       'lf': '#548999',
+                       'hf': '#f1d3a1',
+                       'vhf': '#e3dbd9'
+                       }
+
+    # convert power values
+    powers = powers / (10 ** 6)  # to s^2/Hz
+
+    # initialize plot
+    fig, ax = plt.subplots()
+
+    # figure attributes
+    if method_name is None:
+        ax.set_title(f'Power Spectral Density')
+    else:
+        ax.set_title(f'Power Spectral Density ({method_name})')
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('Power (s$^2$/Hz)')
+
+    # plot spectrum
+    ax.plot(frequencies, powers, linewidth=1, color='0.2')
+    ax.margins(0)
+
+    # plot frequency bands
+    for fband in fbands.keys():
+        band = np.argwhere((frequencies >= fbands[fband][0]) & (frequencies <= fbands[fband][-1])).reshape(-1)
+        color = spectrum_colors[fband]
+        if len(band) > 0:
+            ax.fill_between(frequencies[band], powers[band], color=color, label=fband.upper())
+
+    # update figure legend
+    handles, labels = fig.gca().get_legend_handles_labels()
+    if legends.__len__() != 0:
+        for key, value in legends.items():
+            new_patch = patches.Patch(color='white', alpha=0)
+            handles.extend([new_patch])
+            labels.extend(['%s = %.2f' % (key, value)])
+    ax.legend(handles=handles, labels=labels, loc='upper right')
