@@ -559,10 +559,7 @@ def detrend_window(rri, win_len=2000, **kwargs):
     win_len = int(win_len)
 
     # extract parameters
-    if len(kwargs) == 0:
-        smoothing_factor = 500
-    else:
-        smoothing_factor = kwargs['smoothing_factor']
+    smoothing_factor = kwargs['smoothing_factor'] if 'smoothing_factor' in kwargs else 500
 
     # detrend signal
     if len(rri) > win_len:
