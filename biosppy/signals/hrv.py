@@ -431,6 +431,8 @@ def compute_poincare(rri, show=False):
         SD2 - Poincaré plot standard deviation along the identity line (ms).
     sd12 : float
         SD1/SD2 - SD1 to SD2 ratio.
+    sd21 : float
+        SD2/SD1 - SD2 to SD1 ratio.
     """
 
     # initialize outputs
@@ -446,11 +448,12 @@ def compute_poincare(rri, show=False):
     sd2 = x2.std()
     s = np.pi * sd1 * sd2
 
-    # compute sd1/sd2 ratio
+    # compute sd1/sd2 and sd2/sd1 ratio
     sd12 = sd1 / sd2
+    sd21 = sd2 / sd1
 
     # output
-    out = out.append([s, sd1, sd2, sd12], ['s', 'sd1', 'sd2', 'sd12'])
+    out = out.append([s, sd1, sd2, sd12, sd21], ['s', 'sd1', 'sd2', 'sd12', 'sd21'])
 
     if show:
         plotting.plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
