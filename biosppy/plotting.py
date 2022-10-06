@@ -1744,24 +1744,29 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
         plt.close(fig)
 
 
-def plot_poincare(rri, **kwargs):
+def plot_poincare(rri=None,
+                  s=None,
+                  sd1=None,
+                  sd2=None,
+                  sd12=None):
     """ Plots a Poincaré plot of a series of RR intervals (RRI[i+1] vs. RRI[i]).
 
     Parameters
     ----------
     rri : array
         RR-intervals (ms).
-
+    s : float
+        S - Area of the ellipse of the Poincaré plot (ms^2).
+    sd1 : float
+        SD1 - Poincaré plot standard deviation perpendicular to the identity
+        line (ms).
+    sd2 : float
+        SD2 - Poincaré plot standard deviation along the identity line (ms).
+    sd12 : float
+        SD1/SD2 - SD1 to SD2 ratio.
     """
 
-    # compute poincare features to plot
-    if len(kwargs) == 0:
-        x, y = rri[:-1], rri[1:]
-        s, sd1, sd2, sd12 = hrv.compute_poincare(rri)
-    else:
-        x, y = kwargs['x'], kwargs['y']
-        s, sd1, sd2, sd12 = kwargs['s'], kwargs['sd1'], kwargs['sd2'], kwargs['sd12']
-
+    x, y = rri[:-1], rri[1:]
     rr_mean = rri.mean()
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -1842,26 +1847,33 @@ def plot_poincare(rri, **kwargs):
     plt.show()
 
 
-def plot_hrv_hist(rri, **kwargs):
+def plot_hrv_hist(rri=None,
+                  bins=None,
+                  q_hist=None,
+                  hti=None,
+                  tinn=None):
     """ Plots the RRI histogram with the corresponding geometrical HRV features.
 
     Parameters
     ----------
     rri : array
         RR-intervals (ms).
+    bins : array
+        Histogram bins.
+    q_hist : array
+        Multilinear function fitted to the histogram.
+    hti : float
+        HTI - HRV triangular index - Integral of the density of the RR interval
+        histogram divided by its height.
+    tinn : float
+        TINN - Baseline width of RR interval histogram (ms).
 
     """
-
-    # compute histogram and geometrical features
-    if len(kwargs) == 0:
-        bins, hist, hti, tinn = hrv.compute_geometrical(rri, detailed=True)
-    else:
-        bins, hist, hti, tinn = kwargs['bins'], kwargs['hist'], kwargs['hti'], kwargs['tinn']
 
     # plot histogram and triangle
     fig, ax = plt.subplots()
     ax.hist(rri, bins, facecolor='#85B3D1FF', edgecolor='0.2', label='HTI: %.1f' % hti)
-    ax.plot(bins, hist, color='#A13941FF', linewidth=1.5, label='TINN: %.1f ms' % tinn)
+    ax.plot(bins, q_hist, color='#A13941FF', linewidth=1.5, label='TINN: %.1f ms' % tinn)
     ax.set_title('RRI Distribution')
     ax.set_xlabel('RR Interval (ms)')
     ax.set_ylabel('Count')
@@ -1872,7 +1884,11 @@ def plot_hrv_hist(rri, **kwargs):
     plt.show()
 
 
-def plot_hrv_fbands(frequencies, powers, fbands, method_name=None, legends=None):
+def plot_hrv_fbands(frequencies=None,
+                    powers=None,
+                    fbands=None,
+                    method_name=None,
+                    legends=None):
     """ Plots the power spectrum and highlights the defined frequency bands.
 
     Parameters

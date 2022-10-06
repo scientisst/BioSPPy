@@ -85,7 +85,7 @@ def filter_rri(rri=None, threshold=1200):
     return rri_filt
 
 
-def hrv_timedomain(rri, duration=None, show=False, detrend=True):
+def hrv_timedomain(rri, duration=None, detrend=True, show=False):
     """ Computes the time domain HRV features from a sequence of RR intervals in milliseconds.
 
     Parameters
@@ -94,10 +94,10 @@ def hrv_timedomain(rri, duration=None, show=False, detrend=True):
         RR-intervals (ms).
     duration : int, optional
         Duration of the signal (s).
-    show : bool, optional
-        Controls the plotting calls.
     detrend : bool, optional
         Whether to detrend the input signal.
+    show : bool, optional
+        Controls the plotting calls. Default: False.
 
     Returns
     -------
@@ -151,7 +151,7 @@ def hrv_timedomain(rri, duration=None, show=False, detrend=True):
 
     if duration >= 10:
         # compute heart rate features
-        hr = 60/(rri/1000)  # bpm
+        hr = 60 / (rri / 1000)  # bpm
         hr_min = hr.min()
         hr_max = hr.max()
         hr_minmax = hr.max() - hr.min()
@@ -292,7 +292,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
     return out
 
 
-def hrv_nonlinear(rri=None, duration=None, detrend=True):
+def hrv_nonlinear(rri=None, duration=None, detrend=True, show=False):
     """ Computes the non-linear HRV features from a sequence of RR intervals.
 
     Parameters
@@ -303,6 +303,8 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True):
         Duration of the signal (s).
     detrend : bool, optional
         Whether to detrend the input signal. Default: True.
+    show : bool, optional
+        Controls the plotting calls. Default: False.
 
     Returns
     -------
@@ -340,7 +342,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True):
 
     if duration >= 90:
         # compute SD1, SD2, SD1/SD2 and S
-        cp = compute_poincare(rri=rri)
+        cp = compute_poincare(rri=rri, show=show)
 
         out = out.join(cp)
 
@@ -448,12 +450,12 @@ def compute_poincare(rri, show=False):
     out = out.append([s, sd1, sd2, sd12], ['s', 'sd1', 'sd2', 'sd12'])
 
     if show:
-        plotting.plot_poincare(rri, x=x, y=y, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
+        plotting.plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
 
     return out
 
 
-def compute_geometrical(rri, binsize=1/128, show=False, detailed=False):
+def compute_geometrical(rri, binsize=1/128, show=False):
     """ Computes the geometrical features from a sequence of RR intervals.
 
     Parameters
@@ -464,8 +466,6 @@ def compute_geometrical(rri, binsize=1/128, show=False, detailed=False):
         Binsize for RRI histogram (s). Default: 1/128 s.
     show : bool, optional
         If True, show the RRI histogram. Default: False.
-    detailed : bool, optional
-        If True, returns the histogram variables (for plotting purposes).
 
     Returns
     -------
@@ -523,16 +523,13 @@ def compute_geometrical(rri, binsize=1/128, show=False, detailed=False):
     # plot
     if show:
         plotting.plot_hrv_hist(rri=rri,
-                  bins=bins,
-                  hist=q_hist,
-                  hti=hti,
-                  tinn=tinn)
+                               bins=bins,
+                               q_hist=q_hist,
+                               hti=hti,
+                               tinn=tinn)
 
     # output
     out = utils.ReturnTuple([hti, tinn], ['hti', 'tinn'])
-
-    if detailed:
-        out = utils.ReturnTuple([bins, q_hist, hti, tinn], ['bins', 'hist', 'hti', 'tinn'])
 
     return out
 
