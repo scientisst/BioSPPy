@@ -36,6 +36,102 @@ FBANDS = {'ulf': [0, 0.003],
           }
 
 
+def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rri=True, detrend_rri=True, show=False):
+    """
+
+    Parameters
+    ----------
+    rpeaks : array
+        R-peak index locations.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz). Default: 1000.0 Hz.
+    rri : array, optional
+        RR-intervals (ms). Providing this parameter overrides the computation of
+        RR-intervals from rpeaks.
+    parameters : str, optional
+        If 'auto' computes the recommended HRV features. If 'time' computes
+        only time-domain features. If 'frequency' computes only
+        frequency-domain features. If 'non-linear' computes only non-linear
+        features. If 'all' computes all available HRV features. Default: 'auto'.
+    filter_rri : bool, optional
+        Whether to filter the RRI sequence with a predefined threshold. Default: True.
+    detrend_rri : bool, optional
+        Whether to detrend the RRI sequence with the default method smoothness priors. Default: True.
+    show : bool, optional
+        Controls the plotting calls. Default: False.
+
+    Returns
+    -------
+    hrv_features : ReturnTuple
+        The set of HRV features extracted from the RRI data. The number of features depends on the chosen parameters.
+    """
+
+    # check inputs
+    if rpeaks is None and rri is None:
+        raise TypeError("Please specify an R-Peak or RRI list or array.")
+
+    parameters_list = ['auto', 'time', 'frequency', 'non-linear', 'all']
+    if parameters not in parameters_list:
+        raise ValueError(f"'{parameters}' is not an available input. Enter one from: {parameters_list}.")
+
+    # ensure input format
+    sampling_rate = float(sampling_rate)
+
+    # initialize outputs
+    out = utils.ReturnTuple((), ())
+
+    # compute RRIs
+    if rri is None:
+        rpeaks = np.array(rpeaks, dtype=float)
+        rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate)
+
+    # compute duration
+    duration = np.sum(rri) / 1000.  # seconds
+
+    # filter rri sequence
+    if filter_rri:
+        rri = rri_filter(rri)
+
+    # detrend rri sequence
+    if detrend_rri:
+        rri_det = detrend_window(rri)
+
+    out = out.append(rri, 'rri')
+
+    # extract features
+    if parameters == 'all':
+        duration = np.inf
+
+    # compute time-domain features
+    if parameters in ['time', 'auto', 'all']:
+        try:
+            hrv_td = hrv_timedomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show, rri_detrended=rri_det)
+            out = out.join(hrv_td)
+        except ValueError:
+            print('Time-domain features not computed. The signal is not long enough.')
+            pass
+
+    # compute frequency-domain features
+    if parameters in ['frequency', 'auto', 'all']:
+        try:
+            hrv_fd = hrv_frequencydomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
+            out = out.join(hrv_fd)
+        except ValueError:
+            print('Frequency-domain features not computed. The signal is not long enough.')
+            pass
+
+    # compute non-linear features
+    if parameters in ['non-linear', 'auto', 'all']:
+        try:
+            hrv_nl = hrv_nonlinear(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
+            out = out.join(hrv_nl)
+        except ValueError:
+            print('Non-linear features not computed. The signal is not long enough.')
+            pass
+
+    return out
+
+
 def compute_rri(rpeaks, sampling_rate=1000.):
     """ Computes RR intervals in milliseconds from a list of R-peak indexes.
 
