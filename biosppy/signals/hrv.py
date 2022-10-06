@@ -85,7 +85,7 @@ def rri_filter(rri=None, threshold=1200):
     return rri_filt
 
 
-def hrv_timedomain(rri, duration=None, detrend=True, show=False):
+def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
     """ Computes the time domain HRV features from a sequence of RR intervals in milliseconds.
 
     Parameters
@@ -94,7 +94,7 @@ def hrv_timedomain(rri, duration=None, detrend=True, show=False):
         RR-intervals (ms).
     duration : int, optional
         Duration of the signal (s).
-    detrend : bool, optional
+    detrend_rri : bool, optional
         Whether to detrend the input signal.
     show : bool, optional
         Controls the plotting calls. Default: False.
@@ -132,8 +132,11 @@ def hrv_timedomain(rri, duration=None, detrend=True, show=False):
     rri = np.array(rri, dtype=float)
 
     # detrend
-    if detrend:
-        rri_det = detrend_window(rri)
+    if detrend_rri:
+        if 'rri_detrended' in kwargs:
+            rri_det = kwargs['rri_detrended']
+        else:
+            rri_det = detrend_window(rri)
     else:
         rri_det = rri
 
@@ -190,7 +193,7 @@ def hrv_timedomain(rri, duration=None, detrend=True, show=False):
     return out
 
 
-def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend=True, show=False):
+def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend_rri=True, show=False):
     """Computes the frequency domain HRV features from a sequence of RR intervals.
 
     Parameters
@@ -203,7 +206,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         Method for spectral estimation. If 'FFT' uses Welch's method.
     fbands : dict, optional
         Dictionary specifying the desired HRV frequency bands.
-    detrend : bool, optional
+    detrend_rri : bool, optional
         Whether to detrend the input signal. Default: True.
     show : bool, optional
         Whether to show the power spectrum plot. Default: False.
@@ -265,7 +268,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
     rri_inter = f_inter(t_inter)
 
     # detrend
-    if detrend:
+    if detrend_rri:
         rri_inter = detrend_window(rri_inter)
 
     if duration >= 20:
@@ -292,7 +295,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
     return out
 
 
-def hrv_nonlinear(rri=None, duration=None, detrend=True, show=False):
+def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
     """ Computes the non-linear HRV features from a sequence of RR intervals.
 
     Parameters
@@ -301,7 +304,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True, show=False):
         RR-intervals (ms).
     duration : int, optional
         Duration of the signal (s).
-    detrend : bool, optional
+    detrend_rri : bool, optional
         Whether to detrend the input signal. Default: True.
     show : bool, optional
         Controls the plotting calls. Default: False.
@@ -334,7 +337,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend=True, show=False):
         raise ValueError("Signal duration must be greater than 90 seconds to compute non-linear features.")
 
     # detrend
-    if detrend:
+    if detrend_rri:
         rri = detrend_window(rri)
 
     # initialize outputs
