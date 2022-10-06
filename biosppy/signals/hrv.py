@@ -65,7 +65,7 @@ def compute_rri(rpeaks, sampling_rate=1000.):
     return rri
 
 
-def filter_rri(rri=None, threshold=1200):
+def rri_filter(rri=None, threshold=1200):
     """Filters an RRI sequence based on a maximum threshold in milliseconds.
 
     Parameters
