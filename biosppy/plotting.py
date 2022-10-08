@@ -1925,6 +1925,7 @@ def plot_hrv_fbands(frequencies=None,
         ax.set_title(f'Power Spectral Density ({method_name})')
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Power (s$^2$/Hz)')
+    ax.set_xlim([0, 0.5])
 
     # plot spectrum
     ax.plot(frequencies, powers, linewidth=1, color='0.2')

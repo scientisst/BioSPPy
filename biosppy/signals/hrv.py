@@ -291,7 +291,7 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
     return out
 
 
-def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend_rri=True, show=False):
+def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend_rri=True, show=False, **kwargs):
     """Computes the frequency domain HRV features from a sequence of RR intervals.
 
     Parameters
@@ -308,6 +308,8 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         Whether to detrend the input signal. Default: True.
     show : bool, optional
         Whether to show the power spectrum plot. Default: False.
+    kwargs : dict, optional
+        frs : resampling frequency for the RRI sequence (Hz).
 
     Returns
     -------
@@ -358,11 +360,11 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
     out = utils.ReturnTuple((), ())
 
     # resampling with cubic interpolation for equidistant samples
-    fs = 1
+    frs  = kwargs['frs'] if 'frs' in kwargs else 4
     t = np.cumsum(rri)
     t -= t[0]
     f_inter = interp1d(t, rri, 'cubic')
-    t_inter = np.arange(t[0], t[-1], 1000. / fs)
+    t_inter = np.arange(t[0], t[-1], 1000. / frs)
     rri_inter = f_inter(t_inter)
 
     # detrend
@@ -373,7 +375,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
         # compute frequencies and powers
         if freq_method == 'FFT':
-            frequencies, powers = welch(rri_inter, fs=fs, scaling='density', nperseg=300)
+            frequencies, powers = welch(rri_inter, fs=frs, scaling='density', nperseg=300)
 
         # compute frequency bands
         fb_out = compute_fbands(frequencies=frequencies, powers=powers, show=False)
