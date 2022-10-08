@@ -95,6 +95,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     # detrend rri sequence
     if detrend_rri:
         rri_det = detrend_window(rri)
+    else:
+        rri_det = None
 
     out = out.append(rri, 'rri')
 
