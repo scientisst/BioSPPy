@@ -455,6 +455,17 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
 
         out = out.join(cp)
 
+        # compute sample entropy
+        sampen = sample_entropy(rri)
+
+        out = out.append(sampen, 'sampen')
+
+    if len(rri) >= 800:
+        # compute approximate entropy
+        appen = approximate_entropy(rri)
+
+        out = out.append(appen, 'appen')
+
     return out
 
 
@@ -689,3 +700,87 @@ def detrend_window(rri, win_len=2000, **kwargs):
         rri_det = tools.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
 
     return rri_det
+
+def sample_entropy(rri, m=2, r=0.2):
+    """Computes the sample entropy of an RRI sequence.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    m : int, optional
+        Embedding dimension. Default: 2.
+    r : int, float, optional
+        Tolerance. It is then multiplied by the sequence standard deviation. Default: 0.2.
+
+    Returns
+    -------
+    sampen :  float
+        Sample entropy of the RRI sequence.
+
+    References
+    ----------
+    https://en.wikipedia.org/wiki/Sample_entropy
+    """
+
+    # redefine r
+    r = r * rri.std()
+
+    n = len(rri)
+
+    # Split time series and save all templates of length m
+    xmi = np.array([rri[i: i + m] for i in range(n - m)])
+    xmj = np.array([rri[i: i + m] for i in range(n - m + 1)])
+
+    # Save all matches minus the self-match, compute B
+    b = np.sum([np.sum(np.abs(xmii - xmj).max(axis=1) <= r) - 1 for xmii in xmi])
+
+    # Similar for computing A
+    m += 1
+    xm = np.array([rri[i: i + m] for i in range(n - m + 1)])
+
+    a = np.sum([np.sum(np.abs(xmi - xm).max(axis=1) <= r) - 1 for xmi in xm])
+
+    # Return SampEn
+    return -np.log(a / b)
+
+
+def approximate_entropy(rri, m=2, r=0.2):
+    """Computes the approximate entropy of an RRI sequence.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    m : int, optional
+        Embedding dimension. Default: 2.
+    r : int, float, optional
+        Tolerance. It is then multiplied by the sequence standard deviation. Default: 0.2.
+
+    Returns
+    -------
+    appen :  float
+        Approximate entropy of the RRI sequence.
+
+    References
+    ----------
+    https://en.wikipedia.org/wiki/Approximate_entropy
+    """
+
+    # redefine r
+    r = r * rri.std()
+
+    def _maxdist(x_i, x_j):
+        return max([abs(ua - va) for ua, va in zip(x_i, x_j)])
+
+    def _phi(m):
+        x = [[rri[j] for j in range(i, i + m - 1 + 1)] for i in range(n - m + 1)]
+        C = [
+            len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) / (n - m + 1.0)
+            for x_i in x
+        ]
+        return (n - m + 1.0) ** (-1) * sum(np.log(C))
+
+    n = len(rri)
+
+    return _phi(m) - _phi(m + 1)
