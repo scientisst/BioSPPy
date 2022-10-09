@@ -387,6 +387,12 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
         out = out.append(lf_hf, 'lf_hf')
 
+        # compute LF and HF power in normal units
+        lf_nu = fb_out['lf_pwr'] / (fb_out['lf_pwr'] + fb_out['hf_pwr'])
+        hf_nu = 1 - lf_nu
+
+        out = out.append([lf_nu, hf_nu], ['lf_nu', 'hf_nu'])
+
         # plot
         if show:
             legends = {'LF/HF': lf_hf}
