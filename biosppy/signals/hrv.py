@@ -310,6 +310,8 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         Whether to show the power spectrum plot. Default: False.
     kwargs : dict, optional
         frs : resampling frequency for the RRI sequence (Hz).
+        nperseg : Length of each segment in Welch periodogram.
+        nfft : Length of the FFT used in Welch function.
 
     Returns
     -------
@@ -360,12 +362,12 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
     out = utils.ReturnTuple((), ())
 
     # resampling with cubic interpolation for equidistant samples
-    frs  = kwargs['frs'] if 'frs' in kwargs else 4
+    frs = kwargs['frs'] if 'frs' in kwargs else 4
     t = np.cumsum(rri)
     t -= t[0]
-    f_inter = interp1d(t, rri, 'cubic')
+    rri_inter = interp1d(t, rri, 'cubic')
     t_inter = np.arange(t[0], t[-1], 1000. / frs)
-    rri_inter = f_inter(t_inter)
+    rri_inter = rri_inter(t_inter)
 
     # detrend
     if detrend_rri:
@@ -375,7 +377,11 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
         # compute frequencies and powers
         if freq_method == 'FFT':
-            frequencies, powers = welch(rri_inter, fs=frs, scaling='density', nperseg=300)
+            nperseg = kwargs['nperseg'] if 'nperseg' in kwargs else int(len(rri_inter)/4.5)
+            nfft = kwargs['nfft'] if 'nfft' in kwargs else (256 if nperseg < 256 else 2**np.ceil(np.log(nperseg)/np.log(2)))
+
+            frequencies, powers = welch(rri_inter, fs=frs, scaling='density',
+                                        nperseg=nperseg, nfft=nfft)
 
         # compute frequency bands
         fb_out = compute_fbands(frequencies=frequencies, powers=powers, show=False)
