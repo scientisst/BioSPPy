@@ -110,7 +110,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
             hrv_td = hrv_timedomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show, rri_detrended=rri_det)
             out = out.join(hrv_td)
         except ValueError:
-            print('Time-domain features not computed. The signal is not long enough.')
+            print('Time-domain features not computed. Check input.')
             pass
 
     # compute frequency-domain features
@@ -119,7 +119,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
             hrv_fd = hrv_frequencydomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
             out = out.join(hrv_fd)
         except ValueError:
-            print('Frequency-domain features not computed. The signal is not long enough.')
+            print('Frequency-domain features not computed. Check input.')
             pass
 
     # compute non-linear features
@@ -128,7 +128,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
             hrv_nl = hrv_nonlinear(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
             out = out.join(hrv_nl)
         except ValueError:
-            print('Non-linear features not computed. The signal is not long enough.')
+            print('Non-linear features not computed. Check input.')
             pass
 
     return out
@@ -466,7 +466,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
 
         out = out.append(sampen, 'sampen')
 
-    if len(rri) >= 800:
+    if len(rri) >= 800 or duration == np.inf:
         # compute approximate entropy
         appen = approximate_entropy(rri)
 
@@ -706,6 +706,7 @@ def detrend_window(rri, win_len=2000, **kwargs):
         rri_det = tools.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
 
     return rri_det
+
 
 def sample_entropy(rri, m=2, r=0.2):
     """Computes the sample entropy of an RRI sequence.
