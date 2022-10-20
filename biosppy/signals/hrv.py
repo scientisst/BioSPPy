@@ -291,7 +291,7 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         hr_median = np.median(hr)
 
         out = out.append([hr, hr_min, hr_max, hr_minmax, hr_mean, hr_median],
-                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_avg', 'hr_median'])
+                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_mean', 'hr_median'])
 
         # compute RRI features
         rr_min = rri.min()
@@ -352,24 +352,18 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
     Returns
     -------
-    vlf_peak : float
-        Peak frequency (Hz) of the very-low-frequency band (0.0033–0.04 Hz) in
-        normal units.
-    vlf_pwr : float
-        Relative power of the very-low-frequency band (0.0033–0.04 Hz) in
-        normal units.
-    lf_peak : float
-        Peak frequency (Hz) of the low-frequency band (0.04–0.15 Hz).
-    lf_pwr : float
-        Relative power of the low-frequency band (0.04–0.15 Hz) in normal
-        units.
-    hf_peak : float
-        Peak frequency (Hz)  of the high-frequency band (0.15–0.4 Hz).
-    hf_pwr : float
-        Relative power of the high-frequency band (0.15–0.4 Hz) in normal
-        units.
+    {fbands}_peak : float
+        Peak frequency for each frequency band (Hz).
+    {fbands}_pwr : float
+        Absolute power for each frequency band (ms^2).
+    {fbands}_rpwr : float
+        Relative power for each frequency band (nu).
     lf_hf : float
         Ratio of LF-to-HF power.
+    lf_nu : float
+        Ratio of LF to LF+HF power (nu).
+    hf_nu :  float
+        Ratio of HF to LF+HF power (nu).
     total_pwr : float
         Total power.
     """
@@ -532,11 +526,11 @@ def compute_fbands(frequencies, powers, fbands=None, method_name=None, show=Fals
 
     Returns
     -------
-    _peak : float
+    {fbands}_peak : float
         Peak frequency of the frequency band (Hz).
-    _pwr : float
+    {fbands}_pwr : float
         Absolute power of the frequency band (ms^2).
-    _rpwr : float
+    {fbands}_rpwr : float
         Relative power of the frequency band (nu).
     """
 
