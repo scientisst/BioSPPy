@@ -519,3 +519,35 @@ class ReturnTuple(tuple):
         keys = tuple(self.keys()) + tuple(new_tuple.keys())
 
         return ReturnTuple(values, keys)
+
+    def delete(self, key):
+        """
+        Returns a ReturnTuple without the specified key.
+
+        Parameters
+        ----------
+        key : str
+            ReturnTuple key to be deleted.
+
+        Returns
+        -------
+        object : ReturnTuple
+            The ReturnTuple with the key removed.
+
+        """
+        values = tuple()
+        keys = tuple()
+
+        if not isinstance(key, str):
+            raise TypeError('key must be a string.')
+
+        if key not in self.keys():
+            raise ValueError(f'{key} key not in the ReturnTuple.')
+
+        for k in self.keys():
+
+            if k != key:
+                values += (self.__getitem__(k), )
+                keys += (k, )
+
+        return ReturnTuple(values, keys)
