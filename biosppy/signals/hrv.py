@@ -216,17 +216,27 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
     Returns
     -------
     hr : array
-        Heart rate (bpm).
+        Instantaneous heart rate (bpm).
     hr_min : float
         Minimum heart rate (bpm).
     hr_max : float
         Maximum heart rate (bpm).
     hr_minmax :  float
-        Difference between the highest and the lowest heart rate (bpm).
-    hr_avg : float
-        Average heart rate (bpm).
+        Difference between the highest and the lowest heart rates (bpm).
+    hr_mean : float
+        Mean heart rate (bpm).
+    hr_median : float
+        Median heart rate (bpm).
+    rr_min : float
+        Minimum value of RR intervals (ms).
+    rr_max : float
+        Maximum value of RR intervals (ms).
+    rr_minmax :  float
+        Difference between the highest and the lowest values of RR intervals (ms).
     rr_mean : float
         Mean value of RR intervals (ms).
+    rr_median : float
+        Median value of RR intervals (ms).
     rmssd : float
         RMSSD - Root mean square of successive RR interval differences (ms).
     nn50 : int
@@ -236,6 +246,11 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         50ms.
     sdnn: float
        SDNN - Standard deviation of RR intervals (ms).
+    hti : float
+        HTI - HRV triangular index - Integral of the density of the RR interval
+        histogram divided by its height.
+    tinn : float
+        TINN - Baseline width of RR interval histogram (ms).
     """
 
     # check inputs
@@ -272,10 +287,11 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         hr_min = hr.min()
         hr_max = hr.max()
         hr_minmax = hr.max() - hr.min()
-        hr_avg = hr.mean()
+        hr_mean = hr.mean()
+        hr_median = np.median(hr)
 
-        out = out.append([hr, hr_min, hr_max, hr_minmax, hr_avg],
-                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_avg'])
+        out = out.append([hr, hr_min, hr_max, hr_minmax, hr_mean, hr_median],
+                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_avg', 'hr_median'])
 
         # compute RRI features
         rr_min = rri.min()
