@@ -36,8 +36,9 @@ FBANDS = {'ulf': [0, 0.003],
           }
 
 
-def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rri=True, detrend_rri=True, show=False):
-    """
+def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rri=True, detrend_rri=True,
+        features_only=False, show=False):
+    """ Extracts the RR-interval sequence from a list of R-peak indexes and extracts HRV features.
 
     Parameters
     ----------
@@ -57,12 +58,18 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
         Whether to filter the RRI sequence with a predefined threshold. Default: True.
     detrend_rri : bool, optional
         Whether to detrend the RRI sequence with the default method smoothness priors. Default: True.
+    features_only : bool, optional
+        Whether to return only the hrv features. Default: False
     show : bool, optional
         Controls the plotting calls. Default: False.
 
     Returns
     -------
-    hrv_features : ReturnTuple
+    rri : array
+        RR-intervals (ms).
+    rri_det : array
+        Detrended RR-interval sequence (ms), if detrending was applied.
+    hrv_features : dict
         The set of HRV features extracted from the RRI data. The number of features depends on the chosen parameters.
     """
 
@@ -92,13 +99,18 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     if filter_rri:
         rri = rri_filter(rri)
 
+    # add rri to output
+    if not features_only:
+        out = out.append(rri, 'rri')
+
     # detrend rri sequence
     if detrend_rri:
         rri_det = detrend_window(rri)
+        # add detrended rri to output
+        if not features_only:
+            out = out.append(rri_det, 'rri_det')
     else:
         rri_det = None
-
-    out = out.append(rri, 'rri')
 
     # extract features
     if parameters == 'all':
@@ -109,6 +121,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
         try:
             hrv_td = hrv_timedomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show, rri_detrended=rri_det)
             out = out.join(hrv_td)
+
+            if features_only:
+                out = out.delete('hr')
+
         except ValueError:
             print('Time-domain features not computed. Check input.')
             pass
@@ -262,10 +278,15 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
                          ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_avg'])
 
         # compute RRI features
+        rr_min = rri.min()
+        rr_max = rri.max()
+        rr_minmax = rri.max() - rri.min()
         rr_mean = rri.mean()
+        rr_median = np.median(rri)
         rmssd = (rri_diff ** 2).mean() ** 0.5
 
-        out = out.append([rr_mean, rmssd], ['rr_mean', 'rmssd'])
+        out = out.append([rr_min, rr_max, rr_minmax, rr_mean, rr_median, rmssd],
+                         ['rr_min', 'rr_max', 'rr_minmax', 'rr_mean', 'rr_median', 'rmssd'])
 
     if duration >= 20:
         # compute NN50 and pNN50
