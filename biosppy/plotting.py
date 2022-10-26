@@ -1744,6 +1744,30 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
         plt.close(fig)
 
 
+def plot_rri(rri):
+    """
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    """
+
+    # time axis
+    t = np.cumsum(rri)
+
+    # plot
+    plt.figure(figsize=(8, 4))
+    plt.title('RR Intervals')
+    plt.ylabel('RRI (ms)')
+    plt.xlabel('Time (s)')
+
+    plt.plot(t, rri, color='#85B3D1FF')
+
+    plt.grid()
+    plt.show()
+
+
 def plot_poincare(rri=None,
                   s=None,
                   sd1=None,

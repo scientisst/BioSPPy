@@ -103,6 +103,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     if not features_only:
         out = out.append(rri, 'rri')
 
+    # show rri
+    if show:
+        plotting.plot_rri(rri)
+
     # detrend rri sequence
     if detrend_rri:
         rri_det = detrend_window(rri)
