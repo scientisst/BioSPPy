@@ -90,7 +90,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     # compute RRIs
     if rri is None:
         rpeaks = np.array(rpeaks, dtype=float)
-        rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate)
+        rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate, filter_rri=False)
 
     # compute duration
     duration = np.sum(rri) / 1000.  # seconds
@@ -154,7 +154,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     return out
 
 
-def compute_rri(rpeaks, sampling_rate=1000.):
+def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
     """ Computes RR intervals in milliseconds from a list of R-peak indexes.
 
     Parameters
@@ -176,9 +176,16 @@ def compute_rri(rpeaks, sampling_rate=1000.):
     # difference of R-peaks converted to ms
     rri = (1000. * np.diff(rpeaks)) / sampling_rate
 
+    # filter rri sequence
+    if filter_rri:
+        rri = rri_filter(rri)
+
     # check if rri is within physiological parameters
     if rri.min() < 400 or rri.min() > 1400:
         warnings.warn("RR-intervals appear to be out of normal parameters. Check input values.")
+
+    if show:
+        plotting.plot_rri(rri)
 
     return rri
 
@@ -189,7 +196,7 @@ def rri_filter(rri=None, threshold=1200):
     Parameters
     ----------
     rri : array
-        RR-intervals (default: ms).
+        RR-intervals (ms).
     threshold : int, float, optional
         Maximum rri value to accept (ms).
     """
