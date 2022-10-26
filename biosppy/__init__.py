@@ -19,3 +19,5 @@ from .__version__ import __version__
 from .signals import acc, abp, bvp, ppg, pcg, ecg, eda, eeg, emg, resp, tools
 from .synthesizers import ecg
 from .inter_plotting import ecg, acc
+from .features import eda, frequency, time, time_freq, quefrency, phase_space 
+from .tests import eda, frequency, time, quefrency, phase_space, time_freq
