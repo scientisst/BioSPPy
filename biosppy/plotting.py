@@ -378,16 +378,16 @@ def plot_ppg(ts=None,
 
     """
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 5))
     fig.suptitle('PPG Summary')
 
     # raw signal
     ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw', color=color_palette('lightblue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
+    ax1.legend(loc='upper right')
     ax1.grid()
 
     # filtered signal with onsets
@@ -399,24 +399,24 @@ def plot_ppg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered', color=color_palette('lightblue'))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color='m',
+               color=color_palette('darkblue'),
                linewidth=MINOR_LW,
                label='Onsets')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
+    ax2.legend(loc='upper right')
     ax2.grid()
 
     # heart rate
     ax3 = fig.add_subplot(313, sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate')
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('lightblue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend()
+    ax3.legend(loc='upper right')
     ax3.grid()
 
     # make layout tight
