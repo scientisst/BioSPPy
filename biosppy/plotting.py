@@ -28,9 +28,47 @@ from . import utils
 from biosppy.signals import tools as st
 
 # Globals
-MAJOR_LW = 2.5
-MINOR_LW = 1.5
+MAJOR_LW = 1.5
+MINOR_LW = 1.0
 MAX_ROWS = 10
+
+
+def color_palette(idx):
+    """Color palette to use throughout the biosppy package
+
+    Parameters
+    ----------
+    idx: str or int
+        identifier of color to use
+
+    Returns
+    -------
+    color_id: str
+        hexadecimal color code chosen
+    """
+
+    color_dict = {
+        'green': '#49997c',
+        'blue': '#025f88',
+        'yellow': '#d19c2f',
+        'red': '#ae3918',
+        'lightblue': '#1ebecd',
+        'wine': '#6A2E35',
+        'purple': '#A8A4CE',
+        'darkblue': '#032A72',
+        'orange': '#CC7A3F',
+        'darkgreen': '#1A430B'
+    }
+
+    if type(idx) == int:
+        color_id = list(color_dict.values())[idx]
+    else:
+        if idx in color_dict.keys():
+            color_id = color_dict[idx]
+        else:
+            raise IOError(f'Please choose one color from {color_dict.keys()} or give and index')
+
+    return color_id
 
 
 def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
@@ -587,6 +625,7 @@ def plot_abp(ts=None,
         # close
         plt.close(fig)
 
+
 def plot_eda(ts=None,
              raw=None,
              filtered=None,
@@ -624,7 +663,7 @@ def plot_eda(ts=None,
     # raw signal
     ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='raw')
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='raw', color=color_palette(0))
 
     ax1.set_ylabel('Amplitude')
     ax1.legend()
@@ -639,13 +678,13 @@ def plot_eda(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette(0))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color='m',
+               color=color_palette(1),
                linewidth=MINOR_LW,
                label='Onsets')
     ax2.vlines(ts[peaks], ymin, ymax,
-               color='g',
+               color=color_palette(2),
                linewidth=MINOR_LW,
                label='Peaks')
 
@@ -656,7 +695,7 @@ def plot_eda(ts=None,
     # amplitudes
     ax3 = fig.add_subplot(313, sharex=ax1)
 
-    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes')
+    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes', color=color_palette(3))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Amplitude')
@@ -1198,10 +1237,11 @@ def plot_ecg(ts=None,
     fig.suptitle('ECG Summary')
     gs = gridspec.GridSpec(6, 2)
 
+
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
+    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color='blue')
 
     ax1.set_ylabel('Amplitude')
     ax1.legend()
@@ -1216,10 +1256,10 @@ def plot_ecg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
     ax2.vlines(ts[rpeaks], ymin, ymax,
-               color='m',
-               linewidth=MINOR_LW,
+               color=color_palette('darkblue'),
+               linewidth=MAJOR_LW,
                label='R-peaks')
 
     ax2.set_ylabel('Amplitude')
@@ -1229,7 +1269,7 @@ def plot_ecg(ts=None,
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate')
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette(1))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
@@ -1239,7 +1279,7 @@ def plot_ecg(ts=None,
     # templates
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(templates_ts, templates.T, 'm', linewidth=MINOR_LW, alpha=0.7)
+    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.7, color=color_palette(3))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
@@ -1376,6 +1416,7 @@ def plot_bcg(ts=None,
         # close
         plt.close(fig)
 
+
 def plot_pcg(ts=None,
              raw=None,
              filtered=None,
@@ -1406,7 +1447,7 @@ def plot_pcg(ts=None,
         If provided, the plot will be saved to the specified file.
     show : bool, optional
         If True, show the plot immediately.
-        
+
     """
 
     fig = plt.figure()
@@ -1416,8 +1457,8 @@ def plot_pcg(ts=None,
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW,label='raw')
-    
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='raw')
+
     ax1.set_ylabel('Amplitude')
     ax1.legend()
     ax1.grid()
@@ -1430,12 +1471,12 @@ def plot_pcg(ts=None,
     alpha = 0.1 * (ymax - ymin)
     ymax += alpha
     ymin -= alpha
-    
+
     ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[peaks], ymin, ymax,
-                color='m',
-                linewidth=MINOR_LW,
-                label='Peaks')
+               color='m',
+               linewidth=MINOR_LW,
+               label='Peaks')
 
     ax2.set_ylabel('Amplitude')
     ax2.legend()
@@ -1444,22 +1485,21 @@ def plot_pcg(ts=None,
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts,inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate')
-    
+    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate')
+
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
     ax3.legend()
     ax3.grid()
-    
+
     # heart sounds
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(ts,filtered,linewidth=MAJOR_LW, label='PCG heart sounds')
+    ax4.plot(ts, filtered, linewidth=MAJOR_LW, label='PCG heart sounds')
     for i in range(0, len(peaks)):
-
         text = "S" + str(int(heart_sounds[i]))
-        plt.annotate(text,(ts[peaks[i]], ymax-alpha),ha='center', va='center',size = 13) 
-            
+        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=13)
+
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Heart sounds')
@@ -1484,6 +1524,7 @@ def plot_pcg(ts=None,
     else:
         # close
         plt.close(fig)
+
 
 def _plot_rates(thresholds, rates, variables,
                 lw=1,
