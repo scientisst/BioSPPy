@@ -52,7 +52,7 @@ def color_palette(idx):
         'blue': '#025f88',
         'yellow': '#d19c2f',
         'red': '#ae3918',
-        'lightblue': '#1ebecd',
+        'lightblue': '#85B3D1FF',
         'wine': '#6A2E35',
         'purple': '#A8A4CE',
         'darkblue': '#032A72',
