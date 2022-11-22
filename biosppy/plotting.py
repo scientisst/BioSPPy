@@ -1233,7 +1233,7 @@ def plot_ecg(ts=None,
 
     """
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 5))
     fig.suptitle('ECG Summary')
     gs = gridspec.GridSpec(6, 2)
 
@@ -1241,10 +1241,10 @@ def plot_ecg(ts=None,
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color='blue')
+    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color=color_palette('lightblue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
+    ax1.legend(loc='upper right')
     ax1.grid()
 
     # filtered signal with rpeaks
@@ -1256,30 +1256,30 @@ def plot_ecg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('lightblue'))
     ax2.vlines(ts[rpeaks], ymin, ymax,
                color=color_palette('darkblue'),
-               linewidth=MAJOR_LW,
+               linewidth=MINOR_LW,
                label='R-peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
+    ax2.legend(loc='upper right')
     ax2.grid()
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette(1))
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('lightblue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend()
+    ax3.legend(loc='upper right')
     ax3.grid()
 
     # templates
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.7, color=color_palette(3))
+    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.7, color=color_palette('orange'))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
