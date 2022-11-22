@@ -275,55 +275,55 @@ def plot_acc(ts=None,
     raw_t = np.transpose(raw)
     acc_x, acc_y, acc_z = raw_t[0], raw_t[1], raw_t[2]
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 5))
     fig.suptitle('ACC Summary')
     gs = gridspec.GridSpec(6, 2)
 
     # raw signal (acc_x)
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='Raw acc along X', color='C0')
+    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X', color=color_palette('lightblue'))
 
     ax1.set_ylabel('Amplitude ($m/s^2$)')
-    ax1.legend()
+    ax1.legend(loc='upper right')
     ax1.grid()
 
     # raw signal (acc_y)
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
 
-    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Raw acc along Y', color='C1')
+    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Y', color=color_palette('blue'))
 
     ax2.set_ylabel('Amplitude ($m/s^2$)')
-    ax2.legend()
+    ax2.legend(loc='upper right')
     ax2.grid()
 
     # raw signal (acc_z)
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Raw acc along Z', color='C2')
+    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z', color=color_palette('darkblue'))
 
     ax3.set_ylabel('Amplitude ($m/s^2$)')
     ax3.set_xlabel('Time (s)')
-    ax3.legend()
+    ax3.legend(loc='upper right')
     ax3.grid()
 
     # vector magnitude
     ax4 = fig.add_subplot(gs[:3, 1], sharex=ax1)
 
-    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude feature', color='C3')
+    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude feature', color=color_palette('green'))
 
     ax4.set_ylabel('Amplitude ($m/s^2$)')
-    ax4.legend()
+    ax4.legend(loc='upper right')
     ax4.grid()
 
     # signal magnitude
     ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
 
-    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color='C4')
+    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color=color_palette('darkgreen'))
 
     ax5.set_ylabel('Amplitude ($m/s^2$)')
     ax5.set_xlabel('Time (s)')
-    ax5.legend()
+    ax5.legend(loc='upper right')
     ax5.grid()
 
     # make layout tight
