@@ -83,7 +83,7 @@ def color_palette(idx):
         if idx in color_dict.keys():
             color_id = color_dict[idx]
         else:
-            raise IOError(f'Please choose one color from {color_dict.keys()} or give and index')
+            raise ValueError(f'Please choose one color from {color_dict.keys()} or give and index')
 
     return color_id
 
