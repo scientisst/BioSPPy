@@ -803,22 +803,23 @@ def plot_emg(ts=None,
         T = (L - 1) / sampling_rate
         ts_processed = np.linspace(0, T, L, endpoint=True)
         ax3.plot(ts_processed, processed,
-                 linewidth=MAJOR_LW,
-                 label='Processed')
+                 linewidth=MINOR_LW,
+                 label='Processed',
+                 color=color_palette('light-blue'))
         ax3.set_xlabel('Time (s)')
         ax3.set_ylabel('Amplitude')
-        ax3.legend()
-        ax3.grid()
+        ax3.legend(loc='upper right')
+        ax3.grid(ls='--', color=color_palette('light-grey'))
     else:
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212, sharex=ax1)
 
     # raw signal
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
+    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('light-blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
-    ax1.grid()
+    ax1.legend(loc='upper right')
+    ax1.grid(ls='--', color=color_palette('light-grey'))
 
     # filtered signal with onsets
     ymin = np.min(filtered)
@@ -827,16 +828,16 @@ def plot_emg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('light-blue'))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color='m',
+               color=color_palette('dark-red'),
                linewidth=MINOR_LW,
                label='Onsets')
 
     ax2.set_xlabel('Time (s)')
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
-    ax2.grid()
+    ax2.legend(loc='upper right')
+    ax2.grid(ls='--', color=color_palette('light-grey'))
 
     # make layout tight
     fig.tight_layout()
