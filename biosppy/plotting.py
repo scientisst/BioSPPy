@@ -897,11 +897,11 @@ def plot_resp(ts=None,
     # raw signal
     ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
+    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
-    ax1.grid()
+    ax1.legend(loc='upper right')
+    ax1.grid(ls='--', color=color_palette('light-grey'))
 
     # filtered signal with zeros
     ax2 = fig.add_subplot(312, sharex=ax1)
@@ -912,27 +912,30 @@ def plot_resp(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered', color=color_palette('blue'))
     ax2.vlines(ts[zeros], ymin, ymax,
-               color='m',
+               color=color_palette('dark-red'),
                linewidth=MINOR_LW,
-               label='Zero crossings')
+               label='Zero crossings',
+               alpha=0.7)
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
-    ax2.grid()
+    ax2.legend(loc='upper right')
+    ax2.grid(ls='--', color=color_palette('light-grey'))
 
     # heart rate
     ax3 = fig.add_subplot(313, sharex=ax1)
 
     ax3.plot(resp_rate_ts, resp_rate,
              linewidth=MAJOR_LW,
-             label='Respiration Rate')
+             label='Respiration Rate',
+             color=color_palette('blue')
+             )
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Respiration Rate (Hz)')
-    ax3.legend()
-    ax3.grid()
+    ax3.legend(loc='upper right')
+    ax3.grid(ls='--', color=color_palette('light-grey'))
 
     # make layout tight
     fig.tight_layout()
