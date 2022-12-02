@@ -48,16 +48,33 @@ def color_palette(idx):
     """
 
     color_dict = {
+        'blue': '#668998',
+        'dark-blue': '#032A72',
+        'light-blue': '#85B3D1FF',
+
         'green': '#49997c',
-        'blue': '#025f88',
-        'yellow': '#d19c2f',
-        'red': '#ae3918',
-        'lightblue': '#85B3D1FF',
-        'wine': '#6A2E35',
-        'purple': '#A8A4CE',
-        'darkblue': '#032A72',
-        'orange': '#CC7A3F',
-        'darkgreen': '#1A430B'
+        'dark-green': '#1A430B',
+        'light-green': '#95D5B2',
+
+        'red': '#D62839',
+        'dark-red': '#933B4F',
+        'light-red': '#FF5A5F',
+
+        'yellow': '#D19C2F',
+        'dark-yellow': '#FFC300',
+        'light-yellow': '#FFDD55',
+
+        'violet': '#9D4EDD',
+        'dark-violet': '#3C096C',
+        'light-violet': '#E0AAFF',
+
+        'orange': '#FF9F1C',
+        'dark-orange': '#E36414',
+        'light-orange': '#FFBF69',
+
+        'grey': '#ADB5BD',
+        'dark-grey': '#495057',
+        'light-grey': '#E6E6E6'
     }
 
     if type(idx) == int:
