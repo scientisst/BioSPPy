@@ -299,7 +299,7 @@ def plot_acc(ts=None,
     # raw signal (acc_x)
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X', color=color_palette('lightblue'))
+    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X', color=color_palette('light-blue'))
 
     ax1.set_ylabel('Amplitude ($m/s^2$)')
     ax1.legend(loc='upper right')
@@ -317,7 +317,7 @@ def plot_acc(ts=None,
     # raw signal (acc_z)
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z', color=color_palette('darkblue'))
+    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z', color=color_palette('dark-blue'))
 
     ax3.set_ylabel('Amplitude ($m/s^2$)')
     ax3.set_xlabel('Time (s)')
@@ -336,7 +336,7 @@ def plot_acc(ts=None,
     # signal magnitude
     ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
 
-    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color=color_palette('darkgreen'))
+    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color=color_palette('dark-green'))
 
     ax5.set_ylabel('Amplitude ($m/s^2$)')
     ax5.set_xlabel('Time (s)')
