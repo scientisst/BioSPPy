@@ -699,11 +699,11 @@ def plot_eda(ts=None,
     # raw signal
     ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='raw', color=color_palette(0))
+    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
-    ax1.grid()
+    ax1.legend(loc='upper right')
+    ax1.grid(ls='--', color=color_palette('light-grey'))
 
     # filtered signal with onsets, peaks
     ax2 = fig.add_subplot(312, sharex=ax1)
@@ -714,29 +714,29 @@ def plot_eda(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette(0))
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette(1),
-               linewidth=MINOR_LW,
+               color=color_palette('green'),
+               linewidth=MAJOR_LW,
                label='Onsets')
     ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette(2),
-               linewidth=MINOR_LW,
+               color=color_palette('dark-green'),
+               linewidth=MAJOR_LW,
                label='Peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
-    ax2.grid()
+    ax2.legend(loc='upper right')
+    ax2.grid(ls='--', color=color_palette('light-grey'))
 
     # amplitudes
     ax3 = fig.add_subplot(313, sharex=ax1)
 
-    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes', color=color_palette(3))
+    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes', color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Amplitude')
-    ax3.legend()
-    ax3.grid()
+    ax3.legend(loc='upper right')
+    ax3.grid(ls='--', color=color_palette('light-grey'))
 
     # make layout tight
     fig.tight_layout()
