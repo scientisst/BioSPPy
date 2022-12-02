@@ -1492,18 +1492,18 @@ def plot_pcg(ts=None,
 
     """
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12, 5))
     fig.suptitle('PCG Summary')
     gs = gridspec.GridSpec(6, 2)
 
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='raw')
+    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend()
-    ax1.grid()
+    ax1.legend(loc='upper right')
+    ax1.grid(ls='--', color=color_palette('light-grey'))
 
     # filtered signal with rpeaks
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
@@ -1514,38 +1514,40 @@ def plot_pcg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
     ax2.vlines(ts[peaks], ymin, ymax,
-               color='m',
-               linewidth=MINOR_LW,
+               color=color_palette('dark-red'),
+               alpha=0.6,
+               linewidth=MAJOR_LW,
                label='Peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend()
-    ax2.grid()
+    ax2.legend(loc='upper right')
+    ax2.grid(ls='--', color=color_palette('light-grey'))
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate')
+    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate', color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend()
-    ax3.grid()
+    ax3.legend(loc='upper right')
+    ax3.grid(ls='--', color=color_palette('light-grey'))
 
     # heart sounds
-    ax4 = fig.add_subplot(gs[1:5, 1])
+    ax4 = fig.add_subplot(gs[1:5, 1], sharex=ax1)
 
-    ax4.plot(ts, filtered, linewidth=MAJOR_LW, label='PCG heart sounds')
+    ax4.plot(ts, filtered, linewidth=MINOR_LW, label='PCG heart sounds', color=color_palette('blue'))
     for i in range(0, len(peaks)):
         text = "S" + str(int(heart_sounds[i]))
-        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=13)
+        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=12,
+                     color=color_palette('dark-grey'))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Heart sounds')
-    ax4.grid()
+    ax4.grid(ls='--', color=color_palette('light-grey'))
 
     # make layout tight
     gs.tight_layout(fig)
