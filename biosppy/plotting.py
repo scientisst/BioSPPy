@@ -1281,11 +1281,11 @@ def plot_ecg(ts=None,
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color=color_palette('lightblue'))
+    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
     ax1.legend(loc='upper right')
-    ax1.grid()
+    ax1.grid(ls='--', color=color_palette('light-grey'))
 
     # filtered signal with rpeaks
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
@@ -1296,35 +1296,37 @@ def plot_ecg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('lightblue'))
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
     ax2.vlines(ts[rpeaks], ymin, ymax,
-               color=color_palette('darkblue'),
+               color=color_palette('dark-red'),
                linewidth=MINOR_LW,
-               label='R-peaks')
+               alpha=0.5,
+               linestyle='--')
+    ax2.plot(ts[rpeaks], filtered[rpeaks]*1.05, ls='None', marker=7, color=color_palette('dark-red'), label='R-peaks')
 
     ax2.set_ylabel('Amplitude')
     ax2.legend(loc='upper right')
-    ax2.grid()
+    ax2.grid(ls='--', color=color_palette('light-grey'))
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('lightblue'))
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
     ax3.legend(loc='upper right')
-    ax3.grid()
+    ax3.grid(ls='--', color=color_palette('light-grey'))
 
     # templates
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.7, color=color_palette('orange'))
+    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.5, color=color_palette('blue'))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Templates')
-    ax4.grid()
+    ax4.grid(ls='--', color=color_palette('light-grey'))
 
     # make layout tight
     gs.tight_layout(fig)
