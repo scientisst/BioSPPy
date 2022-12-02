@@ -478,3 +478,66 @@ def ppg_segmentation(signal=None,
     names = ('onsets', 'peaks', 'segments_loc')
 
     return utils.ReturnTuple(args, names)
+
+
+def extract_templates(signal=None,
+                      sampling_rate=1000.,
+                      onsets=None,
+                      peaks=None,
+                      segments_loc=None):
+    """Extracts the templates from the PPG signal, which are aligned with their systolic peaks. To achieve this, the
+    segments are padded with NaNs. Should be used in combination with signals.ppg.ppg_segmentation.
+
+    Parameters
+    ----------
+    signal : array
+        Filtered PPG signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+    onsets : array
+        List of onsets (i.e., start of beats) of the PPG waves.
+    peaks : array
+        List of PPG systolic peaks.
+    segments_loc : array
+        Start and end indices for each selected pulse segment.
+
+    Returns
+    -------
+    templates_ts : array
+        Time axis common to all templates.
+    templates : array
+        List of templates aligned with the systolic peaks.
+
+    """
+    # initialize output
+    templates = []
+
+    # find the longest onset-peak duration
+    shifts = peaks - onsets
+    max_shift = np.max(peaks - onsets)
+
+    # left padding
+    max_len = 0
+    for i in range(len(segments_loc)):
+        segment = signal[segments_loc[i, 0]: segments_loc[i, 1]]
+        segment = np.pad(segment, max_shift - shifts[i], mode='constant', constant_values=(np.nan,))
+        templates.append(segment)
+
+        # find the largest segment
+        if len(segment) > max_len:
+            max_len = len(segment)
+
+    # right padding
+    for index, segment in enumerate(templates):
+        templates[index] = np.pad(segment, (0, max_len - len(segment)), mode='constant', constant_values=(np.nan,))
+
+    templates = np.asarray(templates).T
+
+    # time vector
+    templates_ts = np.arange(-max_shift, max_len - max_shift) / sampling_rate
+
+    # output
+    args = (templates_ts, templates)
+    names = ('templates_ts', 'templates')
+
+    return utils.ReturnTuple(args, names)
