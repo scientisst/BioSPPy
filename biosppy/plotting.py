@@ -830,7 +830,8 @@ def plot_emg(ts=None,
 
     ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('light-blue'))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette('dark-red'),
+               color=color_palette('green'),
+               alpha=0.6,
                linewidth=MINOR_LW,
                label='Onsets')
 
