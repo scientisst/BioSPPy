@@ -44,8 +44,12 @@ def ppg(signal=None, sampling_rate=1000., show=True):
         Signal time axis reference (seconds).
     filtered : array
         Filtered PPG signal.
-    onsets : array
-        Indices of PPG pulse onsets.
+    peaks : array
+        Indices of PPG pulse peaks.
+    templates_ts : array
+        Templates time axis reference (seconds).
+    templates : array
+        Extracted heartbeat templates.
     heart_rate_ts : array
         Heart rate time axis reference (seconds).
     heart_rate : array
@@ -70,8 +74,12 @@ def ppg(signal=None, sampling_rate=1000., show=True):
                                       frequency=[1, 8],
                                       sampling_rate=sampling_rate)
 
-    # find onsets
-    onsets, _ = find_onsets_elgendi2013(signal=filtered, sampling_rate=sampling_rate)
+    # find peaks
+    peaks, _ = find_onsets_elgendi2013(signal=filtered, sampling_rate=sampling_rate)
+
+    # extract templates
+    onsets, peaks, segments_loc = ppg_segmentation(filtered, sampling_rate, peaks)
+    templates_ts, templates = extract_templates(filtered, sampling_rate, onsets, peaks, segments_loc)
 
     # compute heart rate
     hr_idx, hr = st.get_heart_rate(beats=onsets,
@@ -97,12 +105,14 @@ def ppg(signal=None, sampling_rate=1000., show=True):
                           show=True)
 
     # output
-    args = (ts, filtered, onsets, ts_hr, hr)
-    names = ('ts', 'filtered', 'onsets', 'heart_rate_ts', 'heart_rate')
+    args = (ts, filtered, peaks, templates_ts, templates, ts_hr, hr)
+    names = ('ts', 'filtered', 'peaks', 'templates_ts', 'templates', 'heart_rate_ts', 'heart_rate')
 
     return utils.ReturnTuple(args, names)
 
-def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, beatwindow=0.667, beatoffset=0.02, mindelay=0.3):
+
+def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, beatwindow=0.667, beatoffset=0.02,
+                            mindelay=0.3):
     """
     Determines onsets of PPG pulses.
 
