@@ -11,7 +11,7 @@ def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate= 100
     signal : array
         Input signal.
     min_amplitude : float, optional
-        Minimum treshold by which to exclude SCRs.
+        Minimum threshold by which to exclude SCRs.
     filt: bool
         If to filter signal to remove noise and low amplitude events.
     size: float
