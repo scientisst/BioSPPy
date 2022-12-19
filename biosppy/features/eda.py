@@ -119,7 +119,7 @@ def rec_times(signal, onsets, peaks):
         half_rec_amp = 0.5 * a[i] + signal[onsets][i]
         six_rec_amp = 0.37 * a[i] + signal[onsets][i]
         try:
-            wind = np.array(signal[pks[i]:onsets[i + 1]])
+            wind = np.array(signal[peaks[i]:onsets[i + 1]])
         except:
             wind = np.array(signal[pks[i]:])
         half_rec_idx = np.argwhere(wind <= half_rec_amp)
