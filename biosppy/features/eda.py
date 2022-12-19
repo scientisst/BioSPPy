@@ -133,7 +133,7 @@ def rec_times(signal, onsets, peaks):
 
         if len(six_rec_idx) > 0:
             six_rec += [six_rec_idx[0][0] + peaks[i] - onsets[i]]
-            six_rec_ts += [six_rec_idx[0][0] + pks[i]]            
+            six_rec_ts += [six_rec_idx[0][0] + peaks[i]]
         else:
             six_rec += [None]
             six_rec_ts += [None]
