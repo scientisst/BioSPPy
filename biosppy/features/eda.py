@@ -85,7 +85,7 @@ def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate= 100
     return utils.ReturnTuple(tuple(args), tuple(names))
 
 
-def rec_times(signal, onsets, pks):
+def rec_times(signal, onsets, peaks):
     """ Returns EDA recovery times.
 
     Parameters
