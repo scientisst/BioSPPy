@@ -19,8 +19,8 @@ def freq_features(signal, sampling_rate):
         ----------
         signal : array
             Input signal.
-        FS : float
-            Sampling frequency
+        sampling_rate : float
+            Sampling frequency (Hz).
 
         Returns
         -------
