@@ -440,7 +440,7 @@ def time_features(signal, sampling_rate):
     args += [rangeD1]
     names += ['rangeD1']
 
-    # iterquartil range of differences
+    # interquartile range of differences
     try:
         iqrD1 = iqr(sig_diff)
     except Exception as e:
