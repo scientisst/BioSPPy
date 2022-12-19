@@ -110,7 +110,7 @@ def freq_features(signal, sampling_rate):
     # harmonic sum
     try:
         if fundamental_frequency > 0:
-            harmonics = np.array([n * fundamental_frequency for n in range(2, int((SR/2)/fundamental_frequency), 1)]).astype(int)
+            harmonics = np.array([n * fundamental_frequency for n in range(2, int((sampling_rate/2)/fundamental_frequency), 1)]).astype(int)
             sp_hrm = spectrum[np.array([np.where(f >= h)[0][0] for h in harmonics])]
             sum_harmonics = np.sum(sp_hrm)
         else:
