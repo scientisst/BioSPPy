@@ -126,7 +126,7 @@ def rec_times(signal, onsets, peaks):
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
         if len(half_rec_idx) > 0:
-            half_rec += [half_rec_idx[0][0] + pks[i] - onsets[i]]
+            half_rec += [half_rec_idx[0][0] + peaks[i] - onsets[i]]
             hlf_rec_ts += [half_rec_idx[0][0] + pks[i]]
         else:
             half_rec += [None]
