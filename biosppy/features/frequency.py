@@ -91,7 +91,7 @@ def freq_features(signal, sampling_rate):
     args, names = [], []
 
     # temporal
-    _fts = time.time_features(spectrum, SR)
+    _fts = time.time_features(spectrum, sampling_rate)
     fts_name = [str("FFT_" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
