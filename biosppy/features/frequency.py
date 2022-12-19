@@ -146,7 +146,6 @@ def freq_features(signal, sampling_rate):
     args += [spectral_roll_off]
     names += ['spectral_roll_off']
 
-
     # histogram
     try:
         _hist = list(np.histogram(spectrum, bins=5)[0])
