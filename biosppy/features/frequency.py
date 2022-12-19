@@ -72,6 +72,7 @@ def freq_features(signal, sampling_rate):
         - temp fts on [0.05−0.50] was split into five bands + stats fts on FFT  - Shukla, Jainendra, et al. "Feature extraction and selection for emotion recognition from electrodermal activity." IEEE Transactions on Affective Computing 12.4 (2019): 857-869
         - FFT for bands (0.1, 0.2), F2 (0.2, 0.3) and F3 (0.3, 0.4) - Sánchez-Reolid, R., de la Rosa, F.L., Sánchez-Reolid, D., López, M.T., Fernández-Caballero, A. (2021). Feature and Time Series Extraction in Artificial Neural Networks for Arousal Detection from Electrodermal Activity. In: Rojas, I., Joya, G., Català, A. (eds) Advances in Computational Intelligence. IWANN 2021. Lecture Notes in Computer Science(), vol 12861. Springer, Cham. 
         """
+        
     # check inputs
     assert len(signal) > 0, 'Signal size < 1'
 
