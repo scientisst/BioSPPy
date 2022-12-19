@@ -3,7 +3,7 @@ from .. import utils
 from .. import tools as st
 
 
-def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate= 1000.):
+def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate=1000.):
     """ Returns characteristic EDA events.
 
     Parameters
