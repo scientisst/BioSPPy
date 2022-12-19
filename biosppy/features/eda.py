@@ -215,7 +215,7 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
     args += [rise_ts]
     names += ['rise_ts']
 
-    half_rec, six_rec = rec_times(signal, onsets, pks)
+    half_rec, six_rec = rec_times(signal, onsets, peaks)
         
     args += [half_rec]
     names += ['half_rec']
