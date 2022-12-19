@@ -160,7 +160,7 @@ def time_features(signal, sampling_rate):
         Amplitude range of 2nd differences.
 
     iqrD2 : float
-        Interquartil range of 2nd differences.
+        Interquartile range of 2nd differences.
 
     autocorr : float
         Signal autocorrelation sum.
