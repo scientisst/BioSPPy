@@ -194,7 +194,7 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
     onsets, pks, amps, _ = eda_param(signal, filt=filt, size=size, min_amplitude=min_amplitude, sampling_rate=sampling_rate)
     args += [onsets]
     names += ['onsets']
-    args += [pks]
+    args += [peaks]
     names += ['peaks']
     args += [amps]
     names += ['amps']
