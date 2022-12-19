@@ -157,7 +157,7 @@ def freq_features(signal, sampling_rate):
     names += ['spectral_hist_' + str(i) for i in range(len(_hist))]
 
     # bands
-    spectrum = np.nan_to_num(np.abs(np.fft.fft(signal, SR*5)))
+    spectrum = np.nan_to_num(np.abs(np.fft.fft(signal, sampling_rate*5)))
     f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
 
     spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
