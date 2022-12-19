@@ -296,7 +296,7 @@ def time_features(signal, sampling_rate):
     args += [_range]
     names += ['range']
 
-    # iterquartil range 
+    # interquartile range 
     try:
         _iqr = iqr(signal)
     except Exception as e:
