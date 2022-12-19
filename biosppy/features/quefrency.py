@@ -155,6 +155,7 @@ def quefrency_features(signal=None, sampling_rate=100):
   
     # check input
     assert len(signal) > 0, 'Signal size < 1'
+
     # ensure numpy
     signal = np.array(signal)
     args, names = [], []
