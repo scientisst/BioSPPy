@@ -27,55 +27,38 @@ def freq_features(signal, sampling_rate):
         -------
         spectral_maxpeaks : int
             Number of peaks in the spectrum signal.
-
         spect_var : float
             Amount of the variation of the spectrum across time.
-
         curve_distance : float
             Euclidean distance between the cumulative sum of the signal spectrum and evenly spaced numbers across the signal lenght.
-
         spectral_roll_off : float
             Frequency so 95% of the signal energy is below that value.
-
         spectral_roll_on : float
             Frequency so 5% of the signal energy is below that value.
-
         spectral_dec : float
             Amount of decreasing in the spectral amplitude.
-
         spectral_slope : float
             Amount of decreasing in the spectral amplitude.
-
         spectral_centroid : float
             Centroid of the signal spectrum.
-
         spectral_spread : float
             Variance of the signal spectrum i.e. how it spreads around its mean value.
-
         spectral_kurtosis : float
             Kurtosis of the signal spectrum i.e. describes the flatness of the spectrum distribution.
-
         spectral_skewness : float
             Skewness of the signal spectrum i.e. describes the asymmetry of the spectrum distribution.
-
         max_frequency : float
             Maximum frequency of the signal spectrum maximum amplitude.
-
         fundamental_frequency : float
             Fundamental frequency of the signal.
-
         max_power_spectrum : float
             Spectrum maximum value.
-
         mean_power_spectrum : float
             Spectrum mean value.
-
         spectral_skewness : float
             Spectrum Skewness.
-
         spectral_kurtosis : float
             Spectrum Kurtosis.
-
         spectral_hist_ : list
             Histogram of the signal spectrum.
 
