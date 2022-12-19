@@ -111,7 +111,7 @@ def rec_times(signal, onsets, peaks):
     onsets = np.array(onsets).astype(int) 
 
     a = np.array(signal[peaks[:]] - signal[onsets[:]])
-    li = min(len(onsets), len(pks))
+    li = min(len(onsets), len(peaks))
 
     half_rec, hlf_rec_ts = [], []
     six_rec, six_rec_ts = [], []
