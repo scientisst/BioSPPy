@@ -126,7 +126,7 @@ def rec_times(signal, onsets, peaks):
         
         if len(half_rec_idx) > 0:
             half_rec += [half_rec_idx[0][0] + peaks[i] - onsets[i]]
-            hlf_rec_ts += [half_rec_idx[0][0] + pks[i]]
+            hlf_rec_ts += [half_rec_idx[0][0] + peaks[i]]
         else:
             half_rec += [None]
             hlf_rec_ts += [None]
