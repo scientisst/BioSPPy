@@ -81,7 +81,7 @@ def freq_features(signal, sampling_rate):
     window = np.hamming(len(signal))
     signal = signal * window
 
-    spectrum = np.abs(np.fft.fft(signal, SR))
+    spectrum = np.abs(np.fft.fft(signal, sampling_rate))
     
     f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
     spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
