@@ -78,11 +78,6 @@ def freq_features(signal, sampling_rate):
 
     # ensure numpy
     signal = np.array(signal)
-    #f_w, sp_w = st.welch_spectrum(signal, sampling_rate=FS)
-    #f_PS, sp_PS = st.power_spectrum(signal, sampling_rate=FS)
-    #f, spectrum = st.welch_spectrum(signal, size=len(signal)//2, sampling_rate=FS)
-    #f_scW, ps_scW = scipy.signal.welch(signal)
-    #f_scW = np.abs(f_scW*FS)
     window = np.hamming(len(signal))
     signal = signal * window
 
