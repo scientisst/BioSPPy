@@ -66,7 +66,6 @@ def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate= 100
             s = signal[zeros[z]:zeros[z + 1]]  # signal amplitude between event
             
         pk = st.find_extrema(signal=s, mode='max')[0]  # get pk between events
-        #print("_pks", pks)
         for p in pk:
             if (s[p] - s[0]) > min_amplitude:  # only count events with high amplitude
                 pks += [zeros[z] + p]
