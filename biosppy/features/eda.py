@@ -210,7 +210,7 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
 
     # rise_ts
     try:
-        rise_ts = pks - onsets
+        rise_ts = peaks - onsets
     except:
         rise_ts = None
     args += [rise_ts]
