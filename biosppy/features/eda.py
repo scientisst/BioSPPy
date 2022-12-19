@@ -201,7 +201,7 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
 
     # phasic_rate
     try:
-        phasic_rate = sampling_rate * (60. / np.diff(pks))
+        phasic_rate = sampling_rate * (60. / np.diff(peaks))
     except:
         phasic_rate = None
     args += [phasic_rate]
