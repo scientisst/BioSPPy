@@ -107,7 +107,7 @@ def freq_features(signal, sampling_rate):
     args += [fundamental_frequency]
     names += ['fundamental_frequency']
 
-    ## harmonic sum
+    # harmonic sum
     try:
         if fundamental_frequency > 0:
             harmonics = np.array([n * fundamental_frequency for n in range(2, int((SR/2)/fundamental_frequency), 1)]).astype(int)
