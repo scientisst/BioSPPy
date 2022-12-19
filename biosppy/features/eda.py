@@ -182,7 +182,6 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
 
     six_rec : list
         63 % recovery times, i.e. time between peak and 50% amplitude.
-
     """
     # ensure numpy
     assert len(signal) > 0, "len signal < 1"
