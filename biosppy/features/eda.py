@@ -78,7 +78,7 @@ def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate= 100
 
     args, names = [], []
     names += ["onsets", "peaks", "amplitudes", "end"]
-    args += [onsets, pks, amps, end]
+    args += [onsets, peaks, amps, end]
 
     args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
