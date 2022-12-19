@@ -107,7 +107,7 @@ def rec_times(signal, onsets, peaks):
 
     """
     assert len(signal) > 1, "len signal <1"
-    pks = np.array(pks).astype(int) 
+    peaks = np.array(peaks).astype(int) 
     onsets = np.array(onsets).astype(int) 
 
     a = np.array(signal[peaks[:]] - signal[onsets[:]])
