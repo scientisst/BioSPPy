@@ -86,7 +86,7 @@ def freq_features(signal, sampling_rate):
     f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
     spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
     spectrum /= len(spectrum)
-    f = np.abs(f[:len(f)//2]*SR)
+    f = np.abs(f[:len(f)//2]*sampling_rate)
 
     args, names = [], []
 
