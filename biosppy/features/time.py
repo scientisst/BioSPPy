@@ -139,7 +139,7 @@ def time_features(signal, sampling_rate):
         Amplitude range of differences.
 
     iqrd1 : float
-        interquartil range of differences.
+        interquartile range of differences.
 
     meanD2 : float
         Mean of 2nd differences.
