@@ -91,7 +91,7 @@ def time_features(signal, sampling_rate):
         Signal range amplitude.
     
     iqr : float
-        Interquartil range
+        Interquartile range
 
     mean : float
         Signal average
