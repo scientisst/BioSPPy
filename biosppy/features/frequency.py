@@ -8,7 +8,7 @@ from . import time
 from scipy import interpolate
 
 
-def getbands(frequencies, fband= [0, 1]):
+def getbands(frequencies, fband):
    band = np.argwhere((frequencies >= fband[0]) & (frequencies <= fband[1])).reshape(-1)
    return frequencies[band]
 
