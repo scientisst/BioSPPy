@@ -164,6 +164,7 @@ def freq_features(signal, sampling_rate):
     spectrum /= len(spectrum)
     f = np.abs(f[:len(f)//2]*sampling_rate)
 
+    # resampling
     _f = interpolate.interp1d(f, spectrum)
     res_sr = 500  # new sampling rate
     f = np.arange(f[0], f[-1], 1/resSR)
