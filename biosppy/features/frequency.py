@@ -173,7 +173,7 @@ def freq_features(signal, sampling_rate):
     f_b = getbands(f, fband = [0.05, 0.1])
     
     # temporal
-    _fts = time.time_features(f_b, resSR)
+    _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_005_01" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
