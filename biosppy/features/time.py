@@ -1,13 +1,27 @@
+# -*- coding: utf-8 -*-
+"""
+biosppy.features.time
+-------------------
+This module provides methods to extract time features.
+:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:license: BSD 3-clause, see LICENSE for more details.
+"""
+
+# Imports
+# 3rd party
 import numpy as np
-from .. import utils
 from sklearn import linear_model 
-from ..signals import tools
 from scipy.stats import iqr, stats, entropy
+
+# local
+from .. import utils
+from ..signals import tools
 from ..stats import pearson_correlation
 
 
 def mob(signal):
-    """Compute signal mobility hjorth feature.
+    """
+    Compute signal mobility hjorth feature.
 
     Parameters
     ----------
@@ -17,8 +31,10 @@ def mob(signal):
     Returns
     -------
     mobility : float
-        Signal mobility. 
+        Signal mobility.
+
     """
+
     args, names = [], []
     d = np.diff(signal)
     args += [np.sqrt(np.var(d)/np.var(signal))]
@@ -28,7 +44,8 @@ def mob(signal):
 
 
 def com(signal):
-    """Compute signal complexity hjorth feature.
+    """
+    Compute signal complexity hjorth feature.
 
     Parameters
     ----------
@@ -39,7 +56,9 @@ def com(signal):
     -------
     complexity : float
         Signal complexity. 
+
     """
+
     args, names = [], []
     d = np.diff(signal)
     args += [mob(d)["mobility"]/mob(signal)["mobility"]]
@@ -49,7 +68,8 @@ def com(signal):
 
 
 def chaos(signal):
-    """Compute signal chaos hjorth feature.
+    """
+    Compute signal chaos hjorth feature.
 
     Parameters
     ----------
@@ -60,7 +80,9 @@ def chaos(signal):
     -------
     chaos : float
         Signal chaos. 
+
     """
+
     args, names = [], []
     d = np.diff(signal)
     args += [com(d)['complexity']/com(signal)['complexity']]
@@ -70,7 +92,9 @@ def chaos(signal):
 
 
 def time_features(signal, sampling_rate):
-    """Compute various time metrics describing the signal.
+    """
+
+    Compute various time metrics describing the signal.
 
     Parameters
     ----------
@@ -79,168 +103,126 @@ def time_features(signal, sampling_rate):
 
     sampling_rate : float
         Sampling Rate
+
     Returns
     -------
     max : float
         Signal maximum amplitude.
-
     min: float
         Signal minimum amplitude.
-
     range: float
         Signal range amplitude.
-    
     iqr : float
         Interquartile range
-
     mean : float
         Signal average
-    
     std : float
         Signal standard deviation
-    
-    maxToMean: float
+    max_to_mean: float
         Signal maximum aplitude to mean.
-    
     dist : float
         Length of the signal (sum of abs diff)
-
-    meanAD1 : float
+    mean_AD1 : float
         Mean absolute differences.
-
-    medAD1 : float
+    med_AD1 : float
         Median absolute differences.
-
-    minAD1 : float
+    min_AD1 : float
         Min absolute differences.
-
-    maxAD1 : float
+    max_AD1 : float
         Maximum absolute differences.
-
-    meanD1 : float
+    mean_D1 : float
         Mean of differences.
-
-    medD1 : float
+    me_dD1 : float
         Median of differences.
-
-    stdD1 : float
+    std_D1 : float
         Standard deviation of differences.
-
-    maxD1 : float
+    max_D1 : float
         Max of differences.
-
-    minD1 : float
+    min_D1 : float
         Min of differences.
-
-    sumD1 : float
+    sum_D1 : float
         Sum of differences.
-
-    rangeD1 : float
+    range_D1 : float
         Amplitude range of differences.
-
-    iqrd1 : float
+    iqr_d1 : float
         interquartile range of differences.
-
-    meanD2 : float
+    mean_D2 : float
         Mean of 2nd differences.
-
-    stdD2 : float
+    std_D2 : float
         Standard deviation of 2nd differences.
-
-    maxD2 : float
+    max_D2 : float
         Max of 2nd differences.
-
-    minD2 : float
+    min_D2 : float
         Min of 2nd differences.
-
-    sumD2: float
+    sum_D2: float
         Sum of 2nd differences.
-
-    rangeD2 : float
+    range_D2 : float
         Amplitude range of 2nd differences.
-
-    iqrD2 : float
+    iqr_D2 : float
         Interquartile range of 2nd differences.
-
     autocorr : float
         Signal autocorrelation sum.
-
-    zeroCross : int
+    zero_cross : int
         Number of times the sinal crosses the zero axis.
-
-    CminPks : int
+    min_peaks : int
         Number of minimum peaks.
-
-    CmaxPks : int
+    max_peaks : int
         Number of maximum peaks.   
-
-    totalE : float
+    total_e : float
         Total energy.
-
-    linRegSlope : float
+    lin_reg_slope : float
         Slope of linear regression. 
-    
-    linRegb : float
+    lin_reg_b : float
         Interception coefficient b of linear regression. 
-
-    degreLin: float
-        Degree of linearity
-
+    corr_lin_reg: float
+        Correlation to linear regression
     mobility: float
         ratio of the variance between the first derivative and the signal
-
     complexity: float
         ratio between the mobility of the derivative and the mobility of the signal
-
     chaos: float
         ratio between the complexity of the derivative and the complexity of the signal
-
     hazard: float
         ratio between the chaos of the derivative and the chaos of the signal
-
     kurtosis : float
         Signal kurtosis (unbiased).
-
     skewness : float
         Signal skewness (unbiased).
-
     rms : float
         Root Mean Square.
-
     midhinge: float
         average of first and third quartile
-
     trimean: float
         weighted average of 1st, 2nd and 3rd quartiles
-
     stat_hist : list
         Histogram.
-    
     entropy : float
         Signal entropy.
-   
+    
     References
     ----------
-    TSFEL library: https://github.com/fraunhoferportugal/tsfel
-    Peeters, Geoffroy. (2004). A large set of audio features for sound description (similarity and classification) in the CUIDADO project.
-    Veeranki, Yedukondala Rao, Nagarajan Ganapathy, and Ramakrishnan Swaminathan. "Non-Parametric Classifiers Based Emotion Classification Using Electrodermal Activity and Modified Hjorth Features." MIE. 2021.
-    Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101.
+    - TSFEL library: https://github.com/fraunhoferportugal/tsfel
+    - Peeters, Geoffroy. (2004). A large set of audio features for sound description (similarity and classification) in the CUIDADO project.
+    - Veeranki, Yedukondala Rao, Nagarajan Ganapathy, and Ramakrishnan Swaminathan. "Non-Parametric Classifiers Based Emotion Classification Using Electrodermal Activity and Modified Hjorth Features." MIE. 2021.
+    - Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101.
 
     """
 
     # check input
     assert len(signal) > 0, 'Signal size < 1'
+    
     # ensure numpy
     signal = np.array(signal)
    
-    # helpers
+    # start helpers
     args, names = [], []
     try:
         sig_diff = np.diff(signal)
     except Exception as e:
         print(e)
         sig_diff = []
-    ## 2nd derivative
+    
+    # 2nd derivative
     try:
         sig_diff_2 = np.diff(sig_diff)
     except Exception as e:
@@ -266,8 +248,7 @@ def time_features(signal, sampling_rate):
     except Exception as e:
         print(e)   
         energy = []
-
-    ### end helpers
+    # end helpers
     
     # signal max
     try:
@@ -330,7 +311,7 @@ def time_features(signal, sampling_rate):
         print(e)   
         maxToMean = None
     args += [maxToMean]
-    names += ['maxToMean']
+    names += ['max_to_mean']
 
     # distance
     try:
@@ -343,174 +324,174 @@ def time_features(signal, sampling_rate):
 
     # mean absolute differences
     try:
-        meanAD1 = np.mean(np.abs(sig_diff))
+        mean_AD1 = np.mean(np.abs(sig_diff))
     except Exception as e:
         print(e)   
-        meanAD1 = None
-    args += [meanAD1]
-    names += ['meanAD1']
+        mean_AD1 = None
+    args += [mean_AD1]
+    names += ['mean_AD1']
 
     # median absolute differences
     try:
-        medAD1 = np.median(np.abs(sig_diff))
+        med_AD1 = np.median(np.abs(sig_diff))
     except Exception as e:
         print(e)
-        medAD1 = None
-    args += [medAD1]
-    names += ['medAD1']
+        med_AD1 = None
+    args += [med_AD1]
+    names += ['med_AD1']
 
     # min absolute differences
     try:
-        minAD1 = np.min(np.abs(sig_diff))
+        min_AD1 = np.min(np.abs(sig_diff))
     except Exception as e:
         print(e)   
-        minAD1 = None
-    args += [minAD1]
-    names += ['minAD1']
+        min_AD1 = None
+    args += [min_AD1]
+    names += ['min_AD1']
 
     # max absolute differences
     try:
-        maxAD1 = np.max(np.abs(sig_diff))
+        max_AD1 = np.max(np.abs(sig_diff))
     except Exception as e:
         print(e)   
-        maxAD1 = None
-    args += [maxAD1]
-    names += ['maxAD1']
+        max_AD1 = None
+    args += [max_AD1]
+    names += ['max_AD1']
 
     # mean of differences
     try:
-        meanD1 = np.mean(sig_diff)
+        mean_D1 = np.mean(sig_diff)
     except Exception as e:
         print(e)  
-        meanD1 = None
-    args += [meanD1]
-    names += ['meanD1']
+        mean_D1 = None
+    args += [mean_D1]
+    names += ['mean_D1']
 
     # median of differences
     try:
-        medD1 = np.median(sig_diff)
+        med_D1 = np.median(sig_diff)
     except Exception as e:
         print(e)  
-        medD1 = None
-    args += [medD1]
-    names += ['medD1']
+        med_D1 = None
+    args += [med_D1]
+    names += ['med_D1']
 
     # std of differences
     try:
-        stdD1 = np.std(sig_diff)
+        std_D1 = np.std(sig_diff)
     except Exception as e:
         print(e)  
-        stdD1 = None
-    args += [stdD1]
-    names += ['stdD1']
+        std_D1 = None
+    args += [std_D1]
+    names += ['std_D1']
     
     # max of differences
     try:
-        maxD1 = np.max(sig_diff)
+        max_D1 = np.max(sig_diff)
     except Exception as e:
         print(e)  
-        maxD1 = None
-    args += [maxD1]
-    names += ['maxD1']
+        max_D1 = None
+    args += [max_D1]
+    names += ['max_D1']
 
     # min of differences
     try:
-        minD1 = np.min(sig_diff)
+        min_D1 = np.min(sig_diff)
     except Exception as e:
         print(e)   
-        minD1 = None
-    args += [minD1]
-    names += ['minD1']
+        min_D1 = None
+    args += [min_D1]
+    names += ['min_D1']
 
     # sum of differences
     try:
-        sumD1 = np.sum(sig_diff)
+        sum_D1 = np.sum(sig_diff)
     except Exception as e:
         print(e)
-        sumD1 = None
-    args += [sumD1]
-    names += ['sumD1']
+        sum_D1 = None
+    args += [sum_D1]
+    names += ['sum_D1']
 
     # range of differences
     try:
-        rangeD1 = np.max(sig_diff) - np.min(sig_diff)
+        range_D1 = np.max(sig_diff) - np.min(sig_diff)
     except Exception as e:
         print(e)
-        rangeD1 = None
-    args += [rangeD1]
-    names += ['rangeD1']
+        range_D1 = None
+    args += [range_D1]
+    names += ['range_D1']
 
     # interquartile range of differences
     try:
-        iqrD1 = iqr(sig_diff)
+        iqr_D1 = iqr(sig_diff)
     except Exception as e:
         print(e)
-        iqrD1 = None
-    args += [iqrD1]
-    names += ['iqrD1']
+        iqr_D1 = None
+    args += [iqr_D1]
+    names += ['iqr_D1']
 
     # mean of 2nd differences
     try:
-        meanD2 = np.mean(sig_diff_2)
+        mean_D2 = np.mean(sig_diff_2)
     except Exception as e:
         print(e)   
-        meanD2 = None
-    args += [meanD2]
-    names += ['meanD2']
+        mean_D2 = None
+    args += [mean_D2]
+    names += ['mean_D2']
 
     # std of 2nd differences
     try:
-        stdD2 = np.std(sig_diff_2)
+        std_D2 = np.std(sig_diff_2)
     except Exception as e:
         print(e)   
-        stdD2 = None
-    args += [stdD2]
-    names += ['stdD2']
+        std_D2 = None
+    args += [std_D2]
+    names += ['std_D2']
     
     # max of 2nd differences
     try:
-        maxD2 = np.max(sig_diff_2)
+        max_D2 = np.max(sig_diff_2)
     except Exception as e:
         print(e)   
-        maxD2 = None
-    args += [maxD2]
-    names += ['maxD2']
+        max_D2 = None
+    args += [max_D2]
+    names += ['max_D2']
 
     # min of 2nd differences
     try:
-        minD2 = np.min(sig_diff_2)
+        min_D2 = np.min(sig_diff_2)
     except Exception as e:
         print(e)   
-        minD2 = None
-    args += [minD2]
-    names += ['minD2']
+        min_D2 = None
+    args += [min_D2]
+    names += ['min_D2']
 
     # sum of 2nd differences
     try:
-        sumD2 = np.sum(sig_diff_2)
+        sum_D2 = np.sum(sig_diff_2)
     except Exception as e:
         print(e)   
-        sumD2 = None
-    args += [sumD2]
-    names += ['sumD2']
+        sum_D2 = None
+    args += [sum_D2]
+    names += ['sum_D2']
 
     # range of 2nd differences
     try:
-        rangeD2 = np.max(sig_diff_2) - np.min(sig_diff_2)
+        range_D2 = np.max(sig_diff_2) - np.min(sig_diff_2)
     except Exception as e:
         print(e)   
-        rangeD2 = None
-    args += [rangeD2]
-    names += ['rangeD2']
+        range_D2 = None
+    args += [range_D2]
+    names += ['range_D2']
 
     # interquartile range of 2nd differences
     try:
-        iqrD2 = iqr(sig_diff_2)
+        iqr_D2 = iqr(sig_diff_2)
     except Exception as e:
         print(e)
-        iqrD2 = None
-    args += [iqrD2]
-    names += ['iqrD2']
+        iqr_D2 = None
+    args += [iqr_D2]
+    names += ['iqr_D2']
 
     # autocorrelation sum
     try:
@@ -523,65 +504,65 @@ def time_features(signal, sampling_rate):
 
     # zero_cross
     try:
-        zeroCross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
+        zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
     except Exception as e:
         print(e)   
-        zeroCross = None
-    args += [zeroCross]
-    names += ['zeroCross']
+        zero_cross = None
+    args += [zero_cross]
+    names += ['zero_cross']
 
     # number of minimum peaks
     try:
-        CminPks = len(tools.find_extrema(signal, "min")["extrema"])
+        min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
     except Exception as e:
         print(e)   
-        CminPks = None
-    args += [CminPks]
-    names += ['CminPks']
+        min_peaks = None
+    args += [min_peaks]
+    names += ['min_peaks']
 
     # number of maximum peaks
     try:
-        CmaxPks = len(tools.find_extrema(signal, "max")["extrema"])
+        max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
     except Exception as e:
         print(e)   
-        CmaxPks = None
-    args += [CmaxPks]
-    names += ['CmaxPks']
+        max_peaks = None
+    args += [max_peaks]
+    names += ['max_peaks']
     
     # total energy
     try:
-        totalE = np.sum(energy)
+        total_e = np.sum(energy)
     except Exception as e:
         print(e)   
-        totalE = None
-    args += [totalE]
-    names += ['totalE']
+        total_e = None
+    args += [total_e]
+    names += ['total_e']
 
     _t = np.array(time).reshape(-1, 1)
     try:
         reg = linear_model.LinearRegression().fit(_t,  signal) 
-        linRegSlope = reg.coef_[0]    
+        lin_reg_slope = reg.coef_[0]    
     except Exception as e:
         print(e)   
-        linRegSlope = None
-    args += [linRegSlope]
-    names += ['linRegSlope']
+        lin_reg_slope = None
+    args += [lin_reg_slope]
+    names += ['lin_reg_slope']
 
     try:
-        linRegb = reg.intercept_    
+        lin_reg_b = reg.intercept_    
     except Exception as e:
         print(e)   
-        linRegb = None
-    args += [linRegb]
-    names += ['linRegb']
+        lin_reg_b = None
+    args += [lin_reg_b]
+    names += ['lin_reg_b']
 
     try:    
-        degreeLin = pearson_correlation(signal, reg.predict(_t))[0]
+        corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
     except Exception as e:
         print(e)  
-        degreeLin = None
-    args += [degreeLin]
-    names += ['degreeLin']
+        corr_lin_reg = None
+    args += [corr_lin_reg]
+    names += ['corr_lin_reg']
     
 
     ## hjorth

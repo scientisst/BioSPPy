@@ -1,11 +1,26 @@
+# -*- coding: utf-8 -*-
+"""
+biosppy.features.ceptral
+-------------------
+This module provides methods to extract cepstral features.
+:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:license: BSD 3-clause, see LICENSE for more details.
+"""
+
+# Imports
+# 3rd party
 import numpy as np
+from scipy import fft
+
+# local
 from .. import utils
 from . import time
-from scipy import fft
 
 
 def freq_to_mel(hertz):
-    """ Converts mel-frequencies to heartz frequencies.
+    """ 
+    Converts mel-frequencies to heartz frequencies.
+    
     Parameters
     ----------
     hertz : array
@@ -15,12 +30,20 @@ def freq_to_mel(hertz):
     ----------
     mel frequencies : array
         mel frequencies.
+    
+    References
+    ----------
+    - Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
+    
     """   
-    return 2595 * np.log10(1 + hertz / 700)
+
+    return 1125 * np.log(1 + hertz / 700)
 
 
 def mel_to_freq(mel):
-    """ Converts mel-frequencies to heartz frequencies.
+    """ 
+    Converts mel-frequencies to heartz frequencies.
+    
     Parameters
     ----------
     mel : array
@@ -30,33 +53,45 @@ def mel_to_freq(mel):
     ----------
     hertz frequencies : array
         hertz frequencies.
+
+    References
+    ----------
+    - Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
+
     """
-    return 700 * (10**(mel / 2595) - 1)
+    return 700 * (np.exp(mel / 1125) - 1)
 
 
-def mfcc(signal, N=100, SR=100, LEN_FILTER=10):
-    """Computes the mel-frequency cepstral coefficients.
-        Parameters
-        ----------
-        signal : array
-            Input signal.
+def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
+    """
+    Computes the mel-frequency cepstral coefficients.
+    
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    sampling_rate: float
+        Data sampling rate.
+    N : int
+       DFT window size. 
+    LEN_FILTR : int
+       Number of filters.
 
-        sampling_rate: float
-            Data sampling rate.
+    Returns
+    -------
+    mfcc : list
+        Signal mel-frequency cepstral coefficients.
 
-        Returns
-        -------
-        mfcc : list
-            Signal mel-frequency cepstral coefficients.
-
-        References
-        ----------
- # https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
-   # https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
-   # https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
-    # https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
-    # https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
-        """
+    References
+    ----------
+    - https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
+    - https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
+    - https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
+    - https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
+    - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
+   
+   """
+    
     #pre_emphasis = 0.97
     #conv_signal = np.append(np.array(signal)[0], np.array(signal[1:]) - pre_emphasis * np.array(signal[:-1]))
     
@@ -69,7 +104,7 @@ def mfcc(signal, N=100, SR=100, LEN_FILTER=10):
     f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
     spectrum = np.nan_to_num(spectrum[:(len(spectrum)//2)+1])
     spectrum /= len(spectrum)
-    f = np.abs(f[:(len(f)//2)+1]*SR)
+    f = np.abs(f[:(len(f)//2)+1]*sampling_rate)
 
     # filter bank
     low_f = 0
@@ -86,7 +121,7 @@ def mfcc(signal, N=100, SR=100, LEN_FILTER=10):
     lin_hz = np.array([mel_to_freq(d) for d in lin_mel])
     
     # normalize the array to the FFT size and choose the associated FFT values
-    filter_bins_hz = np.floor((N + 1) / SR * lin_hz).astype(int)
+    filter_bins_hz = np.floor((N + 1) / sampling_rate * lin_hz).astype(int)
 
     # filterbank
     filter_banks = [] 
@@ -130,28 +165,30 @@ def mfcc(signal, N=100, SR=100, LEN_FILTER=10):
     
 
 def quefrency_features(signal=None, sampling_rate=100):
-    """Compute quefrency metrics describing the signal.
-        Parameters
-        ----------
-        signal : array
-            Input signal.
+    """
+    Compute quefrency metrics describing the signal.
+   
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    sampling_rate: float
+        Data sampling rate.
 
-        sampling_rate: float
-            Data sampling rate.
+    Returns
+    -------
+    mfcc_{time_features} : list
+        Time features computer over the signal mel-frequency cepstral coefficients.
 
-        Returns
-        -------
-        MFCC_{time_features} : list
-            Time features computer over the signal mel-frequency cepstral coefficients.
-
-        References
-        ----------
- # https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
-   # https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
-   # https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
-    # https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
-    # https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
-        """
+    References
+    ----------
+    - https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
+    - https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
+    - https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
+    - https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
+    - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
+    
+    """
   
     # check input
     assert len(signal) > 0, 'Signal size < 1'
@@ -164,7 +201,7 @@ def quefrency_features(signal=None, sampling_rate=100):
     
     # temporal
     _fts = time.time_features(mel_coeff, sampling_rate)
-    fts_name = [str("MFCC_" + i) for i in _fts.keys()]
+    fts_name = [str("mfcc_" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
     args += fts

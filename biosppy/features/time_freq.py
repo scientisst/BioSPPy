@@ -1,33 +1,49 @@
+# -*- coding: utf-8 -*-
+"""
+biosppy.features.time_freq
+-------------------
+This module provides methods to extract time frequency features. 
+:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:license: BSD 3-clause, see LICENSE for more details.
+"""
+
+# Imports
+# 3rd party
 import numpy as np
+import pywt
+
+# local
 from .. import utils
 from . import time
-import pywt
 
 
 def get_DWT(signal, wavelet="db4", level=5):
-    """Compute the signal discrete wavelet transform coefficients.
-        Parameters
-        ----------
-        signal : array
-            Input signal.
-        wavelet: string
-            Type of wavelet
-        level: int
-            Decomposition level
+    """
+    Compute the signal discrete wavelet transform coefficients.
+    
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    wavelet: string
+        Type of wavelet
+    level: int
+        Decomposition level
 
-        Returns
-        -------
-        cA : list
-            Approximation coefficient
-        cD : list
-            Detail coefficient
+    Returns
+    -------
+    cA : list
+        Approximation coefficient
+    cD : list
+        Detail coefficient
 
-        References
-        ----------
-        https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-wavelet-transform.html
-    Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101
+    References
+    ----------
+    - https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-wavelet-transform.html
+    - Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101
 
     """
+    
     args, names = [], []
     cD = pywt.downcoef("d", signal, wavelet, level)
     cA = pywt.downcoef("a", signal, wavelet, level)
@@ -38,42 +54,33 @@ def get_DWT(signal, wavelet="db4", level=5):
 
 
 def time_freq_features(signal, sampling_rate):
-    """Compute statistical metrics describing the signal.
-        Parameters
-        ----------
-        signal : array
-            Input signal.
-        
-        sampling_rate: float
-            Sampling rate.
+    """
+    Compute statistical metrics describing the signal.
+   
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    sampling_rate: float
+        Sampling rate.
 
-        Returns
-        -------
-        DWT_cA_{temporal features} : list
-            Temporal features over the signal discrete wavelet transform approximation coefficients.
-        
-        DWT_cA_{statistical features} : list
-            Statistical features over the signal discrete wavelet transform approximation coefficients.
+    Returns
+    -------
+    DWT_cA_{time features} : list
+        Time features over the signal discrete wavelet transform approximation coefficients.
+    DWT_cD_{time features} : list
+        Time features over the signal discrete wavelet transform detail coefficients.
 
-        DWT_cD_{temporal features} : list
-            Temporal features over the signal discrete wavelet transform detail coefficients.
-        
-        DWT_cD_{statistical features} : list
-            Statistical features over the signal discrete wavelet transform detail coefficients.
-
-        DWT_cA_entropy : float
-            Entropy of the signal discrete wavelet transform approximation coefficients.
-
-        DWT_cD_entropy : float
-            Entripy of the signal discrete wavelet transform detail coefficients.
-
-        References
-        ----------
-    Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101.
-    recurrence plot: https://github.com/bmfreis/recurrence_python
-        """
+    References
+    ----------
+    - Ghaderyan, Peyvand, and Ataollah Abbasi. "An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations." International Journal of Psychophysiology 110 (2016): 91-101.
+    - recurrence plot: https://github.com/bmfreis/recurrence_python
+    
+    """
+    
     # check input
     assert len(signal) > 0, 'Signal size < 1'
+    
     # ensure numpy
     signal = np.array(signal)
     args, names = [], []
