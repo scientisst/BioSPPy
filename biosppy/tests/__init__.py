@@ -20,4 +20,4 @@ physiological signals (biosignals):
 from __future__ import absolute_import, division, print_function
 
 # allow lazy loading
-from . import eda, frequency, time, quefrency, phase_space, time_freq
+from . import eda, frequency, time, cepstral, phase_space, time_freq
