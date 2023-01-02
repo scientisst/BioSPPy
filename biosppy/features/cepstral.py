@@ -92,9 +92,6 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
    
    """
     
-    #pre_emphasis = 0.97
-    #conv_signal = np.append(np.array(signal)[0], np.array(signal[1:]) - pre_emphasis * np.array(signal[:-1]))
-    
     # apply window to remove high freqyency at ends 
     window = np.hamming(len(signal))
     conv_signal = signal * window
@@ -153,10 +150,6 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
     lift = 1 + (cep_lifter / 2) * np.sin(np.pi * n / cep_lifter)
     mel_coeff *= lift  
 
-    #import tsfel
-    #_mfcc = list(tsfel.feature_extraction.features.mfcc(signal, SR, nfft=SR, nfilt=LEN_FILTER, num_ceps=LEN_FILTER))
-
-    #m = librosa.feature.mfcc(y=signal, sr=SR, lifter=22, n_mfcc=LEN_FILTER, n_fft=SR, win_length=SR)
     args = [mel_coeff]
     names = ["mfcc"]
     
