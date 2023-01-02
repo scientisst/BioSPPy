@@ -80,10 +80,8 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amps = kbk_scr(
-        signal=filtered, sampling_rate=sampling_rate, min_amplitude=min_amplitude
-    )
-
+    onsets, peaks, amps, _ = eda_param(signal, filt=True, size=0.9, sampling_rate=1000)
+    
     # get time vectors
     length = len(signal)
     T = (length - 1) / sampling_rate
@@ -331,9 +329,8 @@ def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate=1000
 
     args, names = [], []
     names += ["onsets", "peaks", "amplitudes", "end"]
-    args += [onsets, peaks, amps, end]
+    args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
 
-    args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
 
 
