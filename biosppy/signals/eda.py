@@ -17,10 +17,91 @@ from six.moves import range
 
 # 3rd party
 import numpy as np
+from scipy import interpolate
 
 # local
 from . import tools as st
 from .. import plotting, utils
+
+
+def edr(signal=None, sampling_rate=1000.0):
+    """
+    Extracts EDR signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input filterd EDA signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    edr : array
+        Electrodermal response (EDR) signal.
+
+    """
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # differentiation
+    df = np.diff(signal)
+
+    # smooth
+    size = int(1.0 * sampling_rate)
+    edr, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+
+    # output
+    args = (edr, )
+    names = ("edr", )
+
+    return utils.ReturnTuple(args, names)
+
+
+def edl(signal=None, sampling_rate=1000.0, method="onsets"):
+    """
+    Extracts EDL signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input filterd EDA signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+    method: string
+        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets interpolation. 
+
+    Returns
+    -------
+    edl : array
+        Electrodermal level (EDL) signal.
+
+    """
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # smooth
+    if method == "smoother":
+        size = int(10.0 * sampling_rate)
+        edl, _ = tools.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
+    else:
+        # get time vectors
+        length = len(signal)
+        T = (length - 1) / sampling_rate
+        ts = np.linspace(0, T, length, endpoint=True)
+
+        onsets, peaks, amps, _ = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
+        edl_on = np.hstack((ts[0], ts[onsets], ts[-1]))
+        edl_amp = np.hstack((signal[0], signal[onsets], signal[-1]))
+        f = interpolate.interp1d(edl_on, edl_amp)
+        edl = f(ts)
+    # output
+    args = (edl, )
+    names = ("edl", )
+
+    return utils.ReturnTuple(args, names)
 
 
 def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0.1):
@@ -80,29 +161,34 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amps, _ = eda_param(signal, filt=True, size=0.9, sampling_rate=1000)
-    
+    onsets, peaks, amplitudes, _ = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
+     
     # get time vectors
     length = len(signal)
     T = (length - 1) / sampling_rate
     ts = np.linspace(0, T, length, endpoint=True)
 
+    _edr = edr(filtered, sampling_rate=sampling_rate)["edr"]
+    _edl = edl(filtered, sampling_rate=sampling_rate)["edl"]
+
     # plot
     if show:
-        plotting.plot_eda(
+        plotting.plot_eda_(
             ts=ts,
             raw=signal,
             filtered=filtered,
+            edr=_edr,
+            edl=_edl,
             onsets=onsets,
             peaks=peaks,
-            amplitudes=amps,
+            amplitudes=amplitudes,
             path=path,
             show=True,
         )
 
     # output
-    args = (ts, filtered, onsets, peaks, amps)
-    names = ("ts", "filtered", "onsets", "peaks", "amplitudes")
+    args = (ts, filtered, _edr, _edl, onsets, peaks, amplitudes)
+    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes")
 
     return utils.ReturnTuple(args, names)
 
@@ -176,6 +262,7 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     return utils.ReturnTuple(args, names)
 
 
+
 def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     """
     KBK method to extract Skin Conductivity Responses (SCR) from an
@@ -212,13 +299,9 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
-
-    # differentiation
-    df = np.diff(signal)
-
-    # smooth
-    size = int(1.0 * sampling_rate)
-    df, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+    
+    # extract edr signal
+    df = edr(signal, sampling_rate=sampling_rate)['edr']
 
     # zero crosses
     (zeros,) = st.zero_cross(signal=df, detrend=False)
@@ -253,7 +336,7 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
-def eda_param(signal, min_amplitude=0.08, filt=True, size=1., sampling_rate=1000.):
+def eda_events(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000.):
     """ 
     Returns characteristic EDA events.
 
@@ -438,7 +521,7 @@ def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling
     args, names = [], []
 
     # onsets, peaks, amps
-    onsets, peaks, amps, _ = eda_param(signal, filt=filt, size=size, min_amplitude=min_amplitude, sampling_rate=sampling_rate)
+    onsets, peaks, amps, _ = eda_events(signal, filt=filt, size=size, min_amplitude=min_amplitude, sampling_rate=sampling_rate)
     args += [onsets]
     names += ['onsets']
     args += [peaks]
