@@ -37,7 +37,15 @@ def mob(signal):
 
     args, names = [], []
     d = np.diff(signal)
-    args += [np.sqrt(np.var(d)/np.var(signal))]
+    try: 
+        if np.var(signal) > 0:
+            mobility = np.sqrt(np.var(d)/np.var(signal))
+        else:
+            mobility = None
+    except Exception as e:
+        print("mobility", e)
+        mobility = None 
+    args += [mobility] 
     names += ['mobility']
     args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
@@ -61,7 +69,15 @@ def com(signal):
 
     args, names = [], []
     d = np.diff(signal)
-    args += [mob(d)["mobility"]/mob(signal)["mobility"]]
+    try:
+        if mob(signal)["mobility"] != None:
+            complexity = mob(d)["mobility"]/mob(signal)["mobility"]
+        else:
+            complexity = None
+    except Exception as e:
+        print("complexity", e)
+        complexity = None
+    args += [complexity]
     names += ['complexity']
     args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
@@ -85,7 +101,15 @@ def chaos(signal):
 
     args, names = [], []
     d = np.diff(signal)
-    args += [com(d)['complexity']/com(signal)['complexity']]
+    try:
+        if com(signal)['complexity'] != None:
+            chaos = com(d)['complexity']/com(signal)['complexity']
+        else:
+            chaos = None
+    except Exception as e:
+        print("chaos", e)
+        chaos = None
+    args += [chaos]
     names += ['chaos']
     args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
@@ -219,34 +243,34 @@ def time_features(signal, sampling_rate):
     try:
         sig_diff = np.diff(signal)
     except Exception as e:
-        print(e)
+        print("sig_diff", e)
         sig_diff = []
     
     # 2nd derivative
     try:
         sig_diff_2 = np.diff(sig_diff)
     except Exception as e:
-        print(e)
+        print("sig_diff_2", e)
         sig_diff_2 = []
 
     try:
         mean = np.mean(signal)
     except Exception as e:
-        print(e)
+        print("mean", e)
         mean = None
 
     try:
         time = range(len(signal))
         time = [float(x) / sampling_rate for x in time]
     except Exception as e:
-        print(e)
+        print("time", e)
         time = []
 
     try:
         ds = 1/sampling_rate
         energy = np.sum(signal**2*ds)
     except Exception as e:
-        print(e)   
+        print("energy", e)   
         energy = []
     # end helpers
     
@@ -254,7 +278,7 @@ def time_features(signal, sampling_rate):
     try:
         _max = np.max(signal)
     except Exception as e:
-        print(e)   
+        print("max", e)   
         _max = None
     args += [_max]
     names += ['max']
@@ -263,7 +287,7 @@ def time_features(signal, sampling_rate):
     try:
         _min = np.min(signal)
     except Exception as e:
-        print(e)   
+        print("min", e)   
         _min = None
     args += [_min]
     names += ['min']
@@ -272,7 +296,7 @@ def time_features(signal, sampling_rate):
     try:
         _range = np.max(signal) - np.min(signal)
     except Exception as e:
-        print(e)   
+        print("range", e)   
         _range = None
     args += [_range]
     names += ['range']
@@ -281,7 +305,7 @@ def time_features(signal, sampling_rate):
     try:
         _iqr = iqr(signal)
     except Exception as e:
-        print(e)
+        print("iqr", e)
         _iqr = None
     args += [_iqr]
     names += ['iqr']
@@ -290,7 +314,7 @@ def time_features(signal, sampling_rate):
     try:
         mean = np.mean(signal)
     except Exception as e:
-        print(e)   
+        print("mean", e)   
         mean = None
     args += [mean]
     names += ['mean']
@@ -306,18 +330,18 @@ def time_features(signal, sampling_rate):
 
     # max to mean
     try:
-        maxToMean = np.max(signal - mean)
+        max_to_mean = np.max(signal - mean)
     except Exception as e:
-        print(e)   
-        maxToMean = None
-    args += [maxToMean]
+        print("max_to_mean", e)   
+        max_to_mean = None
+    args += [max_to_mean]
     names += ['max_to_mean']
 
     # distance
     try:
         dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) +1
     except Exception as e:
-        print(e)   
+        print("dist", e)   
         dist = None
     args += [dist]
     names += ['dist']
@@ -407,7 +431,7 @@ def time_features(signal, sampling_rate):
     try:
         sum_D1 = np.sum(sig_diff)
     except Exception as e:
-        print(e)
+        print("sum_D1", e)
         sum_D1 = None
     args += [sum_D1]
     names += ['sum_D1']
@@ -416,7 +440,7 @@ def time_features(signal, sampling_rate):
     try:
         range_D1 = np.max(sig_diff) - np.min(sig_diff)
     except Exception as e:
-        print(e)
+        print("range_D1", e)
         range_D1 = None
     args += [range_D1]
     names += ['range_D1']
@@ -425,7 +449,7 @@ def time_features(signal, sampling_rate):
     try:
         iqr_D1 = iqr(sig_diff)
     except Exception as e:
-        print(e)
+        print("iqr_D1", e)
         iqr_D1 = None
     args += [iqr_D1]
     names += ['iqr_D1']
@@ -434,7 +458,7 @@ def time_features(signal, sampling_rate):
     try:
         mean_D2 = np.mean(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("mean_D2", e)   
         mean_D2 = None
     args += [mean_D2]
     names += ['mean_D2']
@@ -443,7 +467,7 @@ def time_features(signal, sampling_rate):
     try:
         std_D2 = np.std(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("std_D2", e)   
         std_D2 = None
     args += [std_D2]
     names += ['std_D2']
@@ -452,7 +476,7 @@ def time_features(signal, sampling_rate):
     try:
         max_D2 = np.max(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("max_D2", e)   
         max_D2 = None
     args += [max_D2]
     names += ['max_D2']
@@ -461,7 +485,7 @@ def time_features(signal, sampling_rate):
     try:
         min_D2 = np.min(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("min_D2", e)   
         min_D2 = None
     args += [min_D2]
     names += ['min_D2']
@@ -470,7 +494,7 @@ def time_features(signal, sampling_rate):
     try:
         sum_D2 = np.sum(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("sum_D2", e)   
         sum_D2 = None
     args += [sum_D2]
     names += ['sum_D2']
@@ -479,7 +503,7 @@ def time_features(signal, sampling_rate):
     try:
         range_D2 = np.max(sig_diff_2) - np.min(sig_diff_2)
     except Exception as e:
-        print(e)   
+        print("range_D2", e)   
         range_D2 = None
     args += [range_D2]
     names += ['range_D2']
@@ -488,7 +512,7 @@ def time_features(signal, sampling_rate):
     try:
         iqr_D2 = iqr(sig_diff_2)
     except Exception as e:
-        print(e)
+        print("iqr_D2", e)
         iqr_D2 = None
     args += [iqr_D2]
     names += ['iqr_D2']
@@ -497,7 +521,7 @@ def time_features(signal, sampling_rate):
     try:
         autocorr = np.sum(np.correlate(signal, signal, 'full'))
     except Exception as e:
-        print(e)   
+        print("autocorr", e)   
         autocorr = None
     args += [autocorr]
     names += ['autocorr']
@@ -506,7 +530,7 @@ def time_features(signal, sampling_rate):
     try:
         zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
     except Exception as e:
-        print(e)   
+        print("zero_cross", e)   
         zero_cross = None
     args += [zero_cross]
     names += ['zero_cross']
@@ -515,7 +539,7 @@ def time_features(signal, sampling_rate):
     try:
         min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
     except Exception as e:
-        print(e)   
+        print("min_peaks", e)   
         min_peaks = None
     args += [min_peaks]
     names += ['min_peaks']
@@ -524,7 +548,7 @@ def time_features(signal, sampling_rate):
     try:
         max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
     except Exception as e:
-        print(e)   
+        print("max_peaks", e)   
         max_peaks = None
     args += [max_peaks]
     names += ['max_peaks']
@@ -533,7 +557,7 @@ def time_features(signal, sampling_rate):
     try:
         total_e = np.sum(energy)
     except Exception as e:
-        print(e)   
+        print("total_e", e)   
         total_e = None
     args += [total_e]
     names += ['total_e']
@@ -543,7 +567,7 @@ def time_features(signal, sampling_rate):
         reg = linear_model.LinearRegression().fit(_t,  signal) 
         lin_reg_slope = reg.coef_[0]    
     except Exception as e:
-        print(e)   
+        print("lin_reg_slope", e)   
         lin_reg_slope = None
     args += [lin_reg_slope]
     names += ['lin_reg_slope']
@@ -551,26 +575,29 @@ def time_features(signal, sampling_rate):
     try:
         lin_reg_b = reg.intercept_    
     except Exception as e:
-        print(e)   
+        print("lin_reg_b", e)   
         lin_reg_b = None
     args += [lin_reg_b]
     names += ['lin_reg_b']
 
     try:    
-        corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
+        if np.sum(np.abs(signal)) > 0: 
+            corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
+        else:
+            corr_lin_reg = None
     except Exception as e:
-        print(e)  
+        print("corr_lin_reg", e)  
         corr_lin_reg = None
     args += [corr_lin_reg]
     names += ['corr_lin_reg']
     
 
-    ## hjorth
+    # hjorth features
     # mobility
     try:    
         mobility = mob(signal)['mobility']
     except Exception as e:
-        print(e)  
+        print("mobility", e)  
         mobility = None
     args += [mobility]
     names += ['mobility']
@@ -579,7 +606,7 @@ def time_features(signal, sampling_rate):
     try:    
         complexity = com(signal)['complexity']
     except Exception as e:
-        print(e)  
+        print("complexity", e)  
         complexity = None
     args += [complexity]
     names += ['complexity']
@@ -588,16 +615,19 @@ def time_features(signal, sampling_rate):
     try:    
         _chaos = chaos(signal)['chaos']
     except Exception as e:
-        print(e)  
+        print("chaos", e)  
         _chaos = None
     args += [_chaos]
     names += ['chaos']
 
     # Hazard
     try:    
-        hazard = chaos(sig_diff)['chaos']/chaos(signal)['chaos']
+        if chaos(signal)['chaos'] != None:
+            hazard = chaos(sig_diff)['chaos']/chaos(signal)['chaos']
+        else:
+            hazard = None
     except Exception as e:
-        print(e)  
+        print("hazard", e)  
         hazard = None
     args += [hazard]
     names += ['hazard']
@@ -606,7 +636,7 @@ def time_features(signal, sampling_rate):
     try:
         kurtosis = stats.kurtosis(signal, bias=False)
     except Exception as e:
-        print(e) 
+        print("kurtosis", e) 
         kurtosis = None
     args += [kurtosis]
     names += ['kurtosis']
@@ -615,7 +645,7 @@ def time_features(signal, sampling_rate):
     try:
         skewness = stats.skew(signal, bias=False)
     except Exception as e:
-        print(e) 
+        print("skewness", e) 
         skewness = None
     args += [skewness]
     names += ['skewness']
@@ -624,7 +654,7 @@ def time_features(signal, sampling_rate):
     try:
         rms = np.sqrt(np.sum(signal ** 2) / len(signal))
     except Exception as e:
-        print(e) 
+        print("rms", e) 
         rms = None
     args += [rms]
     names += ['rms']
@@ -634,7 +664,7 @@ def time_features(signal, sampling_rate):
         quant = np.quantile(signal, [0.25, 0.5, 0.75])
         midhinge = (quant[0] + quant[2])/2
     except Exception as e:
-        print(e) 
+        print("midhinge", e) 
         midhinge = None
     args += [midhinge]
     names += ['midhinge']
@@ -643,7 +673,7 @@ def time_features(signal, sampling_rate):
     try:
         trimean = (quant[1] + midhinge)/2
     except Exception as e:
-        print(e) 
+        print("trimean", e) 
         trimean = None
     args += [trimean]
     names += ['trimean']
@@ -653,14 +683,17 @@ def time_features(signal, sampling_rate):
         _hist = list(np.histogram(signal, bins=5)[0])
         _hist = _hist/np.sum(_hist)
     except Exception as e:
-        print(e) 
+        print("time hist", e) 
         _hist = [None] * 5
     args += [i for i in _hist]
     names += ['stat_hist' + str(i) for i in range(len(_hist))]
 
     # entropy
     try:
-        _entropy = entropy(signal)
+        if np.sum(np.abs(signal)) > 0: 
+            _entropy = entropy(signal)
+        else:
+            _entropy = None
     except Exception as e:
         print("entropy", e) 
         _entropy = None
@@ -668,5 +701,4 @@ def time_features(signal, sampling_rate):
     names += ['entropy']
 
     # output
-    args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))

@@ -16,23 +16,23 @@ from matplotlib import pylab as plt
 from ..features.phase_space import phase_space_features
 
 
-def getData(LEN=100, sampling_rate=100):
-    const0 = np.zeros(LEN)
-    const1 = np.ones(LEN)
-    constNeg = -1 * np.ones(LEN)
+def getData(size=100, sampling_rate=100):
+    const0 = np.zeros(size)
+    const1 = np.ones(size)
+    constNeg = -1 * np.ones(size)
 
     f = 5
-    x = np.arange(0, LEN/sampling_rate, 1/sampling_rate)
+    x = np.arange(0, size/sampling_rate, 1/sampling_rate)
     sine = np.sin(2 * np.pi * f * x)
     np.random.seed(0)
-    sineWNoise = sine + np.random.normal(0, 0.5, LEN)
-    lin = np.arange(LEN)
+    sineWNoise = sine + np.random.normal(0, 0.5, size)
+    lin = np.arange(size)
     
     return const0, const1, constNeg, lin, sine
 
 
-def test(LEN=100, sampling_rate=100):
-    const0, const1, constNeg, lin, sine = getData(LEN, sampling_rate)
+def test(size=100, sampling_rate=100):
+    const0, const1, constNeg, lin, sine = getData(size, sampling_rate)
     
     const0_fts = phase_space_features(const0)
     const1_fts = phase_space_features(const1)

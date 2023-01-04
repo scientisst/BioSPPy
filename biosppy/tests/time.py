@@ -2,22 +2,22 @@ import numpy as np
 from ..features.time import time_features
 
 
-def getData(LEN=100, sampling_rate=100):
-    const_0 = np.zeros(LEN)
-    const_1 = np.ones(LEN)
-    const_neg = -1 * np.ones(LEN)
+def getData(size=100, sampling_rate=100):
+    const_0 = np.zeros(size)
+    const_1 = np.ones(size)
+    const_neg = -1 * np.ones(size)
 
     f = 5
-    x = np.arange(0, LEN/sampling_rate, 1/sampling_rate)
+    x = np.arange(0, size/sampling_rate, 1/sampling_rate)
     sine = np.sin(2 * np.pi * f * x)
     np.random.seed(0)
-    lin = np.arange(LEN)
+    lin = np.arange(size)
 
-    return const_0, const_1, const_eg, lin, sine
+    return const_0, const_1, const_neg, lin, sine
 
 
-def test(LEN=100, sampling_rate=100):
-    const0, const1, constNeg, lin, sine = getData(LEN)
+def test(size=100, sampling_rate=100):
+    const_0, const_1, const_neg, lin, sine = getData(size)
     
     const_0_fts = time_features(const_0, sampling_rate)
     const_1_fts = time_features(const_1, sampling_rate)
@@ -25,6 +25,23 @@ def test(LEN=100, sampling_rate=100):
     lin_fts = time_features(lin, sampling_rate)
     sine_fts = time_features(sine, sampling_rate)
 
+    print(const_0_fts["max"], const_1_fts["max"], const_neg_fts["max"], lin_fts["max"], sine_fts["max"], sq_fts["max"])
+    print(const_0_fts["min"], const_1_fts["min"], const_neg_fts["min"], lin_fts["min"], sine_fts["min"], sq_fts["min"])
+    print(const_0_fts["range"], const_1_fts["range"], const_neg_fts["range"], lin_fts["range"], sine_fts["range"], sq_fts["range"])
+    print(const_0_fts["iqr"], const_1_fts["iqr"], const_neg_fts["iqr"], lin_fts["iqr"], sine_fts["iqr"], sq_fts["iqr"])
+    print(const_0_fts["mean"], const_1_fts["mean"], const_neg_fts["mean"], lin_fts["mean"], sine_fts["mean"], sq_fts["mean"])
+    print(const_0_fts["std"], const_1_fts["std"], const_neg_fts["std"], lin_fts["std"], sine_fts["std"], sq_fts["std"])
+    print(const_0_fts["max_to_mean"], const_1_fts["max_to_mean"], const_neg_fts["max_to_mean"], lin_fts["max_to_mean"], sine_fts["max_to_mean"], sq_fts["max_to_mean"])
+    print(const_0_fts["dist"], const_1_fts["dist"], const_neg_fts["dist"], lin_fts["dist"], sine_fts["dist"], sq_fts["dist"])
+    print(const_0_fts["mean_AD1"], const_1_fts["mean_AD1"], const_neg_fts["mean_AD1"], lin_fts["mean_AD1"], sine_fts["mean_AD1"], sq_fts["mean_AD1"])
+    print(const_0_fts["med_AD1"], const_1_fts["med_AD1"], const_neg_fts["med_AD1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
+    print(const_0_fts["min_AD1"], const_1_fts["min_AD1"], const_neg_fts["min_AD1"], lin_fts["min_AD1"], sine_fts["min_AD1"], sq_fts["min_AD1"])
+    print(const_0_fts["max_AD1"], const_1_fts["max_AD1"], const_neg_fts["max_AD1"], lin_fts["max_AD1"], sine_fts["max_AD1"], sq_fts["max_AD1"])
+    print(const_0_fts["mean_D1"], const_1_fts["mean_D1"], const_neg_fts["mean_D1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
+    print(const_0_fts["med_AD1"], const_1_fts["med_AD1"], const_neg_fts["med_AD1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
+    print(const_0_fts["med_AD1"], const_1_fts["med_AD1"], const_neg_fts["med_AD1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
+    print(const_0_fts["med_AD1"], const_1_fts["med_AD1"], const_neg_fts["med_AD1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
+    print(const_0_fts["med_AD1"], const_1_fts["med_AD1"], const_neg_fts["med_AD1"], lin_fts["med_AD1"], sine_fts["med_AD1"], sq_fts["med_AD1"])
     # max
     np.testing.assert_almost_equal(const_0_fts["max"], 0.0, err_msg="const0 max")
     np.testing.assert_almost_equal(const_1_fts["max"], 1.0, err_msg="const1 max")
@@ -68,11 +85,11 @@ def test(LEN=100, sampling_rate=100):
     np.testing.assert_almost_equal(sine_fts["std"], 0.70, err_msg="sine std", decimal=2)
     
     # maxToMean
-    np.testing.assert_almost_equal(const_0_fts["maxToMean"], 0.0, err_msg="const0 maxToMean")
-    np.testing.assert_almost_equal(const_1_fts["maxToMean"], 0.0, err_msg="const1 maxToMean")
-    np.testing.assert_almost_equal(const_neg_fts["maxToMean"], 0.0, err_msg="const neg maxToMean")
-    np.testing.assert_almost_equal(lin_fts["maxToMean"], 49.5, err_msg="lin maxToMean")
-    np.testing.assert_almost_equal(sine_fts["maxToMean"], 1.0, err_msg="sine maxToMean")
+    np.testing.assert_almost_equal(const_0_fts["max_to_mean"], 0.0, err_msg="const0 maxToMean")
+    np.testing.assert_almost_equal(const_1_fts["max_to_mean"], 0.0, err_msg="const1 maxToMean")
+    np.testing.assert_almost_equal(const_neg_fts["max_to_mean"], 0.0, err_msg="const neg maxToMean")
+    np.testing.assert_almost_equal(lin_fts["max_to_mean"], 49.5, err_msg="lin maxToMean")
+    np.testing.assert_almost_equal(sine_fts["max_to_mean"], 1.0, err_msg="sine maxToMean")
 
     # dist
     np.testing.assert_almost_equal(const_0_fts["dist"], 100.0, err_msg="const0 dist")
@@ -82,137 +99,137 @@ def test(LEN=100, sampling_rate=100):
     np.testing.assert_almost_equal(sine_fts["dist"], 20.69, err_msg="sine dist", decimal=2)
 
     # meanAD
-    np.testing.assert_almost_equal(const_0_fts["meanAD1"], 0.0, err_msg="const0 meanAD1")
-    np.testing.assert_almost_equal(const_1_fts["meanAD1"], 0.0, err_msg="const1 meanAD1")
-    np.testing.assert_almost_equal(const_neg_fts["meanAD1"], 0.0, err_msg="const neg meanAD1")
-    np.testing.assert_almost_equal(lin_fts["meanAD1"], 1.0, err_msg="lin meanAD1")
-    np.testing.assert_almost_equal(sine_fts["meanAD1"], 0.19, err_msg="sine meanAD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["mean_AD1"], 0.0, err_msg="const0 meanAD1")
+    np.testing.assert_almost_equal(const_1_fts["mean_AD1"], 0.0, err_msg="const1 meanAD1")
+    np.testing.assert_almost_equal(const_neg_fts["mean_AD1"], 0.0, err_msg="const neg meanAD1")
+    np.testing.assert_almost_equal(lin_fts["mean_AD1"], 1.0, err_msg="lin meanAD1")
+    np.testing.assert_almost_equal(sine_fts["mean_AD1"], 0.19, err_msg="sine meanAD1", decimal=2)
 
     # medAD1
-    np.testing.assert_almost_equal(const_0_fts["medAD1"], 0.0, err_msg="const0 medAD1")
-    np.testing.assert_almost_equal(const_1_fts["medAD1"], 0.0, err_msg="const1 medAD1")
-    np.testing.assert_almost_equal(const_neg_fts["medAD1"], 0.0, err_msg="const neg medAD1")
-    np.testing.assert_almost_equal(lin_fts["medAD1"], 1.0, err_msg="lin medAD1")
-    np.testing.assert_almost_equal(sine_fts["medAD1"], 0.22, err_msg="sine medAD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["med_AD1"], 0.0, err_msg="const0 medAD1")
+    np.testing.assert_almost_equal(const_1_fts["med_AD1"], 0.0, err_msg="const1 medAD1")
+    np.testing.assert_almost_equal(const_neg_fts["med_AD1"], 0.0, err_msg="const neg medAD1")
+    np.testing.assert_almost_equal(lin_fts["med_AD1"], 1.0, err_msg="lin medAD1")
+    np.testing.assert_almost_equal(sine_fts["med_AD1"], 0.22, err_msg="sine medAD1", decimal=2)
 
     # minAD1
-    np.testing.assert_almost_equal(const_0_fts["minAD1"], 0.0, err_msg="const0 minAD1")
-    np.testing.assert_almost_equal(const_1_fts["minAD1"], 0.0, err_msg="const1 minAD1")
-    np.testing.assert_almost_equal(const_neg_fts["minAD1"], 0.0, err_msg="const neg minAD1")
-    np.testing.assert_almost_equal(lin_fts["minAD1"], 1.0, err_msg="lin minAD1")
-    np.testing.assert_almost_equal(sine_fts["minAD1"], 0.04, err_msg="sine minAD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["min_AD1"], 0.0, err_msg="const0 minAD1")
+    np.testing.assert_almost_equal(const_1_fts["min_AD1"], 0.0, err_msg="const1 minAD1")
+    np.testing.assert_almost_equal(const_neg_fts["min_AD1"], 0.0, err_msg="const neg minAD1")
+    np.testing.assert_almost_equal(lin_fts["min_AD1"], 1.0, err_msg="lin minAD1")
+    np.testing.assert_almost_equal(sine_fts["min_AD1"], 0.04, err_msg="sine minAD1", decimal=2)
 
     # maxAD1
-    np.testing.assert_almost_equal(const_0_fts["maxAD1"], 0.0, err_msg="const0 maxAD1")
-    np.testing.assert_almost_equal(const_1_fts["maxAD1"], 0.0, err_msg="const1 maxAD1")
-    np.testing.assert_almost_equal(const_neg_fts["maxAD1"], 0.0, err_msg="const neg maxAD1")
-    np.testing.assert_almost_equal(lin_fts["maxAD1"], 1.0, err_msg="lin maxAD1")
-    np.testing.assert_almost_equal(sine_fts["maxAD1"], 0.30, err_msg="sine maxAD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["max_AD1"], 0.0, err_msg="const0 maxAD1")
+    np.testing.assert_almost_equal(const_1_fts["max_AD1"], 0.0, err_msg="const1 maxAD1")
+    np.testing.assert_almost_equal(const_neg_fts["max_AD1"], 0.0, err_msg="const neg maxAD1")
+    np.testing.assert_almost_equal(lin_fts["max_AD1"], 1.0, err_msg="lin maxAD1")
+    np.testing.assert_almost_equal(sine_fts["max_AD1"], 0.30, err_msg="sine maxAD1", decimal=2)
  
     # meanD1
-    np.testing.assert_almost_equal(const_0_fts["meanD1"], 0.0, err_msg="const0 meanD1")
-    np.testing.assert_almost_equal(const_1_fts["meanD1"], 0.0, err_msg="const1 meanD1")
-    np.testing.assert_almost_equal(const_neg_fts["meanD1"], 0.0, err_msg="const neg meanD1")
-    np.testing.assert_almost_equal(lin_fts["meanD1"], 1.0, err_msg="lin meanD1")
-    np.testing.assert_almost_equal(sine_fts["meanD1"], -0.003, err_msg="sine meanD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["mean_D1"], 0.0, err_msg="const0 meanD1")
+    np.testing.assert_almost_equal(const_1_fts["mean_D1"], 0.0, err_msg="const1 meanD1")
+    np.testing.assert_almost_equal(const_neg_fts["mean_D1"], 0.0, err_msg="const neg meanD1")
+    np.testing.assert_almost_equal(lin_fts["mean_D1"], 1.0, err_msg="lin meanD1")
+    np.testing.assert_almost_equal(sine_fts["mean_D1"], -0.003, err_msg="sine meanD1", decimal=2)
 
     # medD1
-    np.testing.assert_almost_equal(const_0_fts["medD1"], 0.0, err_msg="const0 medD1")
-    np.testing.assert_almost_equal(const_1_fts["medD1"], 0.0, err_msg="const1 medD1")
-    np.testing.assert_almost_equal(const_neg_fts["medD1"], 0.0, err_msg="const neg medD1")
-    np.testing.assert_almost_equal(lin_fts["medD1"], 1.0, err_msg="lin medD1")
-    np.testing.assert_almost_equal(sine_fts["medD1"], -0.04, err_msg="sine medD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["med_D1"], 0.0, err_msg="const0 medD1")
+    np.testing.assert_almost_equal(const_1_fts["med_D1"], 0.0, err_msg="const1 medD1")
+    np.testing.assert_almost_equal(const_neg_fts["med_D1"], 0.0, err_msg="const neg medD1")
+    np.testing.assert_almost_equal(lin_fts["med_D1"], 1.0, err_msg="lin medD1")
+    np.testing.assert_almost_equal(sine_fts["med_D1"], -0.04, err_msg="sine medD1", decimal=2)
 
     # stdD1
-    np.testing.assert_almost_equal(const_0_fts["stdD1"], 0.0, err_msg="const0 stdd1")
-    np.testing.assert_almost_equal(const_1_fts["stdD1"], 0.0, err_msg="const1 stdD1")
-    np.testing.assert_almost_equal(const_neg_fts["stdD1"], 0.0, err_msg="const neg stdD1")
-    np.testing.assert_almost_equal(lin_fts["stdD1"], 0.0, err_msg="lin stdD1", decimal=2)
-    np.testing.assert_almost_equal(sine_fts["stdD1"], 0.22, err_msg="sine stdD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["std_D1"], 0.0, err_msg="const0 stdd1")
+    np.testing.assert_almost_equal(const_1_fts["std_D1"], 0.0, err_msg="const1 stdD1")
+    np.testing.assert_almost_equal(const_neg_fts["std_D1"], 0.0, err_msg="const neg stdD1")
+    np.testing.assert_almost_equal(lin_fts["std_D1"], 0.0, err_msg="lin stdD1", decimal=2)
+    np.testing.assert_almost_equal(sine_fts["std_D1"], 0.22, err_msg="sine stdD1", decimal=2)
     
     # minD1
-    np.testing.assert_almost_equal(const_0_fts["minD1"], 0.0, err_msg="const0 minD1")
-    np.testing.assert_almost_equal(const_1_fts["minD1"], 0.0, err_msg="const1 minD1")
-    np.testing.assert_almost_equal(const_neg_fts["minD1"], 0.0, err_msg="const neg minD1")
-    np.testing.assert_almost_equal(lin_fts["minD1"], 1.0, err_msg="lin minD1")
-    np.testing.assert_almost_equal(sine_fts["minD1"], -0.30, err_msg="sine minD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["min_D1"], 0.0, err_msg="const0 minD1")
+    np.testing.assert_almost_equal(const_1_fts["min_D1"], 0.0, err_msg="const1 minD1")
+    np.testing.assert_almost_equal(const_neg_fts["min_D1"], 0.0, err_msg="const neg minD1")
+    np.testing.assert_almost_equal(lin_fts["min_D1"], 1.0, err_msg="lin minD1")
+    np.testing.assert_almost_equal(sine_fts["min_D1"], -0.30, err_msg="sine minD1", decimal=2)
 
     # maxD1
-    np.testing.assert_almost_equal(const_0_fts["maxD1"], 0.0, err_msg="const0 maxD1")
-    np.testing.assert_almost_equal(const_1_fts["maxD1"], 0.0, err_msg="const1 maxD1")
-    np.testing.assert_almost_equal(const_neg_fts["maxD1"], 0.0, err_msg="const neg maxD1")
-    np.testing.assert_almost_equal(lin_fts["maxD1"], 1.0, err_msg="lin maxD1")
-    np.testing.assert_almost_equal(sine_fts["maxD1"], 0.30, err_msg="sine maxD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["max_D1"], 0.0, err_msg="const0 maxD1")
+    np.testing.assert_almost_equal(const_1_fts["max_D1"], 0.0, err_msg="const1 maxD1")
+    np.testing.assert_almost_equal(const_neg_fts["max_D1"], 0.0, err_msg="const neg maxD1")
+    np.testing.assert_almost_equal(lin_fts["max_D1"], 1.0, err_msg="lin maxD1")
+    np.testing.assert_almost_equal(sine_fts["max_D1"], 0.30, err_msg="sine maxD1", decimal=2)
 
     # sumD1
-    np.testing.assert_almost_equal(const_0_fts["sumD1"], 0.0, err_msg="const0 sumD1")
-    np.testing.assert_almost_equal(const_1_fts["sumD1"], 0.0, err_msg="const1 sumD1")
-    np.testing.assert_almost_equal(const_neg_fts["sumD1"], 0.0, err_msg="const neg sumD1")
-    np.testing.assert_almost_equal(lin_fts["sumD1"], 99.0, err_msg="lin sumD1")
-    np.testing.assert_almost_equal(sine_fts["sumD1"], -0.30, err_msg="sine sumD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["sum_D1"], 0.0, err_msg="const0 sumD1")
+    np.testing.assert_almost_equal(const_1_fts["sum_D1"], 0.0, err_msg="const1 sumD1")
+    np.testing.assert_almost_equal(const_neg_fts["sum_D1"], 0.0, err_msg="const neg sumD1")
+    np.testing.assert_almost_equal(lin_fts["sum_D1"], 99.0, err_msg="lin sumD1")
+    np.testing.assert_almost_equal(sine_fts["sum_D1"], -0.30, err_msg="sine sumD1", decimal=2)
 
     # rangeD1
-    np.testing.assert_almost_equal(const_0_fts["rangeD1"], 0.0, err_msg="const0 rangeD1")
-    np.testing.assert_almost_equal(const_1_fts["rangeD1"], 0.0, err_msg="const1 rangeD1")
-    np.testing.assert_almost_equal(const_neg_fts["rangeD1"], 0.0, err_msg="const neg rangeD1")
-    np.testing.assert_almost_equal(lin_fts["rangeD1"], 0.0, err_msg="lin rangeD1")
-    np.testing.assert_almost_equal(sine_fts["rangeD1"], 0.61, err_msg="sine rangeD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["range_D1"], 0.0, err_msg="const0 rangeD1")
+    np.testing.assert_almost_equal(const_1_fts["range_D1"], 0.0, err_msg="const1 rangeD1")
+    np.testing.assert_almost_equal(const_neg_fts["range_D1"], 0.0, err_msg="const neg rangeD1")
+    np.testing.assert_almost_equal(lin_fts["range_D1"], 0.0, err_msg="lin rangeD1")
+    np.testing.assert_almost_equal(sine_fts["range_D1"], 0.61, err_msg="sine rangeD1", decimal=2)
 
     # iqrD1
-    np.testing.assert_almost_equal(const_0_fts["iqrD1"], 0.0, err_msg="const0 iqrD1")
-    np.testing.assert_almost_equal(const_1_fts["iqrD1"], 0.0, err_msg="const1 iqrD1")
-    np.testing.assert_almost_equal(const_neg_fts["iqrD1"], 0.0, err_msg="const neg iqrD1")
-    np.testing.assert_almost_equal(lin_fts["iqrD1"], 0.0, err_msg="lin iqrD1")
-    np.testing.assert_almost_equal(sine_fts["iqrD1"], 0.44, err_msg="sine iqrD1", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["iqr_D1"], 0.0, err_msg="const0 iqrD1")
+    np.testing.assert_almost_equal(const_1_fts["iqr_D1"], 0.0, err_msg="const1 iqrD1")
+    np.testing.assert_almost_equal(const_neg_fts["iqr_D1"], 0.0, err_msg="const neg iqrD1")
+    np.testing.assert_almost_equal(lin_fts["iqr_D1"], 0.0, err_msg="lin iqrD1")
+    np.testing.assert_almost_equal(sine_fts["iqr_D1"], 0.44, err_msg="sine iqrD1", decimal=2)
     
     # meanD2
-    np.testing.assert_almost_equal(const_0_fts["meanD2"], 0.0, err_msg="const0 meanD2")
-    np.testing.assert_almost_equal(const_1_fts["meanD2"], 0.0, err_msg="const1 meanD2")
-    np.testing.assert_almost_equal(const_neg_fts["meanD2"], 0.0, err_msg="const neg meanD2")
-    np.testing.assert_almost_equal(lin_fts["meanD2"], 0.0, err_msg="lin meanD2")
-    np.testing.assert_almost_equal(sine_fts["meanD2"], -0.003, err_msg="sine meanD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["mean_D2"], 0.0, err_msg="const0 meanD2")
+    np.testing.assert_almost_equal(const_1_fts["mean_D2"], 0.0, err_msg="const1 meanD2")
+    np.testing.assert_almost_equal(const_neg_fts["mean_D2"], 0.0, err_msg="const neg meanD2")
+    np.testing.assert_almost_equal(lin_fts["mean_D2"], 0.0, err_msg="lin meanD2")
+    np.testing.assert_almost_equal(sine_fts["mean_D2"], -0.003, err_msg="sine meanD2", decimal=2)
 
     # stdD2
-    np.testing.assert_almost_equal(const_0_fts["stdD2"], 0.0, err_msg="const0 stdd2")
-    np.testing.assert_almost_equal(const_1_fts["stdD2"], 0.0, err_msg="const1 stdD2")
-    np.testing.assert_almost_equal(const_neg_fts["stdD2"], 0.0, err_msg="const neg stdD2")
-    np.testing.assert_almost_equal(lin_fts["stdD2"], 0.0, err_msg="lin stdD2", decimal=2)
-    np.testing.assert_almost_equal(sine_fts["stdD2"], 0.06, err_msg="sine stdD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["std_D2"], 0.0, err_msg="const0 stdd2")
+    np.testing.assert_almost_equal(const_1_fts["std_D2"], 0.0, err_msg="const1 stdD2")
+    np.testing.assert_almost_equal(const_neg_fts["std_D2"], 0.0, err_msg="const neg stdD2")
+    np.testing.assert_almost_equal(lin_fts["std_D2"], 0.0, err_msg="lin stdD2", decimal=2)
+    np.testing.assert_almost_equal(sine_fts["std_D2"], 0.06, err_msg="sine stdD2", decimal=2)
     
     # minD2
-    np.testing.assert_almost_equal(const_0_fts["minD2"], 0.0, err_msg="const0 minD2")
-    np.testing.assert_almost_equal(const_1_fts["minD2"], 0.0, err_msg="const1 minD2")
-    np.testing.assert_almost_equal(const_neg_fts["minD2"], 0.0, err_msg="const neg minD2")
-    np.testing.assert_almost_equal(lin_fts["minD2"], 0.0, err_msg="lin minD2")
-    np.testing.assert_almost_equal(sine_fts["minD2"], -0.09, err_msg="sine minD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["min_D2"], 0.0, err_msg="const0 minD2")
+    np.testing.assert_almost_equal(const_1_fts["min_D2"], 0.0, err_msg="const1 minD2")
+    np.testing.assert_almost_equal(const_neg_fts["min_D2"], 0.0, err_msg="const neg minD2")
+    np.testing.assert_almost_equal(lin_fts["min_D2"], 0.0, err_msg="lin minD2")
+    np.testing.assert_almost_equal(sine_fts["min_D2"], -0.09, err_msg="sine minD2", decimal=2)
 
     # maxD2
-    np.testing.assert_almost_equal(const_0_fts["maxD2"], 0.0, err_msg="const0 maxD2")
-    np.testing.assert_almost_equal(const_1_fts["maxD2"], 0.0, err_msg="const1 maxD2")
-    np.testing.assert_almost_equal(const_neg_fts["maxD2"], 0.0, err_msg="const neg maxDr")
-    np.testing.assert_almost_equal(lin_fts["maxD2"], 0.0, err_msg="lin maxD2")
-    np.testing.assert_almost_equal(sine_fts["maxD2"], 0.09, err_msg="sine maxD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["max_D2"], 0.0, err_msg="const0 maxD2")
+    np.testing.assert_almost_equal(const_1_fts["max_D2"], 0.0, err_msg="const1 maxD2")
+    np.testing.assert_almost_equal(const_neg_fts["max_D2"], 0.0, err_msg="const neg maxDr")
+    np.testing.assert_almost_equal(lin_fts["max_D2"], 0.0, err_msg="lin maxD2")
+    np.testing.assert_almost_equal(sine_fts["max_D2"], 0.09, err_msg="sine maxD2", decimal=2)
 
     # sumD2
-    np.testing.assert_almost_equal(const_0_fts["sumD2"], 0.0, err_msg="const0 sumD2")
-    np.testing.assert_almost_equal(const_1_fts["sumD2"], 0.0, err_msg="const1 sumD2")
-    np.testing.assert_almost_equal(const_neg_fts["sumD2"], 0.0, err_msg="const neg sumD2")
-    np.testing.assert_almost_equal(lin_fts["sumD2"], 0.0, err_msg="lin sumD2")
-    np.testing.assert_almost_equal(sine_fts["sumD2"], -0.03, err_msg="sine sumD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["sum_D2"], 0.0, err_msg="const0 sumD2")
+    np.testing.assert_almost_equal(const_1_fts["sum_D2"], 0.0, err_msg="const1 sumD2")
+    np.testing.assert_almost_equal(const_neg_fts["sum_D2"], 0.0, err_msg="const neg sumD2")
+    np.testing.assert_almost_equal(lin_fts["sum_D2"], 0.0, err_msg="lin sumD2")
+    np.testing.assert_almost_equal(sine_fts["sum_D2"], -0.03, err_msg="sine sumD2", decimal=2)
 
     # rangeD2
-    np.testing.assert_almost_equal(const_0_fts["rangeD2"], 0.0, err_msg="const0 rangeD2")
-    np.testing.assert_almost_equal(const_1_fts["rangeD2"], 0.0, err_msg="const1 rangeD2")
-    np.testing.assert_almost_equal(const_neg_fts["rangeD2"], 0.0, err_msg="const neg rangeD2")
-    np.testing.assert_almost_equal(lin_fts["rangeD2"], 0.0, err_msg="lin rangeD2")
-    np.testing.assert_almost_equal(sine_fts["rangeD2"], 0.195, err_msg="sine rangeD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["range_D2"], 0.0, err_msg="const0 rangeD2")
+    np.testing.assert_almost_equal(const_1_fts["range_D2"], 0.0, err_msg="const1 rangeD2")
+    np.testing.assert_almost_equal(const_neg_fts["range_D2"], 0.0, err_msg="const neg rangeD2")
+    np.testing.assert_almost_equal(lin_fts["range_D2"], 0.0, err_msg="lin rangeD2")
+    np.testing.assert_almost_equal(sine_fts["range_D2"], 0.195, err_msg="sine rangeD2", decimal=2)
 
     ## iqrD2
-    np.testing.assert_almost_equal(const_0_fts["iqrD2"], 0.0, err_msg="const0 iqrD2")
-    np.testing.assert_almost_equal(const_1_fts["iqrD2"], 0.0, err_msg="const1 iqrD2")
-    np.testing.assert_almost_equal(const_neg_fts["iqrD2"], 0.0, err_msg="const neg iqrD2")
-    np.testing.assert_almost_equal(lin_fts["iqrD2"], 0.0, err_msg="lin iqrD2")
-    np.testing.assert_almost_equal(sine_fts["iqrD2"], 0.147, err_msg="sine iqrD2", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["iqr_D2"], 0.0, err_msg="const0 iqrD2")
+    np.testing.assert_almost_equal(const_1_fts["iqr_D2"], 0.0, err_msg="const1 iqrD2")
+    np.testing.assert_almost_equal(const_neg_fts["iqr_D2"], 0.0, err_msg="const neg iqrD2")
+    np.testing.assert_almost_equal(lin_fts["iqr_D2"], 0.0, err_msg="lin iqrD2")
+    np.testing.assert_almost_equal(sine_fts["iqr_D2"], 0.147, err_msg="sine iqrD2", decimal=2)
 
     ## autocorr
     np.testing.assert_almost_equal(const_0_fts["autocorr"], 0.0, err_msg="const0 autocorr")
@@ -222,53 +239,53 @@ def test(LEN=100, sampling_rate=100):
     np.testing.assert_almost_equal(sine_fts["autocorr"], 0.0, err_msg="sine autocorr")
 
     # zeroCross
-    np.testing.assert_almost_equal(const_0_fts["zeroCross"], 0.0, err_msg="const0 zeroCross")
-    np.testing.assert_almost_equal(const_1_fts["zeroCross"], 0.0, err_msg="const1 zeroCross")
-    np.testing.assert_almost_equal(const_neg_fts["zeroCross"], 0.0, err_msg="const neg zeroCross")
-    np.testing.assert_almost_equal(lin_fts["zeroCross"], 1.0, err_msg="lin zeroCross")
-    np.testing.assert_almost_equal(sine_fts["zeroCross"], 10.0, err_msg="sine zeroCross")
+    np.testing.assert_almost_equal(const_0_fts["zero_cross"], 0.0, err_msg="const0 zeroCross")
+    np.testing.assert_almost_equal(const_1_fts["zero_cross"], 0.0, err_msg="const1 zeroCross")
+    np.testing.assert_almost_equal(const_neg_fts["zero_cross"], 0.0, err_msg="const neg zeroCross")
+    np.testing.assert_almost_equal(lin_fts["zero_cross"], 1.0, err_msg="lin zeroCross")
+    np.testing.assert_almost_equal(sine_fts["zero_cross"], 10.0, err_msg="sine zeroCross")
 
     # CminPks
-    np.testing.assert_almost_equal(const_0_fts["CminPks"], 0.0, err_msg="const0 CminPks")
-    np.testing.assert_almost_equal(const_1_fts["CminPks"], 0.0, err_msg="const1 CminPks")
-    np.testing.assert_almost_equal(const_neg_fts["CminPks"], 0.0, err_msg="const neg CminPks")
-    np.testing.assert_almost_equal(lin_fts["CminPks"], 0.0, err_msg="lin CminPks")
-    np.testing.assert_almost_equal(sine_fts["CminPks"], 5.0, err_msg="sine CminPks")
+    np.testing.assert_almost_equal(const_0_fts["min_peaks"], 0.0, err_msg="const0 CminPks")
+    np.testing.assert_almost_equal(const_1_fts["min_peaks"], 0.0, err_msg="const1 CminPks")
+    np.testing.assert_almost_equal(const_neg_fts["min_peaks"], 0.0, err_msg="const neg CminPks")
+    np.testing.assert_almost_equal(lin_fts["min_peaks"], 0.0, err_msg="lin CminPks")
+    np.testing.assert_almost_equal(sine_fts["min_peaks"], 5.0, err_msg="sine CminPks")
 
     # CmaxPks
-    np.testing.assert_almost_equal(const_0_fts["CmaxPks"], 0.0, err_msg="const0 CmaxPks")
-    np.testing.assert_almost_equal(const_1_fts["CmaxPks"], 0.0, err_msg="const1 CmaxPks")
-    np.testing.assert_almost_equal(const_neg_fts["CmaxPks"], 0.0, err_msg="const neg CmaxPks")
-    np.testing.assert_almost_equal(lin_fts["CmaxPks"], 0.0, err_msg="lin CmaxPks")
-    np.testing.assert_almost_equal(sine_fts["CmaxPks"], 5.0, err_msg="sine CmaxPks")
+    np.testing.assert_almost_equal(const_0_fts["max_peaks"], 0.0, err_msg="const0 CmaxPks")
+    np.testing.assert_almost_equal(const_1_fts["max_peaks"], 0.0, err_msg="const1 CmaxPks")
+    np.testing.assert_almost_equal(const_neg_fts["max_peaks"], 0.0, err_msg="const neg CmaxPks")
+    np.testing.assert_almost_equal(lin_fts["max_peaks"], 0.0, err_msg="lin CmaxPks")
+    np.testing.assert_almost_equal(sine_fts["max_peaks"], 5.0, err_msg="sine CmaxPks")
 
     # totalE
-    np.testing.assert_almost_equal(const_0_fts["totalE"], 0.0, err_msg="const0 totalE", decimal=2)
-    np.testing.assert_almost_equal(const_1_fts["totalE"], 0.99, err_msg="const1 totalE", decimal=2)
-    np.testing.assert_almost_equal(constNeg_fts["totalE"], 0.99, err_msg="const neg totalE", decimal=2)
-    np.testing.assert_almost_equal(lin_fts["totalE"], 3283.50, err_msg="lin totalE", decimal=2)
-    np.testing.assert_almost_equal(sine_fts["totalE"], 0.50, err_msg="sine totalE", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["total_e"], 0.0, err_msg="const0 totalE", decimal=2)
+    np.testing.assert_almost_equal(const_1_fts["total_e"], 0.99, err_msg="const1 totalE", decimal=2)
+    np.testing.assert_almost_equal(constNeg_fts["total_e"], 0.99, err_msg="const neg totalE", decimal=2)
+    np.testing.assert_almost_equal(lin_fts["total_e"], 3283.50, err_msg="lin totalE", decimal=2)
+    np.testing.assert_almost_equal(sine_fts["total_e"], 0.50, err_msg="sine totalE", decimal=2)
 
     # linRegSlope
-    np.testing.assert_almost_equal(const0_fts["linRegSlope"], 0.0, err_msg="const0 linRegSlope")
-    np.testing.assert_almost_equal(const1_fts["linRegSlope"], 0.0, err_msg="const1 linRegSlope")
-    np.testing.assert_almost_equal(const_neg_fts["linRegSlope"], 0.0, err_msg="const neg linRegSlope")
-    np.testing.assert_almost_equal(lin_fts["linRegSlope"], 100.0, err_msg="lin linRegSlope")
-    np.testing.assert_almost_equal(sine_fts["linRegSlope"], -0.378, err_msg="sine linRegSlope", decimal=2)
+    np.testing.assert_almost_equal(const0_fts["lin_reg_slope"], 0.0, err_msg="const0 linRegSlope")
+    np.testing.assert_almost_equal(const1_fts["lin_reg_slope"], 0.0, err_msg="const1 linRegSlope")
+    np.testing.assert_almost_equal(const_neg_fts["lin_reg_slope"], 0.0, err_msg="const neg linRegSlope")
+    np.testing.assert_almost_equal(lin_fts["lin_reg_slope"], 100.0, err_msg="lin linRegSlope")
+    np.testing.assert_almost_equal(sine_fts["lin_reg_slope"], -0.378, err_msg="sine linRegSlope", decimal=2)
 
     # linRegb
-    np.testing.assert_almost_equal(const_0_fts["linRegb"], 0.0, err_msg="const0 linRegb")
-    np.testing.assert_almost_equal(const_1_fts["linRegb"], 1.0, err_msg="const1 linRegb")
-    np.testing.assert_almost_equal(const_neg_fts["linRegb"], -1.0, err_msg="const neg linRegb")
-    np.testing.assert_almost_equal(lin_fts["linRegb"], 0.0, err_msg="lin linRegb")
-    np.testing.assert_almost_equal(sine_fts["linRegb"], 0.1875, err_msg="sine linRegb", decimal=2)
+    np.testing.assert_almost_equal(const_0_fts["lin_reg_b"], 0.0, err_msg="const0 linRegb")
+    np.testing.assert_almost_equal(const_1_fts["lin_reg_b"], 1.0, err_msg="const1 linRegb")
+    np.testing.assert_almost_equal(const_neg_fts["lin_reg_b"], -1.0, err_msg="const neg linRegb")
+    np.testing.assert_almost_equal(lin_fts["lin_reg_b"], 0.0, err_msg="lin linRegb")
+    np.testing.assert_almost_equal(sine_fts["lin_reg_b"], 0.1875, err_msg="sine linRegb", decimal=2)
 
     # degreeLin
-    np.testing.assert_almost_equal(const_0_fts["degreeLin"], 0.0, err_msg="const0 degreeLin")
-    np.testing.assert_almost_equal(const_1_fts["degreeLin"], 0.0, err_msg="const1 degreeLin")
+    np.testing.assert_almost_equal(const_0_fts["corr_lin_reg"], 0.0, err_msg="const0 degreeLin")
+    np.testing.assert_almost_equal(const_1_fts["corr_lin_reg"], 0.0, err_msg="const1 degreeLin")
     np.testing.assert_almost_equal(const_neg_fts["degreeLin"], 0.0, err_msg="const neg degreeLin")
-    np.testing.assert_almost_equal(lin_fts["degreeLin"], 1.0, err_msg="lin degreeLin")
-    np.testing.assert_almost_equal(sine_fts["degreeLin"], 0.154, err_msg="sine degreeLin", decimal=2)
+    np.testing.assert_almost_equal(lin_fts["corr_lin_reg"], 1.0, err_msg="lin degreeLin")
+    np.testing.assert_almost_equal(sine_fts["corr_lin_reg"], 0.154, err_msg="sine degreeLin", decimal=2)
 
     # mobility
     np.testing.assert_almost_equal(const_0_fts["mobility"], 0.0, err_msg="const0 mobility")

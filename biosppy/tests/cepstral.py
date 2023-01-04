@@ -15,23 +15,23 @@ import numpy as np
 from ..features.cepstral import mfcc
 
 
-def getData(LEN=100, sampling_rate=100):
-    const0 = np.zeros(LEN)
-    const1 = np.ones(LEN)
-    constNeg = -1 * np.ones(LEN)
+def getData(size=100, sampling_rate=100):
+    const0 = np.zeros(size)
+    const1 = np.ones(size)
+    constNeg = -1 * np.ones(size)
 
     f = 5
-    x = np.arange(0, LEN/sampling_rate, 1/sampling_rate)
+    x = np.arange(0, size/sampling_rate, 1/sampling_rate)
     sine = np.sin(2 * np.pi * f * x)
     np.random.seed(0)
-    sine = sine + np.random.normal(0, 0.5, LEN)
-    lin = np.arange(LEN)
+    sine = sine + np.random.normal(0, 0.5, size)
+    lin = np.arange(size)
     sine = +2*np.sin(2 * np.pi * 10 * x)
     return const0, const1, constNeg, lin, sine
 
 
-def test(LEN=2000, sampling_rate=24410):
-    const0, const1, constNeg, lin, sine = getData(LEN, sampling_rate)
+def test(size=2000, sampling_rate=24410):
+    const0, const1, constNeg, lin, sine = getData(size, sampling_rate)
     
     const0_fts = mfcc(const0, sampling_rate, sampling_rate)["mfcc"]
     const1_fts = mfcc(const1, sampling_rate, sampling_rate)["mfcc"]

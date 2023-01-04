@@ -587,6 +587,7 @@ def plot_abp(ts=None,
         # close
         plt.close(fig)
 
+
 def plot_eda(ts=None,
              raw=None,
              filtered=None,
@@ -595,7 +596,8 @@ def plot_eda(ts=None,
              amplitudes=None,
              path=None,
              show=False):
-    """Create a summary plot from the output of signals.eda.eda.
+    """
+    Create a summary plot from the output of signals.eda.eda.
 
     Parameters
     ----------
@@ -665,6 +667,125 @@ def plot_eda(ts=None,
 
     # make layout tight
     fig.tight_layout()
+
+    # save to file
+    if path is not None:
+        path = utils.normpath(path)
+        root, ext = os.path.splitext(path)
+        ext = ext.lower()
+        if ext not in ['png', 'jpg']:
+            path = root + '.png'
+        fig.savefig(path, dpi=200, bbox_inches='tight')
+
+    # show
+    if show:
+        plt.show()
+    else:
+        # close
+        plt.close(fig)
+
+
+def plot_eda_(ts=None,
+             raw=None,
+             filtered=None,
+             edr=None,
+             edl=None,
+             onsets=None,
+             peaks=None,
+             amplitudes=None,
+             path=None,
+             show=False):
+    """Create a summary plot from the output of signals.ecg.ecg.
+
+    Parameters
+    ----------
+    ts : array
+        Signal time axis reference (seconds).
+    raw : array
+        Raw ECG signal.
+    filtered : array
+        Filtered ECG signal.
+    edr : array
+        Electrodermal response signal.
+    edl : array
+        Electrodermal level signal.
+    onsets : array
+        Events onsets indices.
+    peaks : array
+        Events peaks indices.
+    amplitudes : array
+        Amplitudes location indices.
+    path : str, optional
+        If provided, the plot will be saved to the specified file.
+    show : bool, optional
+        If True, show the plot immediately.
+
+    """
+
+    fig = plt.figure()
+    fig.suptitle('EDA Summary')
+    gs = gridspec.GridSpec(6, 2)
+
+    # raw signal
+    ax1 = fig.add_subplot(gs[:2, 0])
+
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
+    ax1.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+
+    ax1.set_ylabel('Amplitude')
+    ax1.legend()
+    ax1.grid()
+
+    # filtered signal with rpeaks
+    ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
+
+    ymin = np.min(filtered)
+    ymax = np.max(filtered)
+    alpha = 0.1 * (ymax - ymin)
+    ymax += alpha
+    ymin -= alpha
+
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.plot(ts[onsets], filtered[onsets], ".",
+               color='m',
+               linewidth=MINOR_LW,
+               label='Onsets')
+    ax2.plot(ts[peaks], filtered[peaks], "x",
+               color='g',
+               linewidth=MINOR_LW,
+               label='peaks')
+
+    ax2.set_ylabel('Amplitude')
+    ax2.legend()
+    ax2.grid()
+
+    # heart rate
+    ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
+
+    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitude')
+
+    ax3.set_xlabel('Time (s)')
+    ax3.set_ylabel('Amplitude')
+    ax3.legend()
+    ax3.grid()
+
+    # templates
+    ax4 = fig.add_subplot(gs[1:5, 1])
+
+    ax4.plot(ts, filtered, 'm', linewidth=MINOR_LW, alpha=0.7, label="filtered")
+    ax4.plot(ts, edl, 'm', linewidth=MINOR_LW, alpha=0.7, label="EDL")
+
+    ax4.set_xlabel('Time (s)')
+    ax4.set_ylabel('Amplitude')
+    ax4.set_title('EDA Decomposition')
+    ax4.grid()
+
+    ax5 = ax4.twinx()
+    ax5.plot(ts[1:], edr, 'm', linewidth=MINOR_LW, alpha=0.7, label="EDR")
+    ax4.legend() 
+    ax5.legend() 
+    # make layout tight
+    gs.tight_layout(fig)
 
     # save to file
     if path is not None:

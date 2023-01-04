@@ -15,6 +15,7 @@ from scipy import fft
 # local
 from .. import utils
 from . import time
+from ..signals import tools as st
 
 
 def freq_to_mel(hertz):
@@ -62,7 +63,7 @@ def mel_to_freq(mel):
     return 700 * (np.exp(mel / 1125) - 1)
 
 
-def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
+def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     """
     Computes the mel-frequency cepstral coefficients.
     
@@ -72,9 +73,9 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
         Input signal.
     sampling_rate: float
         Data sampling rate.
-    N : int
+    window_size : int
        DFT window size. 
-    LEN_FILTR : int
+    num_filters : int
        Number of filters.
 
     Returns
@@ -91,34 +92,28 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
     - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
    
    """
+   # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    freqs, power = st.power_spectrum(signal, sampling_rate=sampling_rate, decibel=False)
     
-    # apply window to remove high freqyency at ends 
-    window = np.hamming(len(signal))
-    conv_signal = signal * window
-
-    # DFT
-    spectrum = np.abs(np.fft.fft(conv_signal, N))
-    f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
-    spectrum = np.nan_to_num(spectrum[:(len(spectrum)//2)+1])
-    spectrum /= len(spectrum)
-    f = np.abs(f[:(len(f)//2)+1]*sampling_rate)
-
     # filter bank
     low_f = 0
-    high_f = f[-1]
+    high_f = freqs[-1]
 
     ## convert to mels
     low_f_mel = freq_to_mel(low_f)
     high_f_mel = freq_to_mel(high_f)
 
     # lineary spaced array between the two MEL frequencies
-    lin_mel = np.linspace(low_f_mel, high_f_mel, num=LEN_FILTER+2)
+    lin_mel = np.linspace(low_f_mel, high_f_mel, num=num_filters+2)
     
     # convert the array to the frequency space
     lin_hz = np.array([mel_to_freq(d) for d in lin_mel])
     
     # normalize the array to the FFT size and choose the associated FFT values
-    filter_bins_hz = np.floor((N + 1) / sampling_rate * lin_hz).astype(int)
+    filter_bins_hz = np.floor((window_size + 1) / sampling_rate * lin_hz).astype(int)
 
     # filterbank
     filter_banks = [] 
@@ -127,15 +122,15 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
         _f = [0]*(filter_bins_hz[b])
         _f += np.linspace(0, 1, filter_bins_hz[b + 1] - filter_bins_hz[b]).tolist()
         _f += np.linspace(1, 0, filter_bins_hz[b + 2] - filter_bins_hz[b + 1]).tolist()
-        _f += [0]*(len(f)- filter_bins_hz[b + 2])
+        _f += [0]*(len(freqs)- filter_bins_hz[b + 2])
 
         filter_banks += [_f]
     filter_banks = np.array(filter_banks)
 
-    enorm = 2.0 / (lin_hz[2:LEN_FILTER+2] - lin_hz[:LEN_FILTER])
+    enorm = 2.0 / (lin_hz[2:num_filters+2] - lin_hz[:num_filters])
     filter_banks *= enorm[:, np.newaxis]
 
-    signal_power = np.abs(spectrum)**2*(1/len(spectrum))
+    signal_power = np.abs(power)**2*(1/len(power))
     
     filter_banks = np.dot(filter_banks, signal_power.T)
     filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)
@@ -157,7 +152,7 @@ def mfcc(signal, N=100, sampling_rate=100, LEN_FILTER=10):
     return utils.ReturnTuple(tuple(args), tuple(names))
     
 
-def quefrency_features(signal=None, sampling_rate=100):
+def cepstral_features(signal=None, sampling_rate=100):
     """
     Compute quefrency metrics describing the signal.
    

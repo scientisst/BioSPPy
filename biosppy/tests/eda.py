@@ -13,13 +13,13 @@ import numpy as np
 from matplotlib import pylab as plt
 
 # local
-from ..signals.eda import eda_features, eda_param
+from ..signals.eda import eda_features, eda_events
 
 
 def test():
     signal = np.loadtxt("examples/eda.txt")  
     
-    onsets, peaks, amplitudes, end = eda_param(signal, filt=True, size=1.5, sampling_rate=1000)
+    onsets, peaks, amplitudes, end = eda_events(signal, filt=True, size=1.5, sampling_rate=1000)
     for i in range(len(onsets)):
         plt.figure()
         plt.plot(signal)

@@ -21,3 +21,4 @@ from .synthesizers import ecg
 from .inter_plotting import ecg, acc
 from .features import frequency, time, time_freq, cepstral, phase_space 
 from .tests import eda, frequency, time, cepstral, phase_space, time_freq
+from .storage import load_txt

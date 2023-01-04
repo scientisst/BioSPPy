@@ -15,6 +15,7 @@ from scipy import interpolate
 #local
 from .. import utils
 from . import time
+from ..signals import tools as st
 
 
 def getbands(frequencies, fband):
@@ -85,23 +86,16 @@ def freq_features(signal, sampling_rate):
         
     # check inputs
     assert len(signal) > 0, 'Signal size < 1'
-
-    # ensure numpy
     signal = np.array(signal)
-    window = np.hamming(len(signal))
-    signal = signal * window
 
-    spectrum = np.abs(np.fft.fft(signal, sampling_rate))
+    freqs, power = st.power_spectrum(signal, decibel=False)
     
-    f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
-    spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
-    spectrum /= len(spectrum)
-    f = np.abs(f[:len(f)//2]*sampling_rate)
+    power = np.nan_to_num(power)
 
     args, names = [], []
 
     # temporal
-    _fts = time.time_features(spectrum, sampling_rate)
+    _fts = time.time_features(power, sampling_rate)
     fts_name = [str("FFT_" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
@@ -110,76 +104,84 @@ def freq_features(signal, sampling_rate):
 
     # fundamental_frequency
     try:
-        fundamental_frequency = f[np.argmax(spectrum)]
+        fundamental_frequency = freqs[np.argmax(power)]
     except Exception as e:
-        print(e)
+        print("fundamental frequency", e)
         fundamental_frequency = None
     args += [fundamental_frequency]
     names += ['fundamental_frequency']
 
     # harmonic sum
     try:
-        if fundamental_frequency > 0:
+        if fundamental_frequency > (sampling_rate/2 + 2):
             harmonics = np.array([n * fundamental_frequency for n in range(2, int((sampling_rate/2)/fundamental_frequency), 1)]).astype(int)
-            sp_hrm = spectrum[np.array([np.where(f >= h)[0][0] for h in harmonics])]
+            sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
             sum_harmonics = np.sum(sp_hrm)
         else:
-            sum_harmonics = 0
+            sum_harmonics = None
     except Exception as e:
-        print(e)
+        print("sum harmonics", e)
         sum_harmonics = None
     args += [sum_harmonics]
     names += ['sum_harmonics']
 
     # spectral_roll_on
-    en_sp = spectrum**2#*(f[1]-f[0])
+    en_sp = power**2#*(f[1]-f[0])
     cum_en = np.cumsum(en_sp)
 
     try:
-        norm_cm_s = cum_en/cum_en[-1]
+        if cum_en[-1] is None or cum_en[-1] == 0.0:
+            norm_cm_s = None
+        else:
+            norm_cm_s = cum_en/cum_en[-1]
     except Exception as e:
-        print(e)
-        norm_cm_s =cum_en
+        print("norm_cm_s", e)
+        norm_cm_s = None
+
     try:
-        spectral_roll_on = f[np.argwhere(norm_cm_s >= 0.05)[0][0]]
-    except:
+        if norm_cm_s is None:
+            spectral_roll_on = None
+        else:
+            spectral_roll_on = freqs[np.argwhere(norm_cm_s >= 0.05)[0][0]]
+    except Exception as e:
+        print("spectral_roll_on", e)
         spectral_roll_on = None
 
     args += [spectral_roll_on]
     names += ['spectral_roll_on']
-
+    
     # spectral_roll_off
     try:
-        spectral_roll_off = f[np.argwhere(norm_cm_s >= 0.95)[0][0]]
-    except:
+        if norm_cm_s is None:
+            spectral_roll_off = None 
+        else:
+            spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
+    except Exception as e:
+        print("spectral_roll_off", e)
         spectral_roll_off = None
     args += [spectral_roll_off]
     names += ['spectral_roll_off']
 
     # histogram
     try:
-        _hist = list(np.histogram(spectrum, bins=5)[0])
+        _hist = list(np.histogram(power, bins=5)[0])
         _hist = _hist/np.sum(_hist)
-    except:
+    except Exception as e:
+        print("frequency hist", e)
         _hist = [None] * 5
 
     args += [i for i in _hist]
     names += ['spectral_hist_' + str(i) for i in range(len(_hist))]
 
     # bands
-    spectrum = np.nan_to_num(np.abs(np.fft.fft(signal, sampling_rate*5)))
-    f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
-
-    spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
-    spectrum /= len(spectrum)
-    f = np.abs(f[:len(f)//2]*sampling_rate)
+    freqs, power = st.power_spectrum(signal, sampling_rate*5, decibel=False)
+    power = np.nan_to_num(power)
 
     # resampling
-    _f = interpolate.interp1d(f, spectrum)
+    _f = interpolate.interp1d(freqs, power)
     res_sr = 500  # new sampling rate
-    f = np.arange(f[0], f[-1], 1/res_sr)
-
-    f_b = getbands(f, fband = [0.05, 0.1])
+    freqs = np.arange(freqs[0], freqs[-1], 1/res_sr)
+    f_b = getbands(freqs, fband = [0.05, 0.1])
     
     # temporal
     _fts = time.time_features(f_b, res_sr)
@@ -189,7 +191,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(f, fband = [0.1, 0.2])
+    f_b = getbands(freqs, fband = [0.1, 0.2])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_LF" + i) for i in _fts.keys()]
@@ -198,7 +200,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(f, fband = [0.2, 0.3])
+    f_b = getbands(freqs, fband = [0.2, 0.3])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_MD" + i) for i in _fts.keys()]
@@ -207,7 +209,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(f, fband = [0.3, 0.4])
+    f_b = getbands(freqs, fband = [0.3, 0.4])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_HF" + i) for i in _fts.keys()]
@@ -216,7 +218,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(f, fband = [0.4, 0.5])
+    f_b = getbands(freqs, fband = [0.4, 0.5])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_VHF" + i) for i in _fts.keys()]

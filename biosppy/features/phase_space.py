@@ -100,16 +100,16 @@ def phase_space_features(signal=None):
     args, names = [], []
 
     rp = rec_plot(signal)["rec_plot"]
-    T = 0.5
-    L = len(rp)
-    for l in range(L):
-        for c in range(L):
-            rp[l, c] = 1 if rp[l, c] < T else 0
-    L = len(rp)
-    diag_freq = np.zeros(L+1)
+    threshold = 0.5
+    len_rp = len(rp)
+    for l in range(len_rp):
+        for c in range(len_rp):
+            rp[l, c] = 1 if rp[l, c] < threshold else 0
+    len_rp = len(rp)
+    diag_freq = np.zeros(len_rp+1)
 
     # upper diagnotal
-    for k in range(1, L-1, 1):
+    for k in range(1, len_rp-1, 1):
         d = np.diag(rp, k=k)
         d_l = 0
         for _, i in enumerate(d):
@@ -126,7 +126,7 @@ def phase_space_features(signal=None):
                 diag_freq[d_l] += 1
 
     # lower diagonal
-    for k in range(-1, -(L-1), -1):
+    for k in range(-1, -(len_rp-1), -1):
         d = np.diag(rp, k=k)
         d_l = 0
         for _, i in enumerate(d):
@@ -143,8 +143,8 @@ def phase_space_features(signal=None):
                 diag_freq[d_l] += 1
         
     # vertical lines
-    vert_freq = np.zeros(L+1)
-    for k in range(L):
+    vert_freq = np.zeros(len_rp+1)
+    for k in range(len_rp):
         d = rp[:, k]
         d_l = 0
         for _, i in enumerate(d):
@@ -161,8 +161,8 @@ def phase_space_features(signal=None):
                 vert_freq[d_l] += 1
 
     # white vertical lines
-    white_vert_freq = np.zeros(L+1)
-    for k in range(L):
+    white_vert_freq = np.zeros(len_rp+1)
+    for k in range(len_rp):
         d = rp[:, k]
         d_l = 0
         for _, i in enumerate(d):
@@ -181,9 +181,9 @@ def phase_space_features(signal=None):
     # recurrence rate
     try:
         rec_rate = 0
-        for l in range(L):
+        for l in range(len_rp):
             rec_rate += np.sum(rp[l])
-        rec_rate/=(L**2)
+        rec_rate/=(len_rp**2)
     except Exception as e:
         print(e) 
         rec_rate = None
@@ -211,7 +211,7 @@ def phase_space_features(signal=None):
     
     # det_rr_ratio 
     try:
-        det_rr_ratio = L**2*(np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/(np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)]))**2)
+        det_rr_ratio = len_rp**2*(np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/(np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)]))**2)
     except Exception as e:
         print(e) 
         det_rr_ratio = None
