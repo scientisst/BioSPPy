@@ -70,7 +70,7 @@ def com(signal):
     args, names = [], []
     d = np.diff(signal)
     try:
-        if mob(signal)["mobility"] != None:
+        if mob(signal)["mobility"] is not None and mob(d)["mobility"] is not None:
             complexity = mob(d)["mobility"]/mob(signal)["mobility"]
         else:
             complexity = None
@@ -102,7 +102,7 @@ def chaos(signal):
     args, names = [], []
     d = np.diff(signal)
     try:
-        if com(signal)['complexity'] != None:
+        if com(signal)['complexity'] is not None:
             chaos = com(d)['complexity']/com(signal)['complexity']
         else:
             chaos = None
@@ -519,7 +519,10 @@ def time_features(signal, sampling_rate):
 
     # autocorrelation sum
     try:
-        autocorr = np.sum(np.correlate(signal, signal, 'full'))
+        if np.sum(np.abs(signal)) > 0: 
+            autocorr = np.sum(np.correlate(signal, signal, 'full'))
+        else:
+            autocorr = None
     except Exception as e:
         print("autocorr", e)   
         autocorr = None
@@ -565,32 +568,35 @@ def time_features(signal, sampling_rate):
     _t = np.array(time).reshape(-1, 1)
     try:
         reg = linear_model.LinearRegression().fit(_t,  signal) 
-        lin_reg_slope = reg.coef_[0]    
+        lin_reg_slope = reg.coef_[0]
     except Exception as e:
-        print("lin_reg_slope", e)   
+        print("lin_reg_slope", e)
         lin_reg_slope = None
     args += [lin_reg_slope]
     names += ['lin_reg_slope']
 
     try:
-        lin_reg_b = reg.intercept_    
+        lin_reg_b = reg.intercept_
     except Exception as e:
         print("lin_reg_b", e)   
         lin_reg_b = None
     args += [lin_reg_b]
     names += ['lin_reg_b']
 
-    try:    
-        if np.sum(np.abs(signal)) > 0: 
-            corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
-        else:
+    try:
+        c = 0
+        if np.sum(np.abs(signal)) > 0 and len(np.unique(signal)) > 1:
+            _r = reg.predict(_t)
+            if np.sum(np.abs(_r)) > 0 and len(np.unique(_r)) > 1:
+                corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
+                c = 1
+        if not c:
             corr_lin_reg = None
     except Exception as e:
         print("corr_lin_reg", e)  
         corr_lin_reg = None
     args += [corr_lin_reg]
     names += ['corr_lin_reg']
-    
 
     # hjorth features
     # mobility
@@ -622,7 +628,7 @@ def time_features(signal, sampling_rate):
 
     # Hazard
     try:    
-        if chaos(signal)['chaos'] != None:
+        if chaos(signal)['chaos'] is not None:
             hazard = chaos(sig_diff)['chaos']/chaos(signal)['chaos']
         else:
             hazard = None
@@ -691,7 +697,7 @@ def time_features(signal, sampling_rate):
     # entropy
     try:
         if np.sum(np.abs(signal)) > 0: 
-            _entropy = entropy(signal)
+            _entropy = np.nan_to_num(entropy(signal))
         else:
             _entropy = None
     except Exception as e:
