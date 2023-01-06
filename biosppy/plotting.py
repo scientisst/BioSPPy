@@ -28,7 +28,6 @@ import numpy as np
 # local
 from . import utils
 from .signals import tools as st
-from .signals import hrv
 
 # Globals
 MAJOR_LW = 2.5
