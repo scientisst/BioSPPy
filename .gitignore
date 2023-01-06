@@ -23,6 +23,7 @@ var/
 .installed.cfg
 *.egg
 
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -61,3 +62,7 @@ target/
 
 # Test
 test.py
+
+# MAC
+.DS_Store
+**/.DS_Store

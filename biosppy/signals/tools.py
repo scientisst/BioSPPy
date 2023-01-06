@@ -755,6 +755,7 @@ def power_spectrum(
     power = np.power(power, 2)
 
     if decibel:
+        power = np.nan_to_num(power)
         power = 10.0 * np.log10(power)
 
     return utils.ReturnTuple((freqs, power), ("freqs", "power"))
