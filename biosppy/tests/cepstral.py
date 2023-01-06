@@ -16,9 +16,9 @@ from ..features.cepstral import mfcc
 
 
 def getData(size=100, sampling_rate=100):
-    const0 = np.zeros(size)
-    const1 = np.ones(size)
-    constNeg = -1 * np.ones(size)
+    const_0 = np.zeros(size)
+    const_1 = np.ones(size)
+    const_neg = -1 * np.ones(size)
 
     f = 5
     x = np.arange(0, size/sampling_rate, 1/sampling_rate)
@@ -27,15 +27,15 @@ def getData(size=100, sampling_rate=100):
     sine = sine + np.random.normal(0, 0.5, size)
     lin = np.arange(size)
     sine = +2*np.sin(2 * np.pi * 10 * x)
-    return const0, const1, constNeg, lin, sine
+    return const_0, const_1, const_neg, lin, sine
 
 
 def test(size=2000, sampling_rate=24410):
-    const0, const1, constNeg, lin, sine = getData(size, sampling_rate)
+    const_0, const_1, const_neg, lin, sine = getData(size, sampling_rate)
     
-    const0_fts = mfcc(const0, sampling_rate, sampling_rate)["mfcc"]
-    const1_fts = mfcc(const1, sampling_rate, sampling_rate)["mfcc"]
-    constNeg_fts = mfcc(constNeg, sampling_rate, sampling_rate)["mfcc"]
+    const_0_fts = mfcc(const_0, sampling_rate, sampling_rate)["mfcc"]
+    const_1_fts = mfcc(const_1, sampling_rate, sampling_rate)["mfcc"]
+    const_neg_fts = mfcc(const_neg, sampling_rate, sampling_rate)["mfcc"]
     lin_fts = mfcc(lin, sampling_rate, sampling_rate)["mfcc"]
     sine_fts = mfcc(sine, sampling_rate, sampling_rate)["mfcc"]
     

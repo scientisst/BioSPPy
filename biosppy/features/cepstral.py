@@ -125,7 +125,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
         _f += [0]*(len(freqs)- filter_bins_hz[b + 2])
 
         filter_banks += [_f]
-    filter_banks = np.array(filter_banks)
+    filter_banks = np.array(filter_banks, dtype=object)
 
     enorm = 2.0 / (lin_hz[2:num_filters+2] - lin_hz[:num_filters])
     filter_banks *= enorm[:, np.newaxis]
