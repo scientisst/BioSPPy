@@ -54,7 +54,7 @@ def pcosine(u, v):
     return dist
 
 
-def pdist(X, metric='euclidean', p=2, w=None, V=None, VI=None):
+def pdist(X, metric='euclidean', **kwargs):
     """Pairwise distances between observations in n-dimensional space.
 
     Wraps scipy.spatial.distance.pdist.
@@ -69,14 +69,15 @@ def pdist(X, metric='euclidean', p=2, w=None, V=None, VI=None):
         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
         'matching', 'minkowski', 'pcosine', 'rogerstanimoto', 'russellrao',
         'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule'.
-    p : float, optional
-        The p-norm to apply (for Minkowski, weighted and unweighted).
-    w : array, optional
-        The weight vector (for weighted Minkowski).
-    V : array, optional
-        The variance vector (for standardized Euclidean).
-    VI : array, optional
-        The inverse of the covariance matrix (for Mahalanobis).
+    Possible kwargs:
+        p : float
+            The p-norm to apply (for Minkowski, weighted and unweighted).
+        w : array
+            The weight vector (for weighted Minkowski).
+        V : array
+            The variance vector (for standardized Euclidean).
+        VI : array
+            The inverse of the covariance matrix (for Mahalanobis).
 
     Returns
     -------
@@ -91,10 +92,10 @@ def pdist(X, metric='euclidean', p=2, w=None, V=None, VI=None):
         if metric == 'pcosine':
             metric = pcosine
 
-    return ssd.pdist(X, metric, p, w, V, VI)
+    return ssd.pdist(X, metric, **kwargs)
 
 
-def cdist(XA, XB, metric='euclidean', p=2, V=None, VI=None, w=None):
+def cdist(XA, XB, metric='euclidean', **kwargs):
     """Computes distance between each pair of the two collections of inputs.
 
     Wraps scipy.spatial.distance.cdist.
@@ -113,14 +114,15 @@ def cdist(XA, XB, metric='euclidean', p=2, V=None, VI=None, w=None):
         'euclidean', 'hamming', 'jaccard', 'kulsinski', 'mahalanobis',
         'matching', 'minkowski', 'pcosine', 'rogerstanimoto', 'russellrao',
         'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule'.
-    p : float, optional
-        The p-norm to apply (for Minkowski, weighted and unweighted).
-    w : array, optional
-        The weight vector (for weighted Minkowski).
-    V : array, optional
-        The variance vector (for standardized Euclidean).
-    VI : array, optional
-        The inverse of the covariance matrix (for Mahalanobis).
+    Possible kwargs:
+        p : float
+            The p-norm to apply (for Minkowski, weighted and unweighted).
+        w : array
+            The weight vector (for weighted Minkowski).
+        V : array
+            The variance vector (for standardized Euclidean).
+        VI : array
+            The inverse of the covariance matrix (for Mahalanobis).
 
     Returns
     -------
@@ -135,7 +137,7 @@ def cdist(XA, XB, metric='euclidean', p=2, V=None, VI=None, w=None):
         if metric == 'pcosine':
             metric = pcosine
 
-    return ssd.cdist(XA, XB, metric, p, V, VI, w)
+    return ssd.cdist(XA, XB, metric, **kwargs)
 
 
 def squareform(X, force="no", checks=True):
