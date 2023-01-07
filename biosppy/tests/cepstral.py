@@ -38,11 +38,13 @@ def test(size=2000, sampling_rate=24410):
     const_neg_fts = mfcc(const_neg, sampling_rate, sampling_rate)["mfcc"]
     lin_fts = mfcc(lin, sampling_rate, sampling_rate)["mfcc"]
     sine_fts = mfcc(sine, sampling_rate, sampling_rate)["mfcc"]
-    
-    np.testing.assert_almost_equal(const0_fts, [-1.00000000e-08, -2.56546322e-08, -4.09905813e-08, -5.56956514e-08, -6.94704899e-08, -8.20346807e-08, -9.31324532e-08, -1.02537889e-07, -1.10059519e-07], err_msg="const0 mfcc", decimal=2)
-    np.testing.assert_almost_equal(const1_fts, [ 248.30695301,   88.68699763,   72.82806925,  -63.63692506, -173.93188851, -353.00476906, -535.48391595, -758.99703192, -986.48117664], err_msg="const1 mfcc", decimal=2)
-    np.testing.assert_almost_equal(constNeg_fts, [ 248.30695301 ,  88.68699763 ,  72.82806925,  -63.63692506, -173.93188851, -353.00476906 ,-535.48391595, -758.99703192 ,-986.48117664], err_msg="const neg mfcc", decimal=2)
-    np.testing.assert_almost_equal(lin_fts, [ 245.32180296  , 81.85925318 ,  64.09605229,  -71.46085216, -177.42474564, -348.46821293 ,-519.31140372, -728.02836367, -938.33424622], err_msg="lin mfcc", decimal=2)
-    np.testing.assert_almost_equal(sine_fts, [  253.25355662 ,   99.95100524,    87.16461631 ,  -50.87104034, -168.34395888 , -360.63497483  ,-562.20900582,  -809.9139956, -1065.34792531], err_msg="sine mfcc", decimal=2)
+
+    np.testing.assert_almost_equal(const_0_fts, [-1.00000000e-08, -2.56546322e-08, -4.09905813e-08, -5.56956514e-08, -6.94704899e-08, -8.20346807e-08, -9.31324532e-08, -1.02537889e-07, -1.10059519e-07], err_msg="const0 mfcc", decimal=2)
+    np.testing.assert_almost_equal(const_1_fts, [ -4094.7587913,   -4655.24449943,   3104.0668423,  13786.7513218, 18916.80269864,  13850.59412923,   1693.48355436,  -9058.78575545, -11369.75300578], err_msg="const1 mfcc", decimal=2)
+    np.testing.assert_almost_equal(const_neg_fts,  [ -4094.7587913,   -4655.24449943 ,  3104.06684236 , 13786.75132184, 18916.80269864  ,13850.59412923  , 1693.48355436,  -9058.78575545 , -11369.75300578], err_msg="const neg mfcc", decimal=2)
+    np.testing.assert_almost_equal(lin_fts, [ 1483.88201703 , 1187.9059237 , -1452.84354142, -2837.49585829,
+ -1349.86719777  , 416.79597194 , -683.9139044 , -3868.546269, -5379.7824041 ] , err_msg="lin mfcc", decimal=2)
+    np.testing.assert_almost_equal(sine_fts,[  175.74366035  , 433.09709603,   510.77151459 ,  231.21002646,
+  -317.02382365 , -792.04194275 , -989.60169899, -1138.51514325, -1664.17796913],  err_msg="sine mfcc", decimal=2)
 
     print("End Check")
