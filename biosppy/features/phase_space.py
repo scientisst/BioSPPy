@@ -106,7 +106,7 @@ def phase_space_features(signal=None):
         for c in range(len_rp):
             rp[l, c] = 1 if rp[l, c] < threshold else 0
     len_rp = len(rp)
-    diag_freq = np.zeros(len_rp+1)
+    diag_freq = np.zeros(len_rp+1, dtype=int)
 
     # upper diagnotal
     for k in range(1, len_rp-1, 1):
@@ -143,7 +143,7 @@ def phase_space_features(signal=None):
                 diag_freq[d_l] += 1
         
     # vertical lines
-    vert_freq = np.zeros(len_rp+1)
+    vert_freq = np.zeros(len_rp+1, dtype=int)
     for k in range(len_rp):
         d = rp[:, k]
         d_l = 0
@@ -161,7 +161,7 @@ def phase_space_features(signal=None):
                 vert_freq[d_l] += 1
 
     # white vertical lines
-    white_vert_freq = np.zeros(len_rp+1)
+    white_vert_freq = np.zeros(len_rp+1, dtype=int)
     for k in range(len_rp):
         d = rp[:, k]
         d_l = 0
@@ -185,7 +185,7 @@ def phase_space_features(signal=None):
             rec_rate += np.sum(rp[l])
         rec_rate/=(len_rp**2)
     except Exception as e:
-        print(e) 
+        print("rec_plot_rec_rate", e) 
         rec_rate = None
     args += [rec_rate]
     names += ['rec_plot_rec_rate']
@@ -193,72 +193,103 @@ def phase_space_features(signal=None):
     
     # determ 
     try:
-        determ = np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)])
+        _sum = np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)])
+        if _sum > 0:
+            determ = np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/_sum
+        else:
+            determ = none
     except Exception as e:
-        print(e) 
+        print("rec_plot_determ", e) 
         determ = None
     args += [determ]
     names += ['rec_plot_determ']
     
     # laminarity 
     try:
-        laminarity = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/np.sum([i*vert_freq[i] for i in range(len(vert_freq))])
+        _sum = np.sum([i*vert_freq[i] for i in range(len(vert_freq))])
+        if _sum > 0:
+            laminarity = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/_sum
+        else:
+            laminarity = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_laminarity", e) 
         laminarity = None
     args += [laminarity]
     names += ['rec_plot_laminarity']
     
     # det_rr_ratio 
     try:
-        det_rr_ratio = len_rp**2*(np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/(np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)]))**2)
+        _sum = np.sum([i*diag_freq[i] for i in range(1, len(diag_freq), 1)])
+        if _sum > 0:
+            det_rr_ratio = len_rp**2*(np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/_sum**2)
+        else:
+            det_rr_ratio = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_det_rr_ratio", e) 
         det_rr_ratio = None
     args += [det_rr_ratio]
     names += ['rec_plot_det_rr_ratio']
     
     # det_rr_ratio 
     try:
-        rec_plt_lami_determ_ratio = laminarity/determ
+        if determ is not None and determ > 0:
+            rec_plt_lami_determ_ratio = laminarity/determ
+        else:
+            rec_plt_lami_determ_ratio = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_lami_determ_ratio", e) 
         rec_plt_lami_determ_ratio = None
     args += [rec_plt_lami_determ_ratio]
     names += ['rec_plot_lami_determ_ratio']
     
     # avg_diag_line_len 
     try:
-        avg_diag_line_len = np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/np.sum(diag_freq)
+        _sum = np.sum(diag_freq)
+        if _sum > 0:
+            avg_diag_line_len = np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/_sum
+        else:
+            avg_diag_line_len = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_avg_diag_line_len", e) 
         avg_diag_line_len = None
     args += [avg_diag_line_len]
     names += ['rec_plot_avg_diag_line_len']
     
     # avg_vert_line_len 
     try:
-        avg_vert_line_len = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/np.sum(vert_freq)
+        _sum = np.sum(vert_freq)
+        if _sum > 0:
+            avg_vert_line_len = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/_sum
+        else:
+            avg_vert_line_len = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_avg_vert_line_len", e) 
         avg_vert_line_len = None
     args += [avg_vert_line_len]
     names += ['rec_plot_avg_vert_line_len']
     
     # avg_white_vert_line_len 
     try:
-        avg_white_vert_line_len = np.sum([i*white_vert_freq[i] for i in range(MIN, len(white_vert_freq), 1)])/np.sum(white_vert_freq)
+        _sum = np.sum(white_vert_freq)
+        if _sum > 0:
+            avg_white_vert_line_len = np.sum([i*white_vert_freq[i] for i in range(MIN, len(white_vert_freq), 1)])/_sum
+        else:
+            avg_white_vert_line_len = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_avg_white_vert_line_len", e) 
         avg_white_vert_line_len = None
     args += [avg_white_vert_line_len]
     names += ['rec_plot_avg_white_vert_line_len']
     
     # rec_plot_trapping_tm 
     try:
-        rec_plot_trapping_tm = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/np.sum(vert_freq)
+        _sum = np.sum(vert_freq)
+        if _sum > 0:
+            rec_plot_trapping_tm = np.sum([i*vert_freq[i] for i in range(MIN, len(vert_freq), 1)])/_sum
+        else: 
+            rec_plot_trapping_tm = None
     except Exception as e:
-        print(e) 
+        print("rec_plot_trapping_tm", e) 
         rec_plot_trapping_tm = None
     args += [rec_plot_trapping_tm]
     names += ['rec_plot_trapping_tm']
@@ -268,8 +299,8 @@ def phase_space_features(signal=None):
         i_ll = np.sign(diag_freq)
         rec_plot_lgst_diag_line_len = np.where(i_ll == 1)[0][-1]
     except Exception as e:
-        print(e) 
-        rec_plot_lgst_diag_line_len = 0
+        print("rec_plot_lgst_diag_line_len", e) 
+        rec_plot_lgst_diag_line_len = None
     args += [rec_plot_lgst_diag_line_len]
     names += ['rec_plot_lgst_diag_line_len']
 
@@ -278,8 +309,8 @@ def phase_space_features(signal=None):
         i_ll = np.sign(vert_freq)
         rec_plot_lgst_vert_line_len = np.where(i_ll == 1)[0][-1]
     except Exception as e:
-        print(e) 
-        rec_plot_lgst_vert_line_len = 0
+        print("rec_plot_lgst_vert_line_len", e) 
+        rec_plot_lgst_vert_line_len = None
     args += [rec_plot_lgst_vert_line_len]
     names += ['rec_plot_lgst_vert_line_len']
 
@@ -288,35 +319,35 @@ def phase_space_features(signal=None):
         i_ll = np.sign(white_vert_freq)
         rec_plot_lgst_white_vert_line_len = np.where(i_ll == 1)[0][-1]
     except Exception as e:
-        print(e) 
-        rec_plot_lgst_white_vert_line_len = 0
+        print("rec_plot_lgst_white_vert_line_len", e) 
+        rec_plot_lgst_white_vert_line_len = None
     args += [rec_plot_lgst_white_vert_line_len]
     names += ['rec_plot_lgst_white_vert_line_len']
 
     # rec_plot_entropy_diag_line 
     try:
-        rec_plot_entropy_diag_line = - np.sum([diag_freq[i]*np.log(diag_freq[i]) for i in range(MIN, len(diag_freq), 1)])
+        rec_plot_entropy_diag_line = - np.sum([diag_freq[i]*np.log(diag_freq[i]) if diag_freq[i] > 0 else 0 for i in range(MIN, len(diag_freq), 1)])
     except Exception as e:
-        print(e) 
-        rec_plot_entropy_diag_line = 0
+        print("rec_plot_entropy_diag_line", e) 
+        rec_plot_entropy_diag_line = None
     args += [rec_plot_entropy_diag_line]
     names += ['rec_plot_entropy_diag_line']
 
     # rec_plot_entropy_vert_line 
     try:
-        rec_plot_entropy_vert_line = - np.sum([vert_freq[i]*np.log(vert_freq[i]) for i in range(MIN, len(vert_freq), 1)])
+        rec_plot_entropy_vert_line = - np.sum([vert_freq[i]*np.log(vert_freq[i]) if vert_freq[i] > 0 else 0 for i in range(MIN, len(vert_freq), 1)])
     except Exception as e:
-        print(e) 
-        rec_plot_entropy_vert_line = 0
+        print("rec_plot_entropy_vert_line", e) 
+        rec_plot_entropy_vert_line = None
     args += [rec_plot_entropy_vert_line]
     names += ['rec_plot_entropy_vert_line']
 
     # rec_plot_entropy_white_vert_line 
     try:
-        rec_plot_entropy_white_vert_line = - np.sum([white_vert_freq[i]*np.log(white_vert_freq[i]) for i in range(MIN, len(white_vert_freq), 1)])
+        rec_plot_entropy_white_vert_line = - np.sum([white_vert_freq[i]*np.log(white_vert_freq[i]) if white_vert_freq[i] > 0 else 0 for i in range(MIN, len(white_vert_freq), 1)])
     except Exception as e:
-        print(e) 
-        rec_plot_entropy_white_vert_line = 0
+        print("rec_plot_entropy_white_vert_line", e) 
+        rec_plot_entropy_white_vert_line = None
     args += [rec_plot_entropy_white_vert_line]
     names += ['rec_plot_entropy_white_vert_line']
     

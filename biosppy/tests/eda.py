@@ -19,25 +19,25 @@ from ..signals.eda import eda_features, eda_events
 def test():
     signal = np.loadtxt("examples/eda.txt")  
     
-    onsets, peaks, amplitudes, end = eda_events(signal, filt=True, size=1.5, sampling_rate=1000)
+    onsets, peaks, amplitudes, end = eda_events(signal, filt=True, size=1.2, sampling_rate=1000)
     for i in range(len(onsets)):
         plt.figure()
         plt.plot(signal)
         plt.vlines(onsets[i], signal.min(), signal.max(), label="on", color="r")
         plt.vlines(peaks[i], signal.min(), signal.max(), label="peaks", color="b")
         plt.vlines(end[i], signal.min(), signal.max(), label="end", color="c")
-        plt.hlines(eda_s[int(onsets[i])]+amplitudes[i], 0, len(signal), label="amplitudes", color="k")
+        plt.hlines(signal[int(onsets[i])]+amplitudes[i], 0, len(signal), label="amplitudes", color="k")
         plt.legend()
         plt.show()
 
-    args = eda_features(signal, filt=True, size=1.5, sampling_rate=1000)
+    args = eda_features(signal, filt=True, size=1.2, sampling_rate=1000)
 
     for i in range(len(onsets)):
         plt.figure()
         plt.plot(signal)
         plt.vlines(args["onsets"][i], signal.min(), signal.max(), label="on", color="r")
         plt.vlines(args["peaks"][i], signal.min(), signal.max(), label="peaks", color="b")
-        plt.hlines(eda_s[int(args["onsets"][i])]+args["amps"][i], 0, len(signal), label="amplitudes", color="k")
+        plt.hlines(signal[int(args["onsets"][i])]+args["amps"][i], 0, len(signal), label="amplitudes", color="k")
         
         plt.vlines(args["onsets"][i] + args["rise_ts"][i], signal.min(), signal.max(), label="rise time check", color="c")
         try:

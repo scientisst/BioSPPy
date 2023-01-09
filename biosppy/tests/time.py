@@ -1,4 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+biosppy.tests.time
+----------------
+This module tests the time feature extraction functions.
+:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:license: BSD 3-clause, see LICENSE for more details.
+"""
+
+# Imports
+# 3rd party
 import numpy as np
+
+# local
 from ..features.time import time_features
 
 

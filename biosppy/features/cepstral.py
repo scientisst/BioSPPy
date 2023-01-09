@@ -96,8 +96,18 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
+    signal = np.array(signal)
     freqs, power = st.power_spectrum(signal, sampling_rate=sampling_rate, decibel=False)
+    freqs = np.nan_to_num(freqs)
+    power = np.nan_to_num(power)
     
+    spectrum = np.abs(np.fft.fft(signal, sampling_rate))
+    f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
+    spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
+    spectrum /= len(spectrum)
+    p = spectrum
+    f = np.abs(f[:len(f)//2]*sampling_rate)
+
     # filter bank
     low_f = 0
     high_f = freqs[-1]
@@ -114,7 +124,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     
     # normalize the array to the FFT size and choose the associated FFT values
     filter_bins_hz = np.floor((window_size + 1) / sampling_rate * lin_hz).astype(int)
-
+    
     # filterbank
     filter_banks = [] 
     # iterate bins
@@ -122,11 +132,15 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
         _f = [0]*(filter_bins_hz[b])
         _f += np.linspace(0, 1, filter_bins_hz[b + 1] - filter_bins_hz[b]).tolist()
         _f += np.linspace(1, 0, filter_bins_hz[b + 2] - filter_bins_hz[b + 1]).tolist()
-        _f += [0]*(len(freqs)- filter_bins_hz[b + 2])
+        pad = len(freqs) - filter_bins_hz[b + 2]
+        if pad > 0:
+            _f +=  [0]*pad
+        else:
+            _f = _f[:len(freqs)]
 
-        filter_banks += [_f]
-    filter_banks = np.array(filter_banks, dtype=object)
-
+        filter_banks += [np.array(_f)]
+    filter_banks = np.array(filter_banks)
+    
     enorm = 2.0 / (lin_hz[2:num_filters+2] - lin_hz[:num_filters])
     filter_banks *= enorm[:, np.newaxis]
 
