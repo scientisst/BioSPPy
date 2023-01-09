@@ -28,64 +28,9 @@ from . import utils
 from biosppy.signals import tools as st
 
 # Globals
-MAJOR_LW = 1.5
-MINOR_LW = 1.0
+MAJOR_LW = 2.5
+MINOR_LW = 1.5
 MAX_ROWS = 10
-
-
-def color_palette(idx):
-    """Color palette to use throughout the biosppy package
-
-    Parameters
-    ----------
-    idx: str or int
-        identifier of color to use
-
-    Returns
-    -------
-    color_id: str
-        hexadecimal color code chosen
-    """
-
-    color_dict = {
-        'blue': '#668998',
-        'dark-blue': '#032A72',
-        'light-blue': '#85B3D1FF',
-
-        'green': '#49997c',
-        'dark-green': '#1A430B',
-        'light-green': '#95D5B2',
-
-        'red': '#D62839',
-        'dark-red': '#B14343',
-        'light-red': '#FF5A5F',
-
-        'yellow': '#D19C2F',
-        'dark-yellow': '#FFC300',
-        'light-yellow': '#FFDD55',
-
-        'violet': '#9D4EDD',
-        'dark-violet': '#3C096C',
-        'light-violet': '#E0AAFF',
-
-        'orange': '#FF9F1C',
-        'dark-orange': '#E36414',
-        'light-orange': '#FFBF69',
-
-        'grey': '#ADB5BD',
-        'dark-grey': '#495057',
-        'light-grey': '#E6E6E6'
-    }
-
-    if type(idx) == int:
-        color_id = list(color_dict.values())[idx]
-    else:
-        if idx in color_dict.keys():
-            color_id = color_dict[idx]
-        else:
-            raise ValueError(f'Please choose one color from {color_dict.keys()} or give and index')
-
-    return color_id
 
 
 def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
@@ -292,55 +237,55 @@ def plot_acc(ts=None,
     raw_t = np.transpose(raw)
     acc_x, acc_y, acc_z = raw_t[0], raw_t[1], raw_t[2]
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure()
     fig.suptitle('ACC Summary')
     gs = gridspec.GridSpec(6, 2)
 
     # raw signal (acc_x)
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X', color=color_palette('light-blue'))
+    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='Raw acc along X', color='C0')
 
     ax1.set_ylabel('Amplitude ($m/s^2$)')
-    ax1.legend(loc='upper right')
+    ax1.legend()
     ax1.grid()
 
     # raw signal (acc_y)
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
 
-    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Y', color=color_palette('blue'))
+    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Raw acc along Y', color='C1')
 
     ax2.set_ylabel('Amplitude ($m/s^2$)')
-    ax2.legend(loc='upper right')
+    ax2.legend()
     ax2.grid()
 
     # raw signal (acc_z)
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z', color=color_palette('dark-blue'))
+    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Raw acc along Z', color='C2')
 
     ax3.set_ylabel('Amplitude ($m/s^2$)')
     ax3.set_xlabel('Time (s)')
-    ax3.legend(loc='upper right')
+    ax3.legend()
     ax3.grid()
 
     # vector magnitude
     ax4 = fig.add_subplot(gs[:3, 1], sharex=ax1)
 
-    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude feature', color=color_palette('green'))
+    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude feature', color='C3')
 
     ax4.set_ylabel('Amplitude ($m/s^2$)')
-    ax4.legend(loc='upper right')
+    ax4.legend()
     ax4.grid()
 
     # signal magnitude
     ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
 
-    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color=color_palette('dark-green'))
+    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color='C4')
 
     ax5.set_ylabel('Amplitude ($m/s^2$)')
     ax5.set_xlabel('Time (s)')
-    ax5.legend(loc='upper right')
+    ax5.legend()
     ax5.grid()
 
     # make layout tight
@@ -367,9 +312,7 @@ def plot_acc(ts=None,
 def plot_ppg(ts=None,
              raw=None,
              filtered=None,
-             peaks=None,
-             templates_ts=None,
-             templates=None,
+             onsets=None,
              heart_rate_ts=None,
              heart_rate=None,
              path=None,
@@ -384,12 +327,8 @@ def plot_ppg(ts=None,
         Raw PPG signal.
     filtered : array
         Filtered PPG signal.
-    peaks : array
-        Indices of PPG pulse peaks.
-    templates_ts : array
-        Templates time axis reference (seconds).
-    templates : array
-        Extracted PPG templates.
+    onsets : array
+        Indices of PPG pulse onsets.
     heart_rate_ts : array
         Heart rate time axis reference (seconds).
     heart_rate : array
@@ -401,21 +340,20 @@ def plot_ppg(ts=None,
 
     """
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure()
     fig.suptitle('PPG Summary')
-    gs = gridspec.GridSpec(6, 2)
 
     # raw signal
-    ax1 = fig.add_subplot(gs[:2, 0])
+    ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.grid()
 
     # filtered signal with onsets
-    ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
+    ax2 = fig.add_subplot(312, sharex=ax1)
 
     ymin = np.min(filtered)
     ymax = np.max(filtered)
@@ -423,37 +361,25 @@ def plot_ppg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
-    ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette('dark-red'),
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
+    ax2.vlines(ts[onsets], ymin, ymax,
+               color='m',
                linewidth=MINOR_LW,
-               alpha=0.5,
-               linestyle='--')
-    ax2.plot(ts[peaks], filtered[peaks]*1.1, ls='None', marker=7, color=color_palette('dark-red'), label='Peaks')
+               label='Onsets')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+    ax2.grid()
 
     # heart rate
-    ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
+    ax3 = fig.add_subplot(313, sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('blue'))
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate')
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
-
-    # templates
-    ax4 = fig.add_subplot(gs[1:5, 1])
-
-    ax4.plot(templates_ts, templates, linewidth=MINOR_LW, alpha=0.5, color='#6DA7C0')
-
-    ax4.set_xlabel('Time (s)')
-    ax4.set_ylabel('Amplitude')
-    ax4.set_title('Templates')
-    ax4.grid(ls='--', color=color_palette('light-grey'))
+    ax3.legend()
+    ax3.grid()
 
     # make layout tight
     fig.tight_layout()
@@ -665,103 +591,6 @@ def plot_abp(ts=None,
 def plot_eda(ts=None,
              raw=None,
              filtered=None,
-             onsets=None,
-             peaks=None,
-             amplitudes=None,
-             path=None,
-             show=False):
-    """
-    Create a summary plot from the output of signals.eda.eda.
-
-    Parameters
-    ----------
-    ts : array
-        Signal time axis reference (seconds).
-    raw : array
-        Raw EDA signal.
-    filtered : array
-        Filtered EDA signal.
-    onsets : array
-        Indices of SCR pulse onsets.
-    peaks : array
-        Indices of the SCR peaks.
-    amplitudes : array
-        SCR pulse amplitudes.
-    path : str, optional
-        If provided, the plot will be saved to the specified file.
-    show : bool, optional
-        If True, show the plot immediately.
-
-    """
-
-    fig = plt.figure()
-    fig.suptitle('EDA Summary')
-
-    # raw signal
-    ax1 = fig.add_subplot(311)
-
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
-
-    ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
-
-    # filtered signal with onsets, peaks
-    ax2 = fig.add_subplot(312, sharex=ax1)
-
-    ymin = np.min(filtered)
-    ymax = np.max(filtered)
-    alpha = 0.1 * (ymax - ymin)
-    ymax += alpha
-    ymin -= alpha
-
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
-    ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette('green'),
-               linewidth=MAJOR_LW,
-               label='Onsets')
-    ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette('dark-green'),
-               linewidth=MAJOR_LW,
-               label='Peaks')
-
-    ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
-
-    # amplitudes
-    ax3 = fig.add_subplot(313, sharex=ax1)
-
-    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes', color=color_palette('blue'))
-
-    ax3.set_xlabel('Time (s)')
-    ax3.set_ylabel('Amplitude')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
-
-    # make layout tight
-    fig.tight_layout()
-
-    # save to file
-    if path is not None:
-        path = utils.normpath(path)
-        root, ext = os.path.splitext(path)
-        ext = ext.lower()
-        if ext not in ['png', 'jpg']:
-            path = root + '.png'
-        fig.savefig(path, dpi=200, bbox_inches='tight')
-
-    # show
-    if show:
-        plt.show()
-    else:
-        # close
-        plt.close(fig)
-
-
-def plot_eda_(ts=None,
-             raw=None,
-             filtered=None,
              edr=None,
              edl=None,
              onsets=None,
@@ -923,23 +752,22 @@ def plot_emg(ts=None,
         T = (L - 1) / sampling_rate
         ts_processed = np.linspace(0, T, L, endpoint=True)
         ax3.plot(ts_processed, processed,
-                 linewidth=MINOR_LW,
-                 label='Processed',
-                 color=color_palette('light-blue'))
+                 linewidth=MAJOR_LW,
+                 label='Processed')
         ax3.set_xlabel('Time (s)')
         ax3.set_ylabel('Amplitude')
-        ax3.legend(loc='upper right')
-        ax3.grid(ls='--', color=color_palette('light-grey'))
+        ax3.legend()
+        ax3.grid()
     else:
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212, sharex=ax1)
 
     # raw signal
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('light-blue'))
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.grid()
 
     # filtered signal with onsets
     ymin = np.min(filtered)
@@ -948,17 +776,16 @@ def plot_emg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('light-blue'))
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette('green'),
-               alpha=0.6,
+               color='m',
                linewidth=MINOR_LW,
                label='Onsets')
 
     ax2.set_xlabel('Time (s)')
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+    ax2.grid()
 
     # make layout tight
     fig.tight_layout()
@@ -1018,11 +845,11 @@ def plot_resp(ts=None,
     # raw signal
     ax1 = fig.add_subplot(311)
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.grid()
 
     # filtered signal with zeros
     ax2 = fig.add_subplot(312, sharex=ax1)
@@ -1033,30 +860,27 @@ def plot_resp(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered', color=color_palette('blue'))
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[zeros], ymin, ymax,
-               color=color_palette('dark-red'),
+               color='m',
                linewidth=MINOR_LW,
-               label='Zero crossings',
-               alpha=0.7)
+               label='Zero crossings')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+    ax2.grid()
 
     # heart rate
     ax3 = fig.add_subplot(313, sharex=ax1)
 
     ax3.plot(resp_rate_ts, resp_rate,
              linewidth=MAJOR_LW,
-             label='Respiration Rate',
-             color=color_palette('blue')
-             )
+             label='Respiration Rate')
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Respiration Rate (Hz)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
+    ax3.legend()
+    ax3.grid()
 
     # make layout tight
     fig.tight_layout()
@@ -1394,19 +1218,18 @@ def plot_ecg(ts=None,
 
     """
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure()
     fig.suptitle('ECG Summary')
     gs = gridspec.GridSpec(6, 2)
-
 
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw - np.min(raw), linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MAJOR_LW, label='Raw')
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.grid()
 
     # filtered signal with rpeaks
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
@@ -1417,37 +1240,35 @@ def plot_ecg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[rpeaks], ymin, ymax,
-               color=color_palette('dark-red'),
+               color='m',
                linewidth=MINOR_LW,
-               alpha=0.5,
-               linestyle='--')
-    ax2.plot(ts[rpeaks], filtered[rpeaks]*1.05, ls='None', marker=7, color=color_palette('dark-red'), label='R-peaks')
+               label='R-peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+    ax2.grid()
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('blue'))
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate')
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
+    ax3.legend()
+    ax3.grid()
 
     # templates
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(templates_ts, templates.T, linewidth=MINOR_LW, alpha=0.5, color=color_palette('blue'))
+    ax4.plot(templates_ts, templates.T, 'm', linewidth=MINOR_LW, alpha=0.7)
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Templates')
-    ax4.grid(ls='--', color=color_palette('light-grey'))
+    ax4.grid()
 
     # make layout tight
     gs.tight_layout(fig)
@@ -1579,7 +1400,6 @@ def plot_bcg(ts=None,
         # close
         plt.close(fig)
 
-
 def plot_pcg(ts=None,
              raw=None,
              filtered=None,
@@ -1610,21 +1430,21 @@ def plot_pcg(ts=None,
         If provided, the plot will be saved to the specified file.
     show : bool, optional
         If True, show the plot immediately.
-
+        
     """
 
-    fig = plt.figure(figsize=(12, 5))
+    fig = plt.figure()
     fig.suptitle('PCG Summary')
     gs = gridspec.GridSpec(6, 2)
 
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
-
+    ax1.plot(ts, raw, linewidth=MAJOR_LW,label='raw')
+    
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.grid()
 
     # filtered signal with rpeaks
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
@@ -1634,41 +1454,40 @@ def plot_pcg(ts=None,
     alpha = 0.1 * (ymax - ymin)
     ymax += alpha
     ymin -= alpha
-
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
+    
+    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette('dark-red'),
-               alpha=0.6,
-               linewidth=MAJOR_LW,
-               label='Peaks')
+                color='m',
+                linewidth=MINOR_LW,
+                label='Peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+    ax2.grid()
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate', color=color_palette('blue'))
-
+    ax3.plot(heart_rate_ts,inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate')
+    
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
-
+    ax3.legend()
+    ax3.grid()
+    
     # heart sounds
-    ax4 = fig.add_subplot(gs[1:5, 1], sharex=ax1)
+    ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(ts, filtered, linewidth=MINOR_LW, label='PCG heart sounds', color=color_palette('blue'))
+    ax4.plot(ts,filtered,linewidth=MAJOR_LW, label='PCG heart sounds')
     for i in range(0, len(peaks)):
-        text = "S" + str(int(heart_sounds[i]))
-        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=12,
-                     color=color_palette('dark-grey'))
 
+        text = "S" + str(int(heart_sounds[i]))
+        plt.annotate(text,(ts[peaks[i]], ymax-alpha),ha='center', va='center',size = 13) 
+            
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Heart sounds')
-    ax4.grid(ls='--', color=color_palette('light-grey'))
+    ax4.grid()
 
     # make layout tight
     gs.tight_layout(fig)
@@ -1689,7 +1508,6 @@ def plot_pcg(ts=None,
     else:
         # close
         plt.close(fig)
-
 
 def _plot_rates(thresholds, rates, variables,
                 lw=1,

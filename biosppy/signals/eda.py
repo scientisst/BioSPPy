@@ -81,7 +81,7 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes, _ = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
+    args = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
      
     # get time vectors
     length = len(signal)
@@ -93,15 +93,15 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
 
     # plot
     if show:
-        plotting.plot_eda_(
+        plotting.plot_eda(
             ts=ts,
             raw=signal,
             filtered=filtered,
             edr=_edr,
             edl=_edl,
-            onsets=onsets,
-            peaks=peaks,
-            amplitudes=amplitudes,
+            onsets=args["onsets"],
+            peaks=args["peaks"],
+            amplitudes=args["amplitudes"],
             path=path,
             show=True,
         )
@@ -472,8 +472,8 @@ def eda_events(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000
     else:
         onsets, peaks, amps = basic_scr(signal, sampling_rate)
 
-    names += ["onsets", "peaks", "amplitudes", "end"]
-    args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
+    names += ["onsets", "peaks", "amplitudes"]
+    args += [np.array(onsets), np.array(peaks), np.array(amps)]
 
     return utils.ReturnTuple(tuple(args), tuple(names))
 
