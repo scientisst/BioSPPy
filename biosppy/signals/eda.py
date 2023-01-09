@@ -93,7 +93,7 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
 
     # plot
     if show:
-        plotting.plot_eda_(
+        plotting.plot_eda(
             ts=ts,
             raw=signal,
             filtered=filtered,
