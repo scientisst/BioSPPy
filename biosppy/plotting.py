@@ -57,7 +57,7 @@ def color_palette(idx):
         'light-green': '#95D5B2',
 
         'red': '#D62839',
-        'dark-red': '#933B4F',
+        'dark-red': '#B14343',
         'light-red': '#FF5A5F',
 
         'yellow': '#D19C2F',
