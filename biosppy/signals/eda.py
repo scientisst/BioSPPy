@@ -78,7 +78,7 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True):
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes = emotiphai_eda(signal=signal,
+    onsets, peaks, amplitudes = emotiphai_eda(signal=filtered,
                                               sampling_rate=sampling_rate,
                                               min_amplitude=0.1,
                                               filt=True,
@@ -139,7 +139,7 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
         Signal EDR events Amplitudes.
     phasic_rate : array
         Signal EDR events rate in 60s.
-    rise_ts : array
+    rise_times : array
         Rise times, i.e. onset-peak time difference.
     half_rec : array
         Half Recovery times, i.e. time between peak and 63% amplitude.
@@ -152,9 +152,8 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
-    # ensure input type
-    assert len(signal) > 1, "len signal <1"
-    signal = np.array(signal).astype(np.float)
+    # ensure numpy
+    signal = np.array(signal)
 
     # compute onsets, peaks and amplitudes
     if method == "emotiphai":
@@ -276,7 +275,7 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwarg
         t = (length - 1) / sampling_rate
         ts = np.linspace(0, t, length, endpoint=True)
 
-        # extract eda
+        # extract edl
         edl_on = np.hstack((ts[0], ts[onsets], ts[-1]))
         edl_amp = np.hstack((signal[0], signal[onsets], signal[-1]))
         f = interpolate.interp1d(edl_on, edl_amp)
@@ -462,9 +461,6 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
-
-    assert len(signal) > 1, "len signal <1"
-    signal = np.array(signal).astype(np.float)
 
     # smooth
     if filt:
