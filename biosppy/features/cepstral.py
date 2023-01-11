@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-biosppy.features.ceptral
--------------------
+biosppy.features.cepstral
+-------------------------
+
 This module provides methods to extract cepstral features.
+
 :copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
@@ -19,8 +21,7 @@ from ..signals import tools as st
 
 
 def freq_to_mel(hertz):
-    """ 
-    Converts mel-frequencies to hertz frequencies.
+    """Converts mel-frequencies to hertz frequencies.
     
     Parameters
     ----------
@@ -28,13 +29,14 @@ def freq_to_mel(hertz):
         hertz frequencies.
  
     Returns
-    ----------
+    -------
     mel frequencies : array
         mel frequencies.
     
     References
     ----------
-    - Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
+    .. [Kool12] Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using
+    Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
     
     """   
 
@@ -42,8 +44,7 @@ def freq_to_mel(hertz):
 
 
 def mel_to_freq(mel):
-    """ 
-    Converts mel-frequencies to hertz frequencies.
+    """Converts mel-frequencies to hertz frequencies.
     
     Parameters
     ----------
@@ -51,28 +52,29 @@ def mel_to_freq(mel):
         mel frequencies.
  
     Returns
-    ----------
+    -------
     hertz frequencies : array
         hertz frequencies.
 
     References
     ----------
-    - Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
+    .. [Kool12] Shashidhar G. Koolagudi, Deepika Rastogi, K. Sreenivasa Rao, Identification of Language using
+    Mel-Frequency Cepstral Coefficients (MFCC), Procedia Engineering, Volume 38, 2012, Pages 3391-3398, ISSN 1877-7058
 
     """
+
     return 700 * (np.exp(mel / 1125) - 1)
 
 
-def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
-    """
-    Computes the mel-frequency cepstral coefficients.
+def mfcc(signal, sampling_rate=1000., window_size=100, num_filters=10):
+    """Computes the mel-frequency cepstral coefficients.
     
     Parameters
     ----------
     signal : array
         Input signal.
-    sampling_rate: float
-        Data sampling rate.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
     window_size : int
        DFT window size. 
     num_filters : int
@@ -80,7 +82,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
 
     Returns
     -------
-    mfcc : list
+    mfcc : array
         Signal mel-frequency cepstral coefficients.
 
     References
@@ -93,31 +95,25 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
    
    """
 
-   # check inputs
+    # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
+    # ensure numpy
     signal = np.array(signal)
+
+    # compute power spectrum
     freqs, power = st.power_spectrum(signal, sampling_rate=sampling_rate, decibel=False)
-    freqs = np.nan_to_num(freqs)
-    power = np.nan_to_num(power)
-    
-    spectrum = np.abs(np.fft.fft(signal, sampling_rate))
-    f = np.nan_to_num(np.array(np.fft.fftfreq(len(spectrum))))
-    spectrum = np.nan_to_num(spectrum[:len(spectrum)//2])
-    spectrum /= len(spectrum)
-    p = spectrum
-    f = np.abs(f[:len(f)//2]*sampling_rate)
 
     # filter bank
     low_f = 0
     high_f = freqs[-1]
 
-    ## convert to mels
+    # convert to mel
     low_f_mel = freq_to_mel(low_f)
     high_f_mel = freq_to_mel(high_f)
 
-    # lineary spaced array between the two MEL frequencies
+    # linearly spaced array between the two MEL frequencies
     lin_mel = np.linspace(low_f_mel, high_f_mel, num=num_filters+2)
     
     # convert the array to the frequency space
@@ -126,8 +122,9 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     # normalize the array to the FFT size and choose the associated FFT values
     filter_bins_hz = np.floor((window_size + 1) / sampling_rate * lin_hz).astype(int)
     
-    # filterbank
-    filter_banks = [] 
+    # filter bank
+    filter_banks = []
+
     # iterate bins
     for b in range(len(filter_bins_hz)-2):
         _f = [0]*(filter_bins_hz[b])
@@ -135,7 +132,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
         _f += np.linspace(1, 0, filter_bins_hz[b + 2] - filter_bins_hz[b + 1]).tolist()
         pad = len(freqs) - filter_bins_hz[b + 2]
         if pad > 0:
-            _f +=  [0]*pad
+            _f += [0]*pad
         else:
             _f = _f[:len(freqs)]
 
@@ -154,34 +151,34 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     mel_coeff = fft.dct(filter_banks)[1:]  # Keep 2-13
 
     mel_coeff -= (np.mean(mel_coeff, axis=0) + 1e-8)  # norm
+
     # sinusoidal liftering to the MFCCs to de-emphasize higher MFCCs
     n = np.arange(len(mel_coeff))
     cep_lifter = 22
     lift = 1 + (cep_lifter / 2) * np.sin(np.pi * n / cep_lifter)
     mel_coeff *= lift  
 
-    args = [mel_coeff]
-    names = ["mfcc"]
-    
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    # output
+    args = (mel_coeff,)
+    names = ("mfcc",)
+
+    return utils.ReturnTuple(args, names)
     
 
-def cepstral_features(signal=None, sampling_rate=100):
-    """
-    Compute quefrency metrics describing the signal.
+def cepstral_features(signal=None, sampling_rate=1000.):
+    """Compute quefrency metrics describing the signal.
    
     Parameters
     ----------
     signal : array
         Input signal.
-    sampling_rate: float
-        Data sampling rate.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
 
     Returns
     -------
-    mfcc_{time_features} : list
-        Time features computer over the signal mel-frequency cepstral coefficients.
+    mfcc_{time_features} : array
+        Time features computed over the signal mel-frequency cepstral coefficients.
 
     References
     ----------
@@ -192,23 +189,24 @@ def cepstral_features(signal=None, sampling_rate=100):
     - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
     
     """
-  
-    # check input
-    assert len(signal) > 0, 'Signal size < 1'
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     # ensure numpy
     signal = np.array(signal)
-    args, names = [], []
-    
+
+    # compute mel coefficients
     mel_coeff = mfcc(signal, sampling_rate)["mfcc"]
-    
+
     # temporal
     _fts = time.time_features(mel_coeff, sampling_rate)
     fts_name = [str("mfcc_" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
-    args += fts
-    names += fts_name
+    # output
+    args = tuple(fts)
+    names = tuple(fts_name)
 
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    return utils.ReturnTuple(args, names)
