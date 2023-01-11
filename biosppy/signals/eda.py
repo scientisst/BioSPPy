@@ -115,6 +115,81 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True):
     return utils.ReturnTuple(args, names)
 
 
+def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
+    """Returns characteristic EDA events.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    sampling_rate : int, float, optional
+        Data acquisition sampling rate (Hz).
+    method : str, optional
+       Method to compute eda events: 'emotiphai', 'kbk' or 'basic'.
+    kwargs : dict, optional
+        Method parameters.
+
+    Returns
+    -------
+    onsets : array
+        Signal EDR events onsets.
+    peaks : array
+        Signal EDR events peaks.
+    amps : array
+        Signal EDR events Amplitudes.
+    phasic_rate : array
+        Signal EDR events rate in 60s.
+    rise_ts : array
+        Rise times, i.e. onset-peak time difference.
+    half_rec : array
+        Half Recovery times, i.e. time between peak and 63% amplitude.
+    six_rec : array
+        63 % recovery times, i.e. time between peak and 50% amplitude.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure input type
+    assert len(signal) > 1, "len signal <1"
+    signal = np.array(signal).astype(np.float)
+
+    # compute onsets, peaks and amplitudes
+    if method == "emotiphai":
+        onsets, peaks, amps = emotiphai_eda(signal=signal, sampling_rate=sampling_rate, **kwargs)
+
+    elif method == "kbk":
+        onsets, peaks, amps = kbk_scr(signal=signal, sampling_rate=sampling_rate, **kwargs)
+
+    elif method == "basic":
+        onsets, peaks, amps = basic_scr(signal=signal)
+
+    else:
+        raise TypeError("Please specify a supported method.")
+
+    # compute phasic rate
+    try:
+        phasic_rate = sampling_rate * (60. / np.diff(peaks))
+    except:
+        phasic_rate = None
+
+    # compute rise times
+    try:
+        rise_ts = peaks - onsets
+    except:
+        rise_ts = None
+
+    # compute half and 63% recovery times
+    half_rec, six_rec = rec_times(signal, onsets, peaks)
+
+    args = (onsets, peaks, amps, phasic_rate, rise_ts, half_rec, six_rec)
+    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_ts", "half_rec", "six_rec")
+
+    return utils.ReturnTuple(args, names)
+
+
 def edr(signal=None, sampling_rate=1000.0):
     """
     Extracts EDR signal.
@@ -537,84 +612,5 @@ def rec_times(signal, onsets, peaks):
     args, names = [], []
     names += ["half_rec", "six_rec"]
     args += [half_rec, six_rec]
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
-
-
-def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling_rate=1000.):
-    """
-    Compute EDA characteristic metrics describing the signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-    min_amplitude : float, optional
-        Minimum threshold by which to exclude SCRs.
-    filt: bool
-        If to filter signal to remove noise and low amplitude events.
-    size: float
-        Size of the filter in seconds
-    sampling_rate : float
-        Sampling frequency.
-
-    Returns
-    -------
-    onsets : list
-        Signal EDR events onsets.
-    peaks : list
-        Signal EDR events peaks.
-    amps : list
-        Signal EDR events Amplitudes.
-    phasic_rate : list
-        Signal EDR events rate in 60s.
-    rise_ts : list
-        Rise times, i.e. onset-peak time difference.
-    half_rec : list
-        Half Recovery times, i.e. time between peak and 63% amplitude.
-    six_rec : list
-        63 % recovery times, i.e. time between peak and 50% amplitude.
-
-    """
-
-    # ensure numpy
-    assert len(signal) > 0, "len signal < 1"
-
-    signal = np.array(signal)
-    args, names = [], []
-
-    # onsets, peaks, amps
-    onsets, peaks, amps, _ = eda_events(signal, filt=filt, size=size, min_amplitude=min_amplitude, sampling_rate=sampling_rate)
-    args += [onsets]
-    names += ['onsets']
-    args += [peaks]
-    names += ['peaks']
-    args += [amps]
-    names += ['amps']
-
-    # phasic_rate
-    try:
-        phasic_rate = sampling_rate * (60. / np.diff(peaks))
-    except:
-        phasic_rate = None
-    args += [phasic_rate]
-    names += ['phasic_rate']
-
-    # rise_ts
-    try:
-        rise_ts = peaks - onsets
-    except:
-        rise_ts = None
-    args += [rise_ts]
-    names += ['rise_ts']
-
-    half_rec, six_rec = rec_times(signal, onsets, peaks)
-        
-    args += [half_rec]
-    names += ['half_rec']
-
-    args += [six_rec]
-    names += ['six_rec']
-
     args = np.nan_to_num(args)
     return utils.ReturnTuple(tuple(args), tuple(names))
