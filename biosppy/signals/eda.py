@@ -178,7 +178,7 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     rise_times = (peaks - onsets) / sampling_rate  # to seconds
 
     # compute half and 63% recovery times
-    half_rec, six_rec = rec_times(signal, onsets, peaks)
+    half_rec, six_rec = rec_times(signal=signal, sampling_rate=sampling_rate, onsets=onsets, peaks=peaks)
 
     args = (onsets, peaks, amps, phasic_rate, rise_times, half_rec, six_rec)
     names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
@@ -508,13 +508,15 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
     return utils.ReturnTuple(args, names)
 
 
-def rec_times(signal=None, onsets=None, peaks=None):
+def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
     """Returns EDA recovery times.
 
     Parameters
     ----------
     signal : array
         Input signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
     onsets : array
         Indices of the SCR onsets.
     peaks : array
@@ -528,18 +530,18 @@ def rec_times(signal=None, onsets=None, peaks=None):
         63 % recovery times, i.e. time between peak and 63% amplitude.
 
     """
-    assert len(signal) > 1, "len signal <1"
-    peaks = np.array(peaks).astype(int) 
-    onsets = np.array(onsets).astype(int) 
 
-    a = np.array(signal[peaks[:]] - signal[onsets[:]])
+    # ensure input format
+    peaks = np.array(peaks, dtype=int)
+    onsets = np.array(onsets, dtype=int)
+
+    amps = np.array(signal[peaks[:]] - signal[onsets[:]])  # SCR amplitudes
     li = min(len(onsets), len(peaks))
 
-    half_rec, hlf_rec_ts = [], []
-    six_rec, six_rec_ts = [], []
+    half_rec, six_rec = [], []
     for i in range(li):  # iterate over onset
-        half_rec_amp = 0.5 * a[i] + signal[onsets][i]
-        six_rec_amp = 0.37 * a[i] + signal[onsets][i]
+        half_rec_amp = 0.5 * amps[i] + signal[onsets][i]
+        six_rec_amp = 0.37 * amps[i] + signal[onsets][i]
         try:
             wind = np.array(signal[peaks[i]:onsets[i + 1]])
         except:
@@ -548,21 +550,21 @@ def rec_times(signal=None, onsets=None, peaks=None):
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
         if len(half_rec_idx) > 0:
-            half_rec += [half_rec_idx[0][0] + peaks[i] - onsets[i]]
-            hlf_rec_ts += [half_rec_idx[0][0] + peaks[i]]
+            half_rec += [(half_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
         else:
             half_rec += [None]
-            hlf_rec_ts += [None]
 
         if len(six_rec_idx) > 0:
-            six_rec += [six_rec_idx[0][0] + peaks[i] - onsets[i]]
-            six_rec_ts += [six_rec_idx[0][0] + peaks[i]]
+            six_rec += [(six_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
         else:
             six_rec += [None]
-            six_rec_ts += [None]
 
-    args, names = [], []
-    names += ["half_rec", "six_rec"]
-    args += [half_rec, six_rec]
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    # convert to numpy
+    half_rec = np.array(half_rec)
+    six_rec = np.array(six_rec)
+
+    # output
+    names = ("half_rec", "six_rec")
+    args = (half_rec, six_rec)
+
+    return utils.ReturnTuple(args, names)
