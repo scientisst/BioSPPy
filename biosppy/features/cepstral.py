@@ -20,7 +20,7 @@ from ..signals import tools as st
 
 def freq_to_mel(hertz):
     """ 
-    Converts mel-frequencies to heartz frequencies.
+    Converts mel-frequencies to hertz frequencies.
     
     Parameters
     ----------
@@ -43,7 +43,7 @@ def freq_to_mel(hertz):
 
 def mel_to_freq(mel):
     """ 
-    Converts mel-frequencies to heartz frequencies.
+    Converts mel-frequencies to hertz frequencies.
     
     Parameters
     ----------
@@ -92,6 +92,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
    
    """
+
    # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
@@ -153,7 +154,7 @@ def mfcc(signal, window_size=100, sampling_rate=100, num_filters=10):
     mel_coeff = fft.dct(filter_banks)[1:]  # Keep 2-13
 
     mel_coeff -= (np.mean(mel_coeff, axis=0) + 1e-8)  # norm
-    # sinusoidal liftering1 to the MFCCs to de-emphasize higher MFCCs
+    # sinusoidal liftering to the MFCCs to de-emphasize higher MFCCs
     n = np.arange(len(mel_coeff))
     cep_lifter = 22
     lift = 1 + (cep_lifter / 2) * np.sin(np.pi * n / cep_lifter)
