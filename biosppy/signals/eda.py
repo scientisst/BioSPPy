@@ -232,18 +232,22 @@ def edr(signal=None, sampling_rate=1000.0):
     return utils.ReturnTuple(args, names)
 
 
-def edl(signal=None, sampling_rate=1000.0, method="onsets", window_size=10.0):
-    """
-    Extracts EDL signal.
+def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwargs):
+    """Extracts EDL signal.
 
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
-    method: string
-        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets interpolation. 
+    method: str, optional
+        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets'
+        interpolation.
+    onsets : array, optional
+        List of onsets for the interpolation method.
+    kwargs : dict, optional
+        window_size : Size of the smoother kernel (seconds).
 
     Returns
     -------
@@ -251,28 +255,39 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", window_size=10.0):
         Electrodermal level (EDL) signal.
 
     """
+
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
-    # smooth
+    if method == "onsets" and onsets is None:
+        raise TypeError("Please specify 'onsets' to use the onset interpolation method.")
+
+    # smooth method
     if method == "smoother":
+        window_size = kwargs['window_size'] if 'window_size' in kwargs else 10.0
         size = int(window_size * sampling_rate)
-        edl, _ = tools.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
-    else:
+        edl_signal, _ = st.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
+
+    # interpolation method
+    elif method == "onsets":
         # get time vectors
         length = len(signal)
-        T = (length - 1) / sampling_rate
-        ts = np.linspace(0, T, length, endpoint=True)
+        t = (length - 1) / sampling_rate
+        ts = np.linspace(0, t, length, endpoint=True)
 
-        onsets, peaks, amps, _ = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
+        # extract eda
         edl_on = np.hstack((ts[0], ts[onsets], ts[-1]))
         edl_amp = np.hstack((signal[0], signal[onsets], signal[-1]))
         f = interpolate.interp1d(edl_on, edl_amp)
-        edl = f(ts)
+        edl_signal = f(ts)
+
+    else:
+        raise TypeError("Please specify a supported method.")
+
     # output
-    args = (edl, )
-    names = ("edl", )
+    args = (edl_signal,)
+    names = ("edl",)
 
     return utils.ReturnTuple(args, names)
 
