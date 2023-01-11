@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.features.frequency
--------------------
+--------------------------
+
 This module provides methods to extract frequency features.
+
 :copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
@@ -12,20 +14,20 @@ This module provides methods to extract frequency features.
 import numpy as np
 from scipy import interpolate
 
-#local
+# local
 from .. import utils
 from . import time
 from ..signals import tools as st
 
 
-def getbands(frequencies, fband):
-   band = np.argwhere((frequencies >= fband[0]) & (frequencies <= fband[1])).reshape(-1)
-   return frequencies[band]
+def get_bands(frequencies, fband):
+    band = np.argwhere((frequencies >= fband[0]) & (frequencies <= fband[1])).reshape(-1)
+
+    return frequencies[band]
 
 
 def freq_features(signal, sampling_rate):
-    """
-    Compute spectral metrics describing the signal.
+    """Compute spectral metrics describing the signal.
    
     Parameters
     ----------
@@ -70,7 +72,7 @@ def freq_features(signal, sampling_rate):
         Spectrum Skewness.
     spectral_kurtosis : float
         Spectrum Kurtosis.
-    spectral_hist_{frequency band} : list
+    spectral_hist_{frequency band} : array
         Histogram of the signal spectrum on 0.05 - 0.1 (VLF), 0.1 - 0.2 (LF), 0.2 - 0.3 (MF), 0.3 - 0.4 (HF), 0.4 - 0.5 (VHF).
 
     References
@@ -83,13 +85,15 @@ def freq_features(signal, sampling_rate):
     - FFT for bands (0.1, 0.2), F2 (0.2, 0.3) and F3 (0.3, 0.4) - Sánchez-Reolid, R., de la Rosa, F.L., Sánchez-Reolid, D., López, M.T., Fernández-Caballero, A. (2021). Feature and Time Series Extraction in Artificial Neural Networks for Arousal Detection from Electrodermal Activity. In: Rojas, I., Joya, G., Català, A. (eds) Advances in Computational Intelligence. IWANN 2021. Lecture Notes in Computer Science(), vol 12861. Springer, Cham. 
 
     """
-        
+
     # check inputs
-    assert len(signal) > 0, 'Signal size < 1'
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
     signal = np.array(signal)
 
-    freqs, power = st.power_spectrum(signal, decibel=False)
-    
+    freqs, power = st.power_spectrum(signal, sampling_rate=sampling_rate, decibel=False)
     power = np.nan_to_num(power)
 
     args, names = [], []
@@ -113,8 +117,9 @@ def freq_features(signal, sampling_rate):
 
     # harmonic sum
     try:
-        if fundamental_frequency > (sampling_rate/2 + 2):
-            harmonics = np.array([n * fundamental_frequency for n in range(2, int((sampling_rate/2)/fundamental_frequency), 1)]).astype(int)
+        if fundamental_frequency > (sampling_rate / 2 + 2):
+            harmonics = np.array([n * fundamental_frequency for n in
+                                  range(2, int((sampling_rate / 2) / fundamental_frequency), 1)]).astype(int)
             sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
             sum_harmonics = np.sum(sp_hrm)
         else:
@@ -126,14 +131,14 @@ def freq_features(signal, sampling_rate):
     names += ['sum_harmonics']
 
     # spectral_roll_on
-    en_sp = power**2#*(f[1]-f[0])
+    en_sp = power ** 2  # *(f[1]-f[0])
     cum_en = np.cumsum(en_sp)
 
     try:
         if cum_en[-1] is None or cum_en[-1] == 0.0:
             norm_cm_s = None
         else:
-            norm_cm_s = cum_en/cum_en[-1]
+            norm_cm_s = cum_en / cum_en[-1]
     except Exception as e:
         print("norm_cm_s", e)
         norm_cm_s = None
@@ -149,11 +154,11 @@ def freq_features(signal, sampling_rate):
 
     args += [spectral_roll_on]
     names += ['spectral_roll_on']
-    
+
     # spectral_roll_off
     try:
         if norm_cm_s is None:
-            spectral_roll_off = None 
+            spectral_roll_off = None
         else:
             spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
     except Exception as e:
@@ -165,7 +170,7 @@ def freq_features(signal, sampling_rate):
     # histogram
     try:
         _hist = list(np.histogram(power, bins=5)[0])
-        _hist = _hist/np.sum(_hist)
+        _hist = _hist / np.sum(_hist)
     except Exception as e:
         print("frequency hist", e)
         _hist = [None] * 5
@@ -174,15 +179,15 @@ def freq_features(signal, sampling_rate):
     names += ['spectral_hist_' + str(i) for i in range(len(_hist))]
 
     # bands
-    freqs, power = st.power_spectrum(signal, sampling_rate*5, decibel=False)
+    freqs, power = st.power_spectrum(signal, sampling_rate * 5, decibel=False)
     power = np.nan_to_num(power)
 
     # resampling
     _f = interpolate.interp1d(freqs, power)
     res_sr = 500  # new sampling rate
-    freqs = np.arange(freqs[0], freqs[-1], 1/res_sr)
-    f_b = getbands(freqs, fband = [0.05, 0.1])
-    
+    freqs = np.arange(freqs[0], freqs[-1], 1 / res_sr)
+    f_b = get_bands(freqs, fband=[0.05, 0.1])
+
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_VLF" + i) for i in _fts.keys()]
@@ -191,7 +196,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(freqs, fband = [0.1, 0.2])
+    f_b = get_bands(freqs, fband=[0.1, 0.2])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_LF" + i) for i in _fts.keys()]
@@ -200,7 +205,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(freqs, fband = [0.2, 0.3])
+    f_b = get_bands(freqs, fband=[0.2, 0.3])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_MD" + i) for i in _fts.keys()]
@@ -209,7 +214,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(freqs, fband = [0.3, 0.4])
+    f_b = get_bands(freqs, fband=[0.3, 0.4])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_HF" + i) for i in _fts.keys()]
@@ -218,7 +223,7 @@ def freq_features(signal, sampling_rate):
     args += fts
     names += fts_name
 
-    f_b = getbands(freqs, fband = [0.4, 0.5])
+    f_b = get_bands(freqs, fband=[0.4, 0.5])
     # temporal
     _fts = time.time_features(f_b, res_sr)
     fts_name = [str("FFT_VHF" + i) for i in _fts.keys()]
@@ -226,6 +231,9 @@ def freq_features(signal, sampling_rate):
 
     args += fts
     names += fts_name
-    
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+
+    # output
+    args = tuple(args)
+    names = tuple(names)
+
+    return utils.ReturnTuple(args, names)
