@@ -191,13 +191,12 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
 
 
 def edr(signal=None, sampling_rate=1000.0):
-    """
-    Extracts EDR signal.
+    """Extracts EDR signal.
 
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
 
@@ -214,6 +213,7 @@ def edr(signal=None, sampling_rate=1000.0):
        Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
 
     """
+
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
@@ -223,11 +223,11 @@ def edr(signal=None, sampling_rate=1000.0):
 
     # smooth
     size = int(1.0 * sampling_rate)
-    edr, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
 
     # output
-    args = (edr, )
-    names = ("edr", )
+    args = (edr_signal,)
+    names = ("edr",)
 
     return utils.ReturnTuple(args, names)
 
