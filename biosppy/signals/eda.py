@@ -78,7 +78,7 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True):
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes = emotiphai_eda(signal=filtered,
+    onsets, peaks, amplitudes = emotiphai_eda(signal=signal,
                                               sampling_rate=sampling_rate,
                                               min_amplitude=0.1,
                                               filt=True,
