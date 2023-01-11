@@ -24,9 +24,8 @@ from . import tools as st
 from .. import plotting, utils
 
 
-def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0.1):
-    """
-    Process a raw EDA signal and extract relevant signal features using
+def eda(signal=None, sampling_rate=1000.0, path=None, show=True):
+    """Process a raw EDA signal and extract relevant signal features using
     default parameters.
 
     Parameters
@@ -39,8 +38,6 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
         If provided, the plot will be saved to the specified file.
     show : bool, optional
         If True, show a summary plot.
-    min_amplitude : float, optional
-        Minimum treshold by which to exclude SCRs.
 
     Returns
     -------
@@ -81,15 +78,20 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    args = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
-     
+    onsets, peaks, amplitudes = emotiphai_eda(signal=filtered,
+                                              sampling_rate=sampling_rate,
+                                              min_amplitude=0.1,
+                                              filt=True,
+                                              size=0.9)
+
     # get time vectors
     length = len(signal)
-    T = (length - 1) / sampling_rate
-    ts = np.linspace(0, T, length, endpoint=True)
+    t = (length - 1) / sampling_rate
+    ts = np.linspace(0, t, length, endpoint=True)
 
-    _edr = edr(filtered, sampling_rate=sampling_rate)["edr"]
-    _edl = edl(filtered, sampling_rate=sampling_rate)["edl"]
+    # get EDR and EDL
+    edr_signal = edr(signal=filtered, sampling_rate=sampling_rate)["edr"]
+    edl_signal = edl(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)["edl"]
 
     # plot
     if show:
@@ -97,17 +99,17 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
             ts=ts,
             raw=signal,
             filtered=filtered,
-            edr=_edr,
-            edl=_edl,
-            onsets=args["onsets"],
-            peaks=args["peaks"],
-            amplitudes=args["amplitudes"],
+            edr=edr_signal,
+            edl=edl_signal,
+            onsets=onsets,
+            peaks=peaks,
+            amplitudes=amplitudes,
             path=path,
             show=True,
         )
 
     # output
-    args = (ts, filtered, _edr, _edl, onsets, peaks, amplitudes)
+    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes)
     names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes")
 
     return utils.ReturnTuple(args, names)
