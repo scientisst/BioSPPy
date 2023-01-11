@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.features.phase_space
--------------------
+----------------------------
+
 This module provides methods to extract phase space features.
+
 :copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
@@ -19,8 +21,7 @@ from .. import utils
 
 
 def rec_plot(signal):
-    """
-    Compute recurrence plot (distance matrix).
+    """Compute recurrence plot (distance matrix).
 
     Parameters
     ----------
@@ -33,21 +34,19 @@ def rec_plot(signal):
         recplot matrix.
 
     """
-    args, names = [], []
+
     sig_down = resample(signal, 224)
     d = pdist(sig_down[:,None])
     rec = squareform(d)
 
-    args += [rec]
-    names += ['rec_plot']
-    
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    args = (rec,)
+    names = ('rec_plot',)
+
+    return utils.ReturnTuple(args, names)
 
 
 def phase_space_features(signal=None):
-    """
-    Compute statistical metrics describing the signal.
+    """Compute statistical metrics describing the signal.
 
     Parameters
     ----------
@@ -92,11 +91,13 @@ def phase_space_features(signal=None):
 
     """
 
-    # check input
-    assert len(signal) > 0, 'Signal size < 1'
-    
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
     # ensure numpy
     signal = np.array(signal)
+
     args, names = [], []
 
     rp = rec_plot(signal)["rec_plot"]
@@ -197,7 +198,7 @@ def phase_space_features(signal=None):
         if _sum > 0:
             determ = np.sum([i*diag_freq[i] for i in range(MIN, len(diag_freq), 1)])/_sum
         else:
-            determ = none
+            determ = None
     except Exception as e:
         print("rec_plot_determ", e) 
         determ = None
@@ -350,6 +351,9 @@ def phase_space_features(signal=None):
         rec_plot_entropy_white_vert_line = None
     args += [rec_plot_entropy_white_vert_line]
     names += ['rec_plot_entropy_white_vert_line']
-    
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+
+    # output
+    args = tuple(args)
+    names = tuple(names)
+
+    return utils.ReturnTuple(args, names)
