@@ -516,21 +516,8 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
     return utils.ReturnTuple(args, names)
 
 
-        return utils.ReturnTuple(tuple(args), tuple(names))
-    elif method == "kbk":
-        onsets, peaks, amps = kbk_scr(signal, sampling_rate=sampling_rate, min_amplitude=min_amplitude)
-    else:
-        onsets, peaks, amps = basic_scr(signal, sampling_rate)
-
-    names += ["onsets", "peaks", "amplitudes"]
-    args += [np.array(onsets), np.array(peaks), np.array(amps)]
-
-    return utils.ReturnTuple(tuple(args), tuple(names))
-
-
-def rec_times(signal, onsets, peaks):
-    """ 
-    Returns EDA recovery times.
+def rec_times(signal=None, onsets=None, peaks=None):
+    """Returns EDA recovery times.
 
     Parameters
     ----------
