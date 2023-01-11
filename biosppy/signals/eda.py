@@ -293,8 +293,7 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwarg
 
 
 def basic_scr(signal=None, sampling_rate=1000.0):
-    """
-    Basic method to extract Skin Conductivity Responses (SCR) from an
+    """Basic method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
 
     Follows the approach in [Gamb08]_.
@@ -302,7 +301,7 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
 
@@ -311,7 +310,7 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
 
@@ -381,7 +380,7 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
 
@@ -454,7 +453,7 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
 
@@ -501,7 +500,7 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
             
         pk = st.find_extrema(signal=s, mode='max')[0]  # get pk between events
         for p in pk:
-            if (s[p] - s[0]) > min_amplitude:  # only count events with high amplitude
+            if (s[p] - s[0]) > min_amplitude:  # only count events with minimum amplitude
                 peaks += [zeros[z] + p]
                 onsets += [zeros[z]]
                 amps += [s[p] - s[0]]
@@ -526,7 +525,7 @@ def rec_times(signal=None, onsets=None, peaks=None):
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
 
     Returns
     -------
