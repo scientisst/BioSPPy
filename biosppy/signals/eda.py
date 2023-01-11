@@ -361,10 +361,8 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     return utils.ReturnTuple(args, names)
 
 
-
 def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
-    """
-    KBK method to extract Skin Conductivity Responses (SCR) from an
+    """KBK method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
 
     Follows the approach by Kim *et al.* [KiBK04]_.
@@ -372,11 +370,11 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
     min_amplitude : float, optional
-        Minimum treshold by which to exclude SCRs.
+        Minimum threshold by which to exclude SCRs.
 
     Returns
     -------
