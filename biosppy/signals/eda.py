@@ -175,16 +175,13 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
         phasic_rate = None
 
     # compute rise times
-    try:
-        rise_ts = peaks - onsets
-    except:
-        rise_ts = None
+    rise_times = (peaks - onsets) / sampling_rate  # to seconds
 
     # compute half and 63% recovery times
     half_rec, six_rec = rec_times(signal, onsets, peaks)
 
-    args = (onsets, peaks, amps, phasic_rate, rise_ts, half_rec, six_rec)
-    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_ts", "half_rec", "six_rec")
+    args = (onsets, peaks, amps, phasic_rate, rise_times, half_rec, six_rec)
+    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
