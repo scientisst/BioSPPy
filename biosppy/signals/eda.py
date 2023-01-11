@@ -24,7 +24,7 @@ from . import tools as st
 from .. import plotting, utils
 
 
-def eda(signal=None, sampling_rate=1000.0, path=None, show=True):
+def eda(signal=None, sampling_rate=1000., path=None, show=True):
     """Process a raw EDA signal and extract relevant signal features using
     default parameters.
 
@@ -123,7 +123,7 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     signal : array
         Input signal.
     sampling_rate : int, float, optional
-        Data acquisition sampling rate (Hz).
+        Sampling frequency (Hz).
     method : str, optional
        Method to compute eda events: 'emotiphai', 'kbk' or 'basic'.
     kwargs : dict, optional
