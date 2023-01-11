@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.features.time
--------------------
+---------------------
+
 This module provides methods to extract time features.
+
 :copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
@@ -19,9 +21,8 @@ from ..signals import tools
 from ..stats import pearson_correlation
 
 
-def mob(signal):
-    """
-    Compute signal mobility hjorth feature.
+def hjorth_mob(signal):
+    """Compute signal mobility hjorth feature.
 
     Parameters
     ----------
@@ -35,8 +36,8 @@ def mob(signal):
 
     """
 
-    args, names = [], []
     d = np.diff(signal)
+
     try: 
         if np.var(signal) > 0:
             mobility = np.sqrt(np.var(d)/np.var(signal))
@@ -44,16 +45,17 @@ def mob(signal):
             mobility = None
     except Exception as e:
         print("mobility", e)
-        mobility = None 
-    args += [mobility] 
-    names += ['mobility']
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+        mobility = None
+
+    # output
+    args = (mobility,)
+    names = ('mobility',)
+
+    return utils.ReturnTuple(args, names)
 
 
-def com(signal):
-    """
-    Compute signal complexity hjorth feature.
+def hjorth_comp(signal):
+    """Compute signal complexity hjorth feature.
 
     Parameters
     ----------
@@ -67,25 +69,26 @@ def com(signal):
 
     """
 
-    args, names = [], []
     d = np.diff(signal)
+
     try:
-        if mob(signal)["mobility"] is not None and mob(d)["mobility"] is not None:
-            complexity = mob(d)["mobility"]/mob(signal)["mobility"]
-        else:
-            complexity = None
+        mob_signal = hjorth_mob(signal)["mobility"]
+        mob_d = hjorth_mob(d)["mobility"]
+        complexity = mob_d / mob_signal
+
     except Exception as e:
         print("complexity", e)
         complexity = None
-    args += [complexity]
-    names += ['complexity']
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+
+    # output
+    args = (complexity,)
+    names = ('complexity',)
+
+    return utils.ReturnTuple(args, names)
 
 
-def chaos(signal):
-    """
-    Compute signal chaos hjorth feature.
+def hjorth_chaos(signal):
+    """Compute signal chaos hjorth feature.
 
     Parameters
     ----------
@@ -99,34 +102,33 @@ def chaos(signal):
 
     """
 
-    args, names = [], []
     d = np.diff(signal)
+
     try:
-        if com(signal)['complexity'] is not None:
-            chaos = com(d)['complexity']/com(signal)['complexity']
-        else:
-            chaos = None
+        comp_signal = hjorth_comp(signal)['complexity']
+        comp_d = hjorth_comp(d)['complexity']
+        chaos = comp_d / comp_signal
+
     except Exception as e:
         print("chaos", e)
         chaos = None
-    args += [chaos]
-    names += ['chaos']
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+
+    # output
+    args = (chaos,)
+    names = ('chaos',)
+
+    return utils.ReturnTuple(args, names)
 
 
 def time_features(signal, sampling_rate):
-    """
-
-    Compute various time metrics describing the signal.
+    """Compute various time metrics describing the signal.
 
     Parameters
     ----------
     signal : array
         Input signal.
-
-    sampling_rate : float
-        Sampling Rate
+    sampling_rate : int, float, optional
+        Sampling Rate (Hz).
 
     Returns
     -------
@@ -137,15 +139,15 @@ def time_features(signal, sampling_rate):
     range: float
         Signal range amplitude.
     iqr : float
-        Interquartile range
+        Interquartile range.
     mean : float
-        Signal average
+        Signal average.
     std : float
-        Signal standard deviation
+        Signal standard deviation.
     max_to_mean: float
-        Signal maximum aplitude to mean.
+        Signal maximum amplitude to mean.
     dist : float
-        Length of the signal (sum of abs diff)
+        Length of the signal (sum of abs diff).
     mean_AD1 : float
         Mean absolute differences.
     med_AD1 : float
@@ -169,7 +171,7 @@ def time_features(signal, sampling_rate):
     range_D1 : float
         Amplitude range of differences.
     iqr_d1 : float
-        interquartile range of differences.
+        Interquartile range of differences.
     mean_D2 : float
         Mean of 2nd differences.
     std_D2 : float
@@ -187,7 +189,7 @@ def time_features(signal, sampling_rate):
     autocorr : float
         Signal autocorrelation sum.
     zero_cross : int
-        Number of times the sinal crosses the zero axis.
+        Number of times the signal crosses the zero axis.
     min_peaks : int
         Number of minimum peaks.
     max_peaks : int
@@ -199,15 +201,15 @@ def time_features(signal, sampling_rate):
     lin_reg_b : float
         Interception coefficient b of linear regression. 
     corr_lin_reg: float
-        Correlation to linear regression
+        Correlation to linear regression.
     mobility: float
-        ratio of the variance between the first derivative and the signal
+        ratio of the variance between the first derivative and the signal.
     complexity: float
-        ratio between the mobility of the derivative and the mobility of the signal
+        ratio between the mobility of the derivative and the mobility of the signal.
     chaos: float
-        ratio between the complexity of the derivative and the complexity of the signal
+        ratio between the complexity of the derivative and the complexity of the signal.
     hazard: float
-        ratio between the chaos of the derivative and the chaos of the signal
+        ratio between the chaos of the derivative and the chaos of the signal.
     kurtosis : float
         Signal kurtosis (unbiased).
     skewness : float
@@ -215,11 +217,11 @@ def time_features(signal, sampling_rate):
     rms : float
         Root Mean Square.
     midhinge: float
-        average of first and third quartile
+        average of first and third quartile.
     trimean: float
-        weighted average of 1st, 2nd and 3rd quartiles
-    stat_hist : list
-        Histogram.
+        weighted average of 1st, 2nd and 3rd quartiles.
+    stat_hist{bins} : float
+        Relative frequency of 5 histogram bins.
     entropy : float
         Signal entropy.
     
@@ -232,9 +234,10 @@ def time_features(signal, sampling_rate):
 
     """
 
-    # check input
-    assert len(signal) > 0, 'Signal size < 1'
-    
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
     # ensure numpy
     signal = np.array(signal)
    
@@ -339,7 +342,7 @@ def time_features(signal, sampling_rate):
 
     # distance
     try:
-        dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) +1
+        dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) + 1
     except Exception as e:
         print("dist", e)   
         dist = None
@@ -601,7 +604,7 @@ def time_features(signal, sampling_rate):
     # hjorth features
     # mobility
     try:    
-        mobility = mob(signal)['mobility']
+        mobility = hjorth_mob(signal)['mobility']
     except Exception as e:
         print("mobility", e)  
         mobility = None
@@ -610,7 +613,7 @@ def time_features(signal, sampling_rate):
 
     # complexity
     try:    
-        complexity = com(signal)['complexity']
+        complexity = hjorth_comp(signal)['complexity']
     except Exception as e:
         print("complexity", e)  
         complexity = None
@@ -619,7 +622,7 @@ def time_features(signal, sampling_rate):
 
     # chaos
     try:    
-        _chaos = chaos(signal)['chaos']
+        _chaos = hjorth_chaos(signal)['chaos']
     except Exception as e:
         print("chaos", e)  
         _chaos = None
@@ -628,8 +631,8 @@ def time_features(signal, sampling_rate):
 
     # Hazard
     try:    
-        if chaos(signal)['chaos'] is not None:
-            hazard = chaos(sig_diff)['chaos']/chaos(signal)['chaos']
+        if hjorth_chaos(signal)['chaos'] is not None:
+            hazard = hjorth_chaos(sig_diff)['chaos'] / hjorth_chaos(signal)['chaos']
         else:
             hazard = None
     except Exception as e:
@@ -647,7 +650,7 @@ def time_features(signal, sampling_rate):
     args += [kurtosis]
     names += ['kurtosis']
 
-    # skweness
+    # skewness
     try:
         skewness = stats.skew(signal, bias=False)
     except Exception as e:
@@ -707,4 +710,7 @@ def time_features(signal, sampling_rate):
     names += ['entropy']
 
     # output
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    args = tuple(args)
+    names = tuple(names)
+
+    return utils.ReturnTuple(args, names)
