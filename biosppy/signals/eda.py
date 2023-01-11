@@ -433,22 +433,21 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
-def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000.):
-    """ 
-    Returns characteristic EDA events.
+def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True, size=1.):
+    """Returns characteristic EDA events.
 
     Parameters
     ----------
     signal : array
         Input signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
     min_amplitude : float, optional
         Minimum threshold by which to exclude SCRs.
-    filt: bool
-        If to filter signal to remove noise and low amplitude events.
+    filt: bool, optional
+        Whether to filter signal to remove noise and low amplitude events.
     size: float
         Size of the filter in seconds
-    sampling_rate: float
-        Data acquisition sampling rate.
 
     Returns
     -------
@@ -458,10 +457,13 @@ def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1
         Indices of the SRC peaks.
     amplitudes : array
         SCR pulse amplitudes.
-    end : array
-        Indices of the SCR end.
+
     """
-    
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
     assert len(signal) > 1, "len signal <1"
     signal = np.array(signal).astype(np.float)
 
@@ -485,13 +487,14 @@ def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1
                                       kernel='boxzen',
                                       size=sm_size,
                                       mirror=True)
-        except Exception as e: print(e)
+        except Exception as e:
+            print(e)
 
-
-    amps, onsets, peaks, end = [], [], [], []
+    # extract onsets, peaks and amplitudes
+    onsets, peaks, amps = [], [], []
     zeros = st.find_extrema(signal=signal, mode='min')[0]  # get zeros
     for z in range(len(zeros)):
-        if z == len(zeros) -1:  # last zero
+        if z == len(zeros) - 1:  # last zero
             s = signal[zeros[z]:]  # signal amplitude between event
         else:
             s = signal[zeros[z]:zeros[z + 1]]  # signal amplitude between event
@@ -502,59 +505,16 @@ def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1
                 peaks += [zeros[z] + p]
                 onsets += [zeros[z]]
                 amps += [s[p] - s[0]]
-                if z == len(zeros) -1:  # last zero
-                    end += [len(signal)]                    
-                else:
-                    end += [zeros[z + 1]]
 
-    args, names = [], []
-    names += ["onsets", "peaks", "amplitudes", "end"]
-    args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
+    # convert to array
+    onsets, peaks, amps = np.array(onsets), np.array(peaks), np.array(amps)
 
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    # output
+    args = (onsets, peaks, amps)
+    names = ("onsets", "peaks", "amplitudes")
 
+    return utils.ReturnTuple(args, names)
 
-def eda_events(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000., method="emotiphai"):
-    """ 
-    Returns characteristic EDA events.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-    min_amplitude : float, optional
-        Minimum threshold by which to exclude SCRs.
-    filt : bool
-        If to filter signal to remove noise and low amplitude events.
-    size : float
-        Size of the filter in seconds
-    sampling_rate : float
-        Data acquisition sampling rate.
-    method : string
-       Method to compute eda events: emotiphai, kbk or basic
-
-    Returns
-    -------
-    onsets : array
-        Indices of the SCR onsets.
-    peaks : array
-        Indices of the SRC peaks.
-    amplitudes : array
-        SCR pulse amplitudes.
-    end : array
-        Indices of the SCR end.
-
-    """
-    
-    assert len(signal) > 1, "len signal <1"
-    signal = np.array(signal).astype(np.float)
-    
-    args, names = [], []
-    if method == "emotiphai":
-        onsets, peaks, amps, end = eda_emotiphai(signal, min_amplitude=min_amplitude, filt=filt, size=size, sampling_rate=sampling_rate)
-        
-        names += ["onsets", "peaks", "amplitudes", "end"]
-        args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
 
         return utils.ReturnTuple(tuple(args), tuple(names))
     elif method == "kbk":
