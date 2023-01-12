@@ -26,12 +26,12 @@ def freq_to_mel(hertz):
     Parameters
     ----------
     hertz : array
-        hertz frequencies.
+        Hertz frequencies.
  
     Returns
     -------
     mel frequencies : array
-        mel frequencies.
+        Mel frequencies.
     
     References
     ----------
@@ -49,12 +49,12 @@ def mel_to_freq(mel):
     Parameters
     ----------
     mel : array
-        mel frequencies.
+        Mel frequencies.
  
     Returns
     -------
     hertz frequencies : array
-        hertz frequencies.
+        Hertz frequencies.
 
     References
     ----------

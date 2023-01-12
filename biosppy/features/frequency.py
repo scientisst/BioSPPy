@@ -26,14 +26,14 @@ def get_bands(frequencies, fband):
     return frequencies[band]
 
 
-def freq_features(signal, sampling_rate):
+def freq_features(signal=None, sampling_rate=1000.):
     """Compute spectral metrics describing the signal.
    
     Parameters
     ----------
     signal : array
         Input signal.
-    sampling_rate : float
+    sampling_rate : int, float, optional
         Sampling frequency (Hz).
 
     Returns
