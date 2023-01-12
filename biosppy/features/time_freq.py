@@ -19,7 +19,7 @@ from .. import utils
 from . import time
 
 
-def get_DWT(signal, wavelet="db4", level=5):
+def get_DWT(signal=None, wavelet="db4", level=5):
     """Compute the signal discrete wavelet transform coefficients.
     
     Parameters
@@ -45,7 +45,6 @@ def get_DWT(signal, wavelet="db4", level=5):
 
     """
     
-    args, names = [], []
     cD = pywt.downcoef("d", signal, wavelet, level)
     cA = pywt.downcoef("a", signal, wavelet, level)
 
@@ -54,15 +53,15 @@ def get_DWT(signal, wavelet="db4", level=5):
     return utils.ReturnTuple(args, names)
 
 
-def time_freq_features(signal, sampling_rate):
+def time_freq_features(signal=None, sampling_rate=1000.):
     """Compute statistical metrics describing the signal.
    
     Parameters
     ----------
     signal : array
         Input signal.
-    sampling_rate: float
-        Sampling rate.
+    sampling_rate : int, float, optional
+        Sampling Rate (Hz).
 
     Returns
     -------
@@ -78,8 +77,9 @@ def time_freq_features(signal, sampling_rate):
     
     """
     
-    # check input
-    assert len(signal) > 0, 'Signal size < 1'
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
     
     # ensure numpy
     signal = np.array(signal)

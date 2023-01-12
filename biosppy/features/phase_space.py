@@ -20,7 +20,7 @@ import matplotlib.pylab as plt
 from .. import utils
 
 
-def rec_plot(signal):
+def rec_plot(signal=None):
     """Compute recurrence plot (distance matrix).
 
     Parameters
@@ -34,6 +34,10 @@ def rec_plot(signal):
         recplot matrix.
 
     """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     sig_down = resample(signal, 224)
     d = pdist(sig_down[:,None])

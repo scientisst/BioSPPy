@@ -21,7 +21,7 @@ from ..signals import tools
 from ..stats import pearson_correlation
 
 
-def hjorth_mob(signal):
+def hjorth_mob(signal=None):
     """Compute signal mobility hjorth feature.
 
     Parameters
@@ -35,6 +35,10 @@ def hjorth_mob(signal):
         Signal mobility.
 
     """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     d = np.diff(signal)
 
@@ -54,7 +58,7 @@ def hjorth_mob(signal):
     return utils.ReturnTuple(args, names)
 
 
-def hjorth_comp(signal):
+def hjorth_comp(signal=None):
     """Compute signal complexity hjorth feature.
 
     Parameters
@@ -68,6 +72,10 @@ def hjorth_comp(signal):
         Signal complexity. 
 
     """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     d = np.diff(signal)
 
@@ -87,7 +95,7 @@ def hjorth_comp(signal):
     return utils.ReturnTuple(args, names)
 
 
-def hjorth_chaos(signal):
+def hjorth_chaos(signal=None):
     """Compute signal chaos hjorth feature.
 
     Parameters
@@ -101,6 +109,10 @@ def hjorth_chaos(signal):
         Signal chaos. 
 
     """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     d = np.diff(signal)
 
@@ -120,7 +132,7 @@ def hjorth_chaos(signal):
     return utils.ReturnTuple(args, names)
 
 
-def time_features(signal, sampling_rate):
+def time_features(signal=None, sampling_rate=1000.):
     """Compute various time metrics describing the signal.
 
     Parameters
