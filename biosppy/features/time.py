@@ -253,470 +253,262 @@ def time_features(signal=None, sampling_rate=1000.):
     # ensure numpy
     signal = np.array(signal)
    
-    # start helpers
+    # helpers
     args, names = [], []
-    try:
-        sig_diff = np.diff(signal)
-    except Exception as e:
-        print("sig_diff", e)
-        sig_diff = []
-    
-    # 2nd derivative
-    try:
-        sig_diff_2 = np.diff(sig_diff)
-    except Exception as e:
-        print("sig_diff_2", e)
-        sig_diff_2 = []
+    sig_diff = np.diff(signal)  # 1st derivative
+    sig_diff_2 = np.diff(sig_diff)  # 2nd derivative
+    mean = np.mean(signal)
+    time = range(len(signal))
+    time = [float(x) / sampling_rate for x in time]
+    ds = 1/sampling_rate
+    energy = np.sum(signal**2*ds)
 
-    try:
-        mean = np.mean(signal)
-    except Exception as e:
-        print("mean", e)
-        mean = None
-
-    try:
-        time = range(len(signal))
-        time = [float(x) / sampling_rate for x in time]
-    except Exception as e:
-        print("time", e)
-        time = []
-
-    try:
-        ds = 1/sampling_rate
-        energy = np.sum(signal**2*ds)
-    except Exception as e:
-        print("energy", e)   
-        energy = []
-    # end helpers
-    
-    # signal max
-    try:
-        _max = np.max(signal)
-    except Exception as e:
-        print("max", e)   
-        _max = None
+    # extract features
+    _max = np.max(signal)
     args += [_max]
     names += ['max']
     
-    # signal min
-    try:
-        _min = np.min(signal)
-    except Exception as e:
-        print("min", e)   
-        _min = None
+
+    _min = np.min(signal)
     args += [_min]
     names += ['min']
     
     # range
-    try:
-        _range = np.max(signal) - np.min(signal)
-    except Exception as e:
-        print("range", e)   
-        _range = None
+    _range = np.max(signal) - np.min(signal)
     args += [_range]
     names += ['range']
 
-    # interquartile range 
-    try:
-        _iqr = iqr(signal)
-    except Exception as e:
-        print("iqr", e)
-        _iqr = None
+    # interquartile range
+    _iqr = iqr(signal)
     args += [_iqr]
     names += ['iqr']
 
     # mean
-    try:
-        mean = np.mean(signal)
-    except Exception as e:
-        print("mean", e)   
-        mean = None
+    mean = np.mean(signal)
     args += [mean]
     names += ['mean']
 
     # std
-    try:
-        std = np.std(signal) 
-    except Exception as e:
-        print(e)   
-        std = None
+    std = np.std(signal)
     args += [std]
     names += ['std']
 
     # max to mean
-    try:
-        max_to_mean = np.max(signal - mean)
-    except Exception as e:
-        print("max_to_mean", e)   
-        max_to_mean = None
+    max_to_mean = np.max(signal - mean)
     args += [max_to_mean]
     names += ['max_to_mean']
 
     # distance
-    try:
-        dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) + 1
-    except Exception as e:
-        print("dist", e)   
-        dist = None
+    dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) + 1
     args += [dist]
     names += ['dist']
 
     # mean absolute differences
-    try:
-        mean_AD1 = np.mean(np.abs(sig_diff))
-    except Exception as e:
-        print(e)   
-        mean_AD1 = None
+    mean_AD1 = np.mean(np.abs(sig_diff))
+
     args += [mean_AD1]
     names += ['mean_AD1']
 
     # median absolute differences
-    try:
-        med_AD1 = np.median(np.abs(sig_diff))
-    except Exception as e:
-        print(e)
-        med_AD1 = None
+    med_AD1 = np.median(np.abs(sig_diff))
     args += [med_AD1]
     names += ['med_AD1']
 
     # min absolute differences
-    try:
-        min_AD1 = np.min(np.abs(sig_diff))
-    except Exception as e:
-        print(e)   
-        min_AD1 = None
+    min_AD1 = np.min(np.abs(sig_diff))
     args += [min_AD1]
     names += ['min_AD1']
 
     # max absolute differences
-    try:
-        max_AD1 = np.max(np.abs(sig_diff))
-    except Exception as e:
-        print(e)   
-        max_AD1 = None
+    max_AD1 = np.max(np.abs(sig_diff))
     args += [max_AD1]
     names += ['max_AD1']
 
     # mean of differences
-    try:
-        mean_D1 = np.mean(sig_diff)
-    except Exception as e:
-        print(e)  
-        mean_D1 = None
+    mean_D1 = np.mean(sig_diff)
     args += [mean_D1]
     names += ['mean_D1']
 
     # median of differences
-    try:
-        med_D1 = np.median(sig_diff)
-    except Exception as e:
-        print(e)  
-        med_D1 = None
+    med_D1 = np.median(sig_diff)
     args += [med_D1]
     names += ['med_D1']
 
     # std of differences
-    try:
-        std_D1 = np.std(sig_diff)
-    except Exception as e:
-        print(e)  
-        std_D1 = None
+    std_D1 = np.std(sig_diff)
     args += [std_D1]
     names += ['std_D1']
     
     # max of differences
-    try:
-        max_D1 = np.max(sig_diff)
-    except Exception as e:
-        print(e)  
-        max_D1 = None
+    max_D1 = np.max(sig_diff)
     args += [max_D1]
     names += ['max_D1']
 
     # min of differences
-    try:
-        min_D1 = np.min(sig_diff)
-    except Exception as e:
-        print(e)   
-        min_D1 = None
+    min_D1 = np.min(sig_diff)
     args += [min_D1]
     names += ['min_D1']
 
     # sum of differences
-    try:
-        sum_D1 = np.sum(sig_diff)
-    except Exception as e:
-        print("sum_D1", e)
-        sum_D1 = None
+    sum_D1 = np.sum(sig_diff)
     args += [sum_D1]
     names += ['sum_D1']
 
     # range of differences
-    try:
-        range_D1 = np.max(sig_diff) - np.min(sig_diff)
-    except Exception as e:
-        print("range_D1", e)
-        range_D1 = None
+    range_D1 = np.max(sig_diff) - np.min(sig_diff)
     args += [range_D1]
     names += ['range_D1']
 
     # interquartile range of differences
-    try:
-        iqr_D1 = iqr(sig_diff)
-    except Exception as e:
-        print("iqr_D1", e)
-        iqr_D1 = None
+    iqr_D1 = iqr(sig_diff)
     args += [iqr_D1]
     names += ['iqr_D1']
 
     # mean of 2nd differences
-    try:
-        mean_D2 = np.mean(sig_diff_2)
-    except Exception as e:
-        print("mean_D2", e)   
-        mean_D2 = None
+    mean_D2 = np.mean(sig_diff_2)
     args += [mean_D2]
     names += ['mean_D2']
 
     # std of 2nd differences
-    try:
-        std_D2 = np.std(sig_diff_2)
-    except Exception as e:
-        print("std_D2", e)   
-        std_D2 = None
+    std_D2 = np.std(sig_diff_2)
     args += [std_D2]
     names += ['std_D2']
     
     # max of 2nd differences
-    try:
-        max_D2 = np.max(sig_diff_2)
-    except Exception as e:
-        print("max_D2", e)   
-        max_D2 = None
+    max_D2 = np.max(sig_diff_2)
     args += [max_D2]
     names += ['max_D2']
 
     # min of 2nd differences
-    try:
-        min_D2 = np.min(sig_diff_2)
-    except Exception as e:
-        print("min_D2", e)   
-        min_D2 = None
+    min_D2 = np.min(sig_diff_2)
     args += [min_D2]
     names += ['min_D2']
 
     # sum of 2nd differences
-    try:
-        sum_D2 = np.sum(sig_diff_2)
-    except Exception as e:
-        print("sum_D2", e)   
-        sum_D2 = None
+    sum_D2 = np.sum(sig_diff_2)
     args += [sum_D2]
     names += ['sum_D2']
 
     # range of 2nd differences
-    try:
-        range_D2 = np.max(sig_diff_2) - np.min(sig_diff_2)
-    except Exception as e:
-        print("range_D2", e)   
-        range_D2 = None
+    range_D2 = np.max(sig_diff_2) - np.min(sig_diff_2)
     args += [range_D2]
     names += ['range_D2']
 
     # interquartile range of 2nd differences
-    try:
-        iqr_D2 = iqr(sig_diff_2)
-    except Exception as e:
-        print("iqr_D2", e)
-        iqr_D2 = None
+    iqr_D2 = iqr(sig_diff_2)
     args += [iqr_D2]
     names += ['iqr_D2']
 
     # autocorrelation sum
-    try:
-        if np.sum(np.abs(signal)) > 0: 
-            autocorr = np.sum(np.correlate(signal, signal, 'full'))
-        else:
-            autocorr = None
-    except Exception as e:
-        print("autocorr", e)   
+    if np.sum(np.abs(signal)) > 0:
+        autocorr = np.sum(np.correlate(signal, signal, 'full'))
+    else:
         autocorr = None
     args += [autocorr]
     names += ['autocorr']
 
     # zero_cross
-    try:
-        zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
-    except Exception as e:
-        print("zero_cross", e)   
-        zero_cross = None
+    zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
     args += [zero_cross]
     names += ['zero_cross']
 
     # number of minimum peaks
-    try:
-        min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
-    except Exception as e:
-        print("min_peaks", e)   
-        min_peaks = None
+    min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
     args += [min_peaks]
     names += ['min_peaks']
 
     # number of maximum peaks
-    try:
-        max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
-    except Exception as e:
-        print("max_peaks", e)   
-        max_peaks = None
+    max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
     args += [max_peaks]
     names += ['max_peaks']
     
     # total energy
-    try:
-        total_e = np.sum(energy)
-    except Exception as e:
-        print("total_e", e)   
-        total_e = None
+    total_e = np.sum(energy)
     args += [total_e]
     names += ['total_e']
 
     _t = np.array(time).reshape(-1, 1)
-    try:
-        reg = linear_model.LinearRegression().fit(_t,  signal) 
-        lin_reg_slope = reg.coef_[0]
-    except Exception as e:
-        print("lin_reg_slope", e)
-        lin_reg_slope = None
+    reg = linear_model.LinearRegression().fit(_t,  signal)
+    lin_reg_slope = reg.coef_[0]
     args += [lin_reg_slope]
     names += ['lin_reg_slope']
 
-    try:
-        lin_reg_b = reg.intercept_
-    except Exception as e:
-        print("lin_reg_b", e)   
-        lin_reg_b = None
+    lin_reg_b = reg.intercept_
     args += [lin_reg_b]
     names += ['lin_reg_b']
 
-    try:
-        c = 0
-        if np.sum(np.abs(signal)) > 0 and len(np.unique(signal)) > 1:
-            _r = reg.predict(_t)
-            if np.sum(np.abs(_r)) > 0 and len(np.unique(_r)) > 1:
-                corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
-                c = 1
-        if not c:
-            corr_lin_reg = None
-    except Exception as e:
-        print("corr_lin_reg", e)  
+    c = 0
+    if np.sum(np.abs(signal)) > 0 and len(np.unique(signal)) > 1:
+        _r = reg.predict(_t)
+        if np.sum(np.abs(_r)) > 0 and len(np.unique(_r)) > 1:
+            corr_lin_reg = pearson_correlation(signal, reg.predict(_t))[0]
+            c = 1
+    if not c:
         corr_lin_reg = None
+
     args += [corr_lin_reg]
     names += ['corr_lin_reg']
 
     # hjorth features
     # mobility
-    try:    
-        mobility = hjorth_mob(signal)['mobility']
-    except Exception as e:
-        print("mobility", e)  
-        mobility = None
+    mobility = hjorth_mob(signal)['mobility']
     args += [mobility]
     names += ['mobility']
 
     # complexity
-    try:    
-        complexity = hjorth_comp(signal)['complexity']
-    except Exception as e:
-        print("complexity", e)  
-        complexity = None
+    complexity = hjorth_comp(signal)['complexity']
     args += [complexity]
     names += ['complexity']
 
     # chaos
-    try:    
-        _chaos = hjorth_chaos(signal)['chaos']
-    except Exception as e:
-        print("chaos", e)  
-        _chaos = None
+    _chaos = hjorth_chaos(signal)['chaos']
     args += [_chaos]
     names += ['chaos']
 
     # Hazard
-    try:    
-        if hjorth_chaos(signal)['chaos'] is not None:
-            hazard = hjorth_chaos(sig_diff)['chaos'] / hjorth_chaos(signal)['chaos']
-        else:
-            hazard = None
-    except Exception as e:
-        print("hazard", e)  
+    if hjorth_chaos(signal)['chaos'] is not None:
+        hazard = hjorth_chaos(sig_diff)['chaos'] / hjorth_chaos(signal)['chaos']
+    else:
         hazard = None
     args += [hazard]
     names += ['hazard']
 
     # kurtosis
-    try:
-        kurtosis = stats.kurtosis(signal, bias=False)
-    except Exception as e:
-        print("kurtosis", e) 
-        kurtosis = None
+    kurtosis = stats.kurtosis(signal, bias=False)
     args += [kurtosis]
     names += ['kurtosis']
 
     # skewness
-    try:
-        skewness = stats.skew(signal, bias=False)
-    except Exception as e:
-        print("skewness", e) 
-        skewness = None
+    skewness = stats.skew(signal, bias=False)
     args += [skewness]
     names += ['skewness']
 
     # root mean square
-    try:
-        rms = np.sqrt(np.sum(signal ** 2) / len(signal))
-    except Exception as e:
-        print("rms", e) 
-        rms = None
+    rms = np.sqrt(np.sum(signal ** 2) / len(signal))
     args += [rms]
     names += ['rms']
 
     # midhinge
-    try:
-        quant = np.quantile(signal, [0.25, 0.5, 0.75])
-        midhinge = (quant[0] + quant[2])/2
-    except Exception as e:
-        print("midhinge", e) 
-        midhinge = None
+    quant = np.quantile(signal, [0.25, 0.5, 0.75])
+    midhinge = (quant[0] + quant[2])/2
     args += [midhinge]
     names += ['midhinge']
 
     # trimean
-    try:
-        trimean = (quant[1] + midhinge)/2
-    except Exception as e:
-        print("trimean", e) 
-        trimean = None
+    trimean = (quant[1] + midhinge)/2
     args += [trimean]
     names += ['trimean']
 
     # histogram
-    try:
-        _hist = list(np.histogram(signal, bins=5)[0])
-        _hist = _hist/np.sum(_hist)
-    except Exception as e:
-        print("time hist", e) 
-        _hist = [None] * 5
+    _hist = list(np.histogram(signal, bins=5)[0])
+    _hist = _hist/np.sum(_hist)
     args += [i for i in _hist]
     names += ['stat_hist' + str(i) for i in range(len(_hist))]
 
     # entropy
-    try:
-        if np.sum(np.abs(signal)) > 0: 
-            _entropy = np.nan_to_num(entropy(signal))
-        else:
-            _entropy = None
-    except Exception as e:
-        print("entropy", e) 
+    if np.sum(np.abs(signal)) > 0:
+        _entropy = np.nan_to_num(entropy(signal))
+    else:
         _entropy = None
     args += [_entropy]
     names += ['entropy']
