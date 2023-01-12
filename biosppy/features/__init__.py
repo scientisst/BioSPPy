@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-biosppy.signals
----------------
+biosppy.features
+----------------
 
-This package provides methods to process common
-physiological signals (biosignals):
-    * Photoplethysmogram (PPG)
-    * Electrocardiogram (ECG)
-    * Electrodermal Activity (EDA)
-    * Electroencephalogram (EEG)
-    * Electromyogram (EMG)
-    * Respiration (Resp)
+This package provides methods to extract common
+signal features in:
+    * Time domain
+    * Frequency domain
+    * Time-frequency domain
+    * Phase-space domain
+    * Cepstral domain
 
 :copyright: (c) 2015-2021 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.

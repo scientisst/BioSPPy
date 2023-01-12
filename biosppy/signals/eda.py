@@ -24,9 +24,8 @@ from . import tools as st
 from .. import plotting, utils
 
 
-def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0.1):
-    """
-    Process a raw EDA signal and extract relevant signal features using
+def eda(signal=None, sampling_rate=1000., path=None, show=True):
+    """Process a raw EDA signal and extract relevant signal features using
     default parameters.
 
     Parameters
@@ -39,8 +38,6 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
         If provided, the plot will be saved to the specified file.
     show : bool, optional
         If True, show a summary plot.
-    min_amplitude : float, optional
-        Minimum treshold by which to exclude SCRs.
 
     Returns
     -------
@@ -81,15 +78,20 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    args = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
-     
+    onsets, peaks, amplitudes = emotiphai_eda(signal=filtered,
+                                              sampling_rate=sampling_rate,
+                                              min_amplitude=0.1,
+                                              filt=True,
+                                              size=0.9)
+
     # get time vectors
     length = len(signal)
-    T = (length - 1) / sampling_rate
-    ts = np.linspace(0, T, length, endpoint=True)
+    t = (length - 1) / sampling_rate
+    ts = np.linspace(0, t, length, endpoint=True)
 
-    _edr = edr(filtered, sampling_rate=sampling_rate)["edr"]
-    _edl = edl(filtered, sampling_rate=sampling_rate)["edl"]
+    # get EDR and EDL
+    edr_signal = edr(signal=filtered, sampling_rate=sampling_rate)["edr"]
+    edl_signal = edl(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)["edl"]
 
     # plot
     if show:
@@ -97,30 +99,100 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
             ts=ts,
             raw=signal,
             filtered=filtered,
-            edr=_edr,
-            edl=_edl,
-            onsets=args["onsets"],
-            peaks=args["peaks"],
-            amplitudes=args["amplitudes"],
+            edr=edr_signal,
+            edl=edl_signal,
+            onsets=onsets,
+            peaks=peaks,
+            amplitudes=amplitudes,
             path=path,
             show=True,
         )
 
     # output
-    args = (ts, filtered, _edr, _edl, onsets, peaks, amplitudes)
+    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes)
     names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes")
 
     return utils.ReturnTuple(args, names)
 
 
-def edr(signal=None, sampling_rate=1000.0):
-    """
-    Extracts EDR signal.
+def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
+    """Returns characteristic EDA events.
 
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+    method : str, optional
+       Method to compute eda events: 'emotiphai', 'kbk' or 'basic'.
+    kwargs : dict, optional
+        Method parameters.
+
+    Returns
+    -------
+    onsets : array
+        Signal EDR events onsets.
+    peaks : array
+        Signal EDR events peaks.
+    amps : array
+        Signal EDR events Amplitudes.
+    phasic_rate : array
+        Signal EDR events rate in 60s.
+    rise_times : array
+        Rise times, i.e. onset-peak time difference.
+    half_rec : array
+        Half Recovery times, i.e. time between peak and 63% amplitude.
+    six_rec : array
+        63 % recovery times, i.e. time between peak and 50% amplitude.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    # compute onsets, peaks and amplitudes
+    if method == "emotiphai":
+        onsets, peaks, amps = emotiphai_eda(signal=signal, sampling_rate=sampling_rate, **kwargs)
+
+    elif method == "kbk":
+        onsets, peaks, amps = kbk_scr(signal=signal, sampling_rate=sampling_rate, **kwargs)
+
+    elif method == "basic":
+        onsets, peaks, amps = basic_scr(signal=signal)
+
+    else:
+        raise TypeError("Please specify a supported method.")
+
+    # compute phasic rate
+    try:
+        phasic_rate = sampling_rate * (60. / np.diff(peaks))
+    except:
+        phasic_rate = None
+
+    # compute rise times
+    rise_times = (peaks - onsets) / sampling_rate  # to seconds
+
+    # compute half and 63% recovery times
+    half_rec, six_rec = rec_times(signal=signal, sampling_rate=sampling_rate, onsets=onsets, peaks=peaks)
+
+    args = (onsets, peaks, amps, phasic_rate, rise_times, half_rec, six_rec)
+    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
+
+    return utils.ReturnTuple(args, names)
+
+
+def edr(signal=None, sampling_rate=1000.0):
+    """Extracts EDR signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
 
@@ -137,6 +209,7 @@ def edr(signal=None, sampling_rate=1000.0):
        Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
 
     """
+
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
@@ -146,27 +219,31 @@ def edr(signal=None, sampling_rate=1000.0):
 
     # smooth
     size = int(1.0 * sampling_rate)
-    edr, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
 
     # output
-    args = (edr, )
-    names = ("edr", )
+    args = (edr_signal,)
+    names = ("edr",)
 
     return utils.ReturnTuple(args, names)
 
 
-def edl(signal=None, sampling_rate=1000.0, method="onsets", window_size=10.0):
-    """
-    Extracts EDL signal.
+def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwargs):
+    """Extracts EDL signal.
 
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
-    method: string
-        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets interpolation. 
+    method: str, optional
+        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets'
+        interpolation.
+    onsets : array, optional
+        List of onsets for the interpolation method.
+    kwargs : dict, optional
+        window_size : Size of the smoother kernel (seconds).
 
     Returns
     -------
@@ -174,35 +251,45 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", window_size=10.0):
         Electrodermal level (EDL) signal.
 
     """
+
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
-    # smooth
+    if method == "onsets" and onsets is None:
+        raise TypeError("Please specify 'onsets' to use the onset interpolation method.")
+
+    # smooth method
     if method == "smoother":
+        window_size = kwargs['window_size'] if 'window_size' in kwargs else 10.0
         size = int(window_size * sampling_rate)
-        edl, _ = tools.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
-    else:
+        edl_signal, _ = st.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
+
+    # interpolation method
+    elif method == "onsets":
         # get time vectors
         length = len(signal)
-        T = (length - 1) / sampling_rate
-        ts = np.linspace(0, T, length, endpoint=True)
+        t = (length - 1) / sampling_rate
+        ts = np.linspace(0, t, length, endpoint=True)
 
-        onsets, peaks, amps, _ = eda_events(signal, filt=True, size=0.9, sampling_rate=1000)
+        # extract edl
         edl_on = np.hstack((ts[0], ts[onsets], ts[-1]))
         edl_amp = np.hstack((signal[0], signal[onsets], signal[-1]))
         f = interpolate.interp1d(edl_on, edl_amp)
-        edl = f(ts)
+        edl_signal = f(ts)
+
+    else:
+        raise TypeError("Please specify a supported method.")
+
     # output
-    args = (edl, )
-    names = ("edl", )
+    args = (edl_signal,)
+    names = ("edl",)
 
     return utils.ReturnTuple(args, names)
 
 
 def basic_scr(signal=None, sampling_rate=1000.0):
-    """
-    Basic method to extract Skin Conductivity Responses (SCR) from an
+    """Basic method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
 
     Follows the approach in [Gamb08]_.
@@ -210,7 +297,7 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
 
@@ -219,7 +306,7 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
 
@@ -269,10 +356,8 @@ def basic_scr(signal=None, sampling_rate=1000.0):
     return utils.ReturnTuple(args, names)
 
 
-
 def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
-    """
-    KBK method to extract Skin Conductivity Responses (SCR) from an
+    """KBK method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
 
     Follows the approach by Kim *et al.* [KiBK04]_.
@@ -280,18 +365,18 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     Parameters
     ----------
     signal : array
-        Input filterd EDA signal.
+        Input filtered EDA signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
     min_amplitude : float, optional
-        Minimum treshold by which to exclude SCRs.
+        Minimum threshold by which to exclude SCRs.
 
     Returns
     -------
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
 
@@ -343,37 +428,36 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
-def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000.):
-    """ 
-    Returns characteristic EDA events.
+def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True, size=1.):
+    """Returns characteristic EDA events.
 
     Parameters
     ----------
     signal : array
         Input signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
     min_amplitude : float, optional
         Minimum threshold by which to exclude SCRs.
-    filt: bool
-        If to filter signal to remove noise and low amplitude events.
+    filt: bool, optional
+        Whether to filter signal to remove noise and low amplitude events.
     size: float
         Size of the filter in seconds
-    sampling_rate: float
-        Data acquisition sampling rate.
 
     Returns
     -------
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
     amplitudes : array
         SCR pulse amplitudes.
-    end : array
-        Indices of the SCR end.
+
     """
-    
-    assert len(signal) > 1, "len signal <1"
-    signal = np.array(signal).astype(np.float)
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     # smooth
     if filt:
@@ -395,101 +479,48 @@ def eda_emotiphai(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1
                                       kernel='boxzen',
                                       size=sm_size,
                                       mirror=True)
-        except Exception as e: print(e)
+        except Exception as e:
+            print(e)
 
-
-    amps, onsets, peaks, end = [], [], [], []
+    # extract onsets, peaks and amplitudes
+    onsets, peaks, amps = [], [], []
     zeros = st.find_extrema(signal=signal, mode='min')[0]  # get zeros
     for z in range(len(zeros)):
-        if z == len(zeros) -1:  # last zero
+        if z == len(zeros) - 1:  # last zero
             s = signal[zeros[z]:]  # signal amplitude between event
         else:
             s = signal[zeros[z]:zeros[z + 1]]  # signal amplitude between event
             
         pk = st.find_extrema(signal=s, mode='max')[0]  # get pk between events
         for p in pk:
-            if (s[p] - s[0]) > min_amplitude:  # only count events with high amplitude
+            if (s[p] - s[0]) > min_amplitude:  # only count events with minimum amplitude
                 peaks += [zeros[z] + p]
                 onsets += [zeros[z]]
                 amps += [s[p] - s[0]]
-                if z == len(zeros) -1:  # last zero
-                    end += [len(signal)]                    
-                else:
-                    end += [zeros[z + 1]]
 
-    args, names = [], []
-    names += ["onsets", "peaks", "amplitudes", "end"]
-    args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
+    # convert to array
+    onsets, peaks, amps = np.array(onsets), np.array(peaks), np.array(amps)
 
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    # output
+    args = (onsets, peaks, amps)
+    names = ("onsets", "peaks", "amplitudes")
+
+    return utils.ReturnTuple(args, names)
 
 
-def eda_events(signal, min_amplitude=0.1, filt=True, size=1., sampling_rate=1000., method="emotiphai"):
-    """ 
-    Returns characteristic EDA events.
+def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
+    """Returns EDA recovery times.
 
     Parameters
     ----------
     signal : array
         Input signal.
-    min_amplitude : float, optional
-        Minimum threshold by which to exclude SCRs.
-    filt : bool
-        If to filter signal to remove noise and low amplitude events.
-    size : float
-        Size of the filter in seconds
-    sampling_rate : float
-        Data acquisition sampling rate.
-    method : string
-       Method to compute eda events: emotiphai, kbk or basic
-
-    Returns
-    -------
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
     onsets : array
         Indices of the SCR onsets.
     peaks : array
-        Indices of the SRC peaks.
-    amplitudes : array
-        SCR pulse amplitudes.
-    end : array
-        Indices of the SCR end.
-
-    """
-    
-    assert len(signal) > 1, "len signal <1"
-    signal = np.array(signal).astype(np.float)
-    
-    args, names = [], []
-    if method == "emotiphai":
-        onsets, peaks, amps, end = eda_emotiphai(signal, min_amplitude=min_amplitude, filt=filt, size=size, sampling_rate=sampling_rate)
-        
-        names += ["onsets", "peaks", "amplitudes", "end"]
-        args += [np.array(onsets), np.array(peaks), np.array(amps), np.array(end)]
-
-        return utils.ReturnTuple(tuple(args), tuple(names))
-    elif method == "kbk":
-        onsets, peaks, amps = kbk_scr(signal, sampling_rate=sampling_rate, min_amplitude=min_amplitude)
-    else:
-        onsets, peaks, amps = basic_scr(signal, sampling_rate)
-
-    names += ["onsets", "peaks", "amplitudes"]
-    args += [np.array(onsets), np.array(peaks), np.array(amps)]
-
-    return utils.ReturnTuple(tuple(args), tuple(names))
-
-
-def rec_times(signal, onsets, peaks):
-    """ 
-    Returns EDA recovery times.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-    onsets : array
-        Indices of the SCR onsets.
-    peaks : array
-        Indices of the SRC peaks.
+        Indices of the SCR peaks.
 
     Returns
     -------
@@ -499,18 +530,18 @@ def rec_times(signal, onsets, peaks):
         63 % recovery times, i.e. time between peak and 63% amplitude.
 
     """
-    assert len(signal) > 1, "len signal <1"
-    peaks = np.array(peaks).astype(int) 
-    onsets = np.array(onsets).astype(int) 
 
-    a = np.array(signal[peaks[:]] - signal[onsets[:]])
+    # ensure input format
+    peaks = np.array(peaks, dtype=int)
+    onsets = np.array(onsets, dtype=int)
+
+    amps = np.array(signal[peaks[:]] - signal[onsets[:]])  # SCR amplitudes
     li = min(len(onsets), len(peaks))
 
-    half_rec, hlf_rec_ts = [], []
-    six_rec, six_rec_ts = [], []
+    half_rec, six_rec = [], []
     for i in range(li):  # iterate over onset
-        half_rec_amp = 0.5 * a[i] + signal[onsets][i]
-        six_rec_amp = 0.37 * a[i] + signal[onsets][i]
+        half_rec_amp = 0.5 * amps[i] + signal[onsets][i]
+        six_rec_amp = 0.37 * amps[i] + signal[onsets][i]
         try:
             wind = np.array(signal[peaks[i]:onsets[i + 1]])
         except:
@@ -519,100 +550,21 @@ def rec_times(signal, onsets, peaks):
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
         if len(half_rec_idx) > 0:
-            half_rec += [half_rec_idx[0][0] + peaks[i] - onsets[i]]
-            hlf_rec_ts += [half_rec_idx[0][0] + peaks[i]]
+            half_rec += [(half_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
         else:
             half_rec += [None]
-            hlf_rec_ts += [None]
 
         if len(six_rec_idx) > 0:
-            six_rec += [six_rec_idx[0][0] + peaks[i] - onsets[i]]
-            six_rec_ts += [six_rec_idx[0][0] + peaks[i]]
+            six_rec += [(six_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
         else:
             six_rec += [None]
-            six_rec_ts += [None]
 
-    args, names = [], []
-    names += ["half_rec", "six_rec"]
-    args += [half_rec, six_rec]
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    # convert to numpy
+    half_rec = np.array(half_rec)
+    six_rec = np.array(six_rec)
 
+    # output
+    names = ("half_rec", "six_rec")
+    args = (half_rec, six_rec)
 
-def eda_features(signal=None, min_amplitude=0.08, filt=True, size= 1.5, sampling_rate=1000.):
-    """
-    Compute EDA characteristic metrics describing the signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-    min_amplitude : float, optional
-        Minimum threshold by which to exclude SCRs.
-    filt: bool
-        If to filter signal to remove noise and low amplitude events.
-    size: float
-        Size of the filter in seconds
-    sampling_rate : float
-        Sampling frequency.
-
-    Returns
-    -------
-    onsets : list
-        Signal EDR events onsets.
-    peaks : list
-        Signal EDR events peaks.
-    amps : list
-        Signal EDR events Amplitudes.
-    phasic_rate : list
-        Signal EDR events rate in 60s.
-    rise_ts : list
-        Rise times, i.e. onset-peak time difference.
-    half_rec : list
-        Half Recovery times, i.e. time between peak and 63% amplitude.
-    six_rec : list
-        63 % recovery times, i.e. time between peak and 50% amplitude.
-
-    """
-
-    # ensure numpy
-    assert len(signal) > 0, "len signal < 1"
-
-    signal = np.array(signal)
-    args, names = [], []
-
-    # onsets, peaks, amps
-    onsets, peaks, amps, _ = eda_events(signal, filt=filt, size=size, min_amplitude=min_amplitude, sampling_rate=sampling_rate)
-    args += [onsets]
-    names += ['onsets']
-    args += [peaks]
-    names += ['peaks']
-    args += [amps]
-    names += ['amps']
-
-    # phasic_rate
-    try:
-        phasic_rate = sampling_rate * (60. / np.diff(peaks))
-    except:
-        phasic_rate = None
-    args += [phasic_rate]
-    names += ['phasic_rate']
-
-    # rise_ts
-    try:
-        rise_ts = peaks - onsets
-    except:
-        rise_ts = None
-    args += [rise_ts]
-    names += ['rise_ts']
-
-    half_rec, six_rec = rec_times(signal, onsets, peaks)
-        
-    args += [half_rec]
-    names += ['half_rec']
-
-    args += [six_rec]
-    names += ['six_rec']
-
-    args = np.nan_to_num(args)
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    return utils.ReturnTuple(args, names)

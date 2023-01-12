@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.features.time_freq
--------------------
-This module provides methods to extract time frequency features. 
+--------------------------
+
+This module provides methods to extract time frequency features.
+
 :copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
@@ -18,8 +20,7 @@ from . import time
 
 
 def get_DWT(signal, wavelet="db4", level=5):
-    """
-    Compute the signal discrete wavelet transform coefficients.
+    """Compute the signal discrete wavelet transform coefficients.
     
     Parameters
     ----------
@@ -48,14 +49,13 @@ def get_DWT(signal, wavelet="db4", level=5):
     cD = pywt.downcoef("d", signal, wavelet, level)
     cA = pywt.downcoef("a", signal, wavelet, level)
 
-    args += [cA, cD]
-    names += ["cA", "cD"]
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    args = (cA, cD)
+    names = ("cA", "cD")
+    return utils.ReturnTuple(args, names)
 
 
 def time_freq_features(signal, sampling_rate):
-    """
-    Compute statistical metrics describing the signal.
+    """Compute statistical metrics describing the signal.
    
     Parameters
     ----------
@@ -101,7 +101,8 @@ def time_freq_features(signal, sampling_rate):
     fts_name = [str("DWT_cD_" + i) for i in _fts.keys()]
     fts = list(_fts[:])
 
-    args += fts
-    names += fts_name
+    # output
+    args = tuple(fts)
+    names = tuple(fts_name)
 
-    return utils.ReturnTuple(tuple(args), tuple(names))
+    return utils.ReturnTuple(args, names)
