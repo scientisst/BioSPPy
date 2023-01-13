@@ -676,103 +676,6 @@ def plot_abp(ts=None,
 def plot_eda(ts=None,
              raw=None,
              filtered=None,
-             onsets=None,
-             peaks=None,
-             amplitudes=None,
-             path=None,
-             show=False):
-    """
-    Create a summary plot from the output of signals.eda.eda.
-
-    Parameters
-    ----------
-    ts : array
-        Signal time axis reference (seconds).
-    raw : array
-        Raw EDA signal.
-    filtered : array
-        Filtered EDA signal.
-    onsets : array
-        Indices of SCR pulse onsets.
-    peaks : array
-        Indices of the SCR peaks.
-    amplitudes : array
-        SCR pulse amplitudes.
-    path : str, optional
-        If provided, the plot will be saved to the specified file.
-    show : bool, optional
-        If True, show the plot immediately.
-
-    """
-
-    fig = plt.figure()
-    fig.suptitle('EDA Summary')
-
-    # raw signal
-    ax1 = fig.add_subplot(311)
-
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
-
-    ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
-
-    # filtered signal with onsets, peaks
-    ax2 = fig.add_subplot(312, sharex=ax1)
-
-    ymin = np.min(filtered)
-    ymax = np.max(filtered)
-    alpha = 0.1 * (ymax - ymin)
-    ymax += alpha
-    ymin -= alpha
-
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
-    ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette('green'),
-               linewidth=MAJOR_LW,
-               label='Onsets')
-    ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette('dark-green'),
-               linewidth=MAJOR_LW,
-               label='Peaks')
-
-    ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
-
-    # amplitudes
-    ax3 = fig.add_subplot(313, sharex=ax1)
-
-    ax3.plot(ts[onsets], amplitudes, linewidth=MAJOR_LW, label='Amplitudes', color=color_palette('blue'))
-
-    ax3.set_xlabel('Time (s)')
-    ax3.set_ylabel('Amplitude')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
-
-    # make layout tight
-    fig.tight_layout()
-
-    # save to file
-    if path is not None:
-        path = utils.normpath(path)
-        root, ext = os.path.splitext(path)
-        ext = ext.lower()
-        if ext not in ['png', 'jpg']:
-            path = root + '.png'
-        fig.savefig(path, dpi=200, bbox_inches='tight')
-
-    # show
-    if show:
-        plt.show()
-    else:
-        # close
-        plt.close(fig)
-
-
-def plot_eda_(ts=None,
-             raw=None,
-             filtered=None,
              edr=None,
              edl=None,
              onsets=None,
@@ -817,11 +720,12 @@ def plot_eda_(ts=None,
     ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
+    ax1.set_title('Raw Signal')
     ax1.legend()
-    ax1.grid(**GRID_STYLE)
+    ax1.grid()
 
     # filtered signal with rpeaks
-    ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
+    ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1, sharey=ax1)
 
     ymin = np.min(filtered)
     ymax = np.max(filtered)
@@ -830,12 +734,13 @@ def plot_eda_(ts=None,
     ymin -= alpha
 
     ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'), label='Filtered')
-    ax2.scatter(ts[onsets], filtered[onsets], marker='|', s=100, color=color_palette('dark-red'), label='Onsets')
+    ax2.scatter(ts[onsets], filtered[onsets], marker='|', lw=1, s=100, color=color_palette('dark-red'), label='Onsets')
     ax2.scatter(ts[peaks], filtered[peaks], marker=7, color=color_palette('dark-red'), label='Peaks')
 
     ax2.set_ylabel('Amplitude')
+    ax2.set_title('Event Detection')
     ax2.legend()
-    ax2.grid(**GRID_STYLE)
+    ax2.grid()
 
     # amplitudes
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
@@ -844,22 +749,33 @@ def plot_eda_(ts=None,
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Amplitude')
+    ax3.set_title('Event Amplitudes')
     ax3.legend()
-    ax3.grid(**GRID_STYLE)
+    ax3.grid()
 
-    # templates
-    ax4 = fig.add_subplot(gs[1:5, 1])
+    # align y axis labels
+    fig.align_ylabels()
 
-    ax4.plot(ts, filtered, linewidth=MAJOR_LW, color=color_palette('blue'), label="Filtered")
-    ax4.plot(ts, edl, linewidth=MINOR_LW, color=color_palette('red'), label="EDL")
-    ax4.plot(ts[1:], edr, linewidth=MINOR_LW, color=color_palette('yellow'), label="EDR")
+    # decomposition EDL
+    ax4 = fig.add_subplot(gs[0:3, 1], sharex=ax1, sharey=ax1)
 
-    ax4.set_xlabel('Time (s)')
+    ax4.plot(ts, filtered, linewidth=MAJOR_LW, color=color_palette('blue'), alpha=0.6, label="Filtered")
+    ax4.plot(ts, edl, linewidth=MINOR_LW, color=color_palette('dark-orange'), label="EDL")
+
     ax4.set_ylabel('Amplitude')
     ax4.set_title('EDA Decomposition')
     ax4.legend()
-    ax4.grid(**GRID_STYLE)
+    ax4.grid()
 
+    # decomposition EDR
+    ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
+
+    ax5.plot(ts[1:], edr, linewidth=MINOR_LW, color=color_palette('dark-orange'), label="EDR")
+
+    ax5.set_ylabel('Amplitude')
+    ax5.set_xlabel('Time (s)')
+    ax5.legend()
+    ax5.grid()
 
     # make layout tight
     gs.tight_layout(fig)
