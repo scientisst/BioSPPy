@@ -80,7 +80,7 @@ def color_palette(idx):
         'light-violet': '#E0AAFF',
 
         'orange': '#FF9F1C',
-        'dark-orange': '#E36414',
+        'dark-orange': '#DD8452',
         'light-orange': '#FFBF69',
 
         'grey': '#ADB5BD',
