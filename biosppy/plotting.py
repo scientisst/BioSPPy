@@ -31,7 +31,17 @@ from biosppy.signals import tools as st
 MAJOR_LW = 1.5
 MINOR_LW = 1.0
 MAX_ROWS = 10
-GRID_STYLE = {'linestyle': '--', 'color': '#E6E6E6'}
+
+# grid style
+plt.rcParams["axes.axisbelow"] = True  # grid in the back
+plt.rcParams["grid.color"] = '#E6E6E6'
+plt.rcParams["grid.linestyle"] = '--'
+
+# title style
+plt.rcParams['axes.titlesize'] = 10
+
+# legend
+plt.rcParams['legend.loc'] = 'upper right'
 
 
 def color_palette(idx):
