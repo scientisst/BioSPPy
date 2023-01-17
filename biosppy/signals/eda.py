@@ -390,7 +390,7 @@ def cvx_decomposition(signal, sampling_rate, tau0=2., tau1=0.7, delta_knot=10., 
 
     # output
     args = (np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
-    names = ("edr", "smna", "edl", "tonic_coeff", "linear_drift", "res", "obj"
+    names = ("edr", "smna", "edl", "tonic_coeff", "linear_drift", "res", "obj")
     
     return utils.ReturnTuple(args, names)
 
