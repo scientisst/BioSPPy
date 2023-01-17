@@ -18,6 +18,8 @@ from six.moves import range
 # 3rd party
 import numpy as np
 from scipy import interpolate
+import cvxopt as cv
+import cvxopt.solvers
 
 # local
 from . import tools as st
@@ -78,11 +80,7 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
     filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes = emotiphai_eda(signal=filtered,
-                                              sampling_rate=sampling_rate,
-                                              min_amplitude=0.1,
-                                              filt=True,
-                                              size=0.9)
+    onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered, sampling_rate=sampling_rate, min_amplitude=0.1, size=0.9)
 
     # get time vectors
     length = len(signal)
@@ -109,8 +107,8 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
         )
 
     # output
-    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes)
-    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes")
+    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec)
+    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
@@ -186,49 +184,7 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     return utils.ReturnTuple(args, names)
 
 
-def edr(signal=None, sampling_rate=1000.0):
-    """Extracts EDR signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input filtered EDA signal.
-    sampling_rate : int, float, optional
-        Sampling frequency (Hz).
-
-    Returns
-    -------
-    edr : array
-        Electrodermal response (EDR) signal.
-
-
-    References
-    ----------
-    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition
-       system using short-term monitoring of physiological signals",
-       Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
-
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    # differentiation
-    df = np.diff(signal)
-
-    # smooth
-    size = int(1.0 * sampling_rate)
-    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
-
-    # output
-    args = (edr_signal,)
-    names = ("edr",)
-
-    return utils.ReturnTuple(args, names)
-
-
-def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwargs):
+def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwargs):
     """Extracts EDL signal.
 
     Parameters
@@ -249,6 +205,14 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwarg
     -------
     edl : array
         Electrodermal level (EDL) signal.
+    edr : array
+        Electrodermal response (EDR) signal.
+
+    References
+    ----------
+    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition
+       system using short-term monitoring of physiological signals",
+       Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
 
     """
 
@@ -281,10 +245,153 @@ def edl(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwarg
     else:
         raise TypeError("Please specify a supported method.")
 
-    # output
-    args = (edl_signal,)
-    names = ("edl",)
+    # differentiation
+    df = np.diff(signal)
 
+    # smooth
+    size = int(1.0 * sampling_rate)
+    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+
+    # output
+    args = (edl_signal, edr_signal)
+    names = ("edl", "edr")
+
+    return utils.ReturnTuple(args, names)
+
+
+def cvx_decomposition(signal, sampling_rate, tau0=2., tau1=0.7, delta_knot=10., alpha=8e-4, gamma=1e-2,
+           solver=None, options={'reltol':1e-9}):
+    """CVXEDA Convex optimization approach to electrodermal activity processing
+    This function  implements the cvxEDA algorithm described in "cvxEDA: a
+    Convex Optimization Approach to Electrodermal Activity Processing"
+    (http://dx.doi.org/10.1109/TBME.2015.2474131, also available from the
+    authors' homepages).
+
+    Copyright (C) 2014-2015 Luca Citi, Alberto Greco
+
+    Parameters
+    ----------
+
+    signal : array
+        Observed EDA signal (we recommend normalizing it: y = zscore(y))
+    sampling_rate : int, float
+        Sampling frequency (Hz).
+    tau0 : float
+        Slow time constant of the Bateman function
+    tau1 : float
+        Fast time constant of the Bateman function
+    delta_knot: float
+        Time between knots of the tonic spline function
+    alpha: float
+        Penalization for the sparse SMNA driver
+    gamma : float
+        Penalization for the tonic spline coefficients
+    solver : ndarray
+        Sparse QP solver to be used, see cvxopt.solvers.qp
+    options : dict 
+        solver options, see: http://cvxopt.org/userguide/coneprog.html#algorithm-parameters
+    
+    Returns
+    -------
+        
+    edr : array
+        Phasic component
+    smna : array
+        Sparse SMNA driver of phasic component
+    edl : array
+        Tonic component
+    tonic_coeff : array
+        Coefficients of tonic spline
+    linear_drift : array
+        Offset and slope of the linear drift term
+    res : array
+        Model residuals
+    obj : array 
+        Value of objective function being minimized (eq 15 of paper)
+    
+    References
+    -------
+    .. [cvxEDA] A Greco, G Valenza, A Lanata, EP Scilingo, and L Citi
+    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity Processing"
+    IEEE Transactions on Biomedical Engineering, 2015
+    DOI: 10.1109/TBME.2015.2474131
+    
+    .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin conductance in judgment and decision making research. A Handbook of Process Tracing Methods for Decision Research. 
+    """
+
+    n = len(y)
+    y = cv.matrix(y)
+
+    # bateman ARMA model
+    a1 = 1./min(tau1, tau0) # a1 > a0
+    a0 = 1./max(tau1, tau0)
+    ar = np.array([(a1*delta + 2.) * (a0*delta + 2.), 2.*a1*a0*delta**2 - 8.,
+        (a1*delta - 2.) * (a0*delta - 2.)]) / ((a1 - a0) * delta**2)
+    ma = np.array([1., 2., 1.])
+
+    # matrices for ARMA model
+    i = np.arange(2, n)
+    A = cv.spmatrix(np.tile(ar, (n-2,1)), np.c_[i,i,i], np.c_[i,i-1,i-2], (n,n))
+    M = cv.spmatrix(np.tile(ma, (n-2,1)), np.c_[i,i,i], np.c_[i,i-1,i-2], (n,n))
+
+    # spline
+    delta_knot_s = int(round(delta_knot / delta))
+    spl = np.r_[np.arange(1.,delta_knot_s), np.arange(delta_knot_s, 0., -1.)] # order 1
+    spl = np.convolve(spl, spl, 'full')
+    spl /= max(spl)
+    # matrix of spline regressors
+    i = np.c_[np.arange(-(len(spl)//2), (len(spl)+1)//2)] + np.r_[np.arange(0, n, delta_knot_s)]
+    nB = i.shape[1]
+    j = np.tile(np.arange(nB), (len(spl),1))
+    p = np.tile(spl, (nB,1)).T
+    valid = (i >= 0) & (i < n)
+    B = cv.spmatrix(p[valid], i[valid], j[valid])
+
+    # trend
+    C = cv.matrix(np.c_[np.ones(n), np.arange(1., n+1.)/n])
+    nC = C.size[1]
+
+    # Solve the problem:
+    # .5*(M*q + B*l + C*d - y)^2 + alpha*sum(A,1)*p + .5*gamma*l'*l
+    # s.t. A*q >= 0
+
+    old_options = cv.solvers.options.copy()
+    cv.solvers.options.clear()
+    cv.solvers.options.update(options)
+    if solver == 'conelp':
+        # Use conelp
+        z = lambda m,n: cv.spmatrix([],[],[],(m,n))
+        G = cv.sparse([[-A,z(2,n),M,z(nB+2,n)],[z(n+2,nC),C,z(nB+2,nC)],
+                    [z(n,1),-1,1,z(n+nB+2,1)],[z(2*n+2,1),-1,1,z(nB,1)],
+                    [z(n+2,nB),B,z(2,nB),cv.spmatrix(1.0, range(nB), range(nB))]])
+        h = cv.matrix([z(n,1),.5,.5,y,.5,.5,z(nB,1)])
+        c = cv.matrix([(cv.matrix(alpha, (1,n)) * A).T,z(nC,1),1,gamma,z(nB,1)])
+        res = cv.solvers.conelp(c, G, h, dims={'l':n,'q':[n+2,nB+2],'s':[]})
+        obj = res['primal objective']
+    else:
+        # Use qp
+        Mt, Ct, Bt = M.T, C.T, B.T
+        H = cv.sparse([[Mt*M, Ct*M, Bt*M], [Mt*C, Ct*C, Bt*C],
+                    [Mt*B, Ct*B, Bt*B+gamma*cv.spmatrix(1.0, range(nB), range(nB))]])
+        f = cv.matrix([(cv.matrix(alpha, (1,n)) * A).T - Mt*y,  -(Ct*y), -(Bt*y)])
+        res = cv.solvers.qp(H, f, cv.spmatrix(-A.V, A.I, A.J, (n,len(f))),
+                            cv.matrix(0., (n,1)), solver=solver)
+        obj = res['primal objective'] + .5 * (y.T * y)
+    cv.solvers.options.clear()
+    cv.solvers.options.update(old_options)
+
+    l = res['x'][-nB:]
+    d = res['x'][n:n+nC]
+    t = B*l + C*d
+    q = res['x'][:n]
+    p = A * q
+    r = M * q
+    e = y - r - t
+
+    # output
+    args = (np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
+    names = ("edr", "smna", "edl", "tonic_coeff", "linear_drift", "res", "obj"
+    
     return utils.ReturnTuple(args, names)
 
 
