@@ -19,120 +19,84 @@ from scipy.stats import iqr, stats, entropy
 from .. import utils
 from ..signals import tools
 from ..stats import pearson_correlation
+from . import statistical
 
 
-def hjorth_mob(signal=None):
-    """Compute signal mobility hjorth feature.
+def time(signal=None, sampling_rate=1000.):
+    """Compute various time metrics describing the signal.
 
-    Parameters
-    ----------
-    signal : array
-        Input signal.
+        Parameters
+        ----------
+        signal : array
+            Input signal.
+        sampling_rate : int, float, optional
+            Sampling Rate (Hz).
 
-    Returns
-    -------
-    mobility : float
-        Signal mobility.
+        Returns
+        -------
+        feats : ReturnTuple object
+            Signal time features.
 
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    d = np.diff(signal)
-
-    try: 
-        if np.var(signal) > 0:
-            mobility = np.sqrt(np.var(d)/np.var(signal))
-        else:
-            mobility = None
-    except Exception as e:
-        print("mobility", e)
-        mobility = None
-
-    # output
-    args = (mobility,)
-    names = ('mobility',)
-
-    return utils.ReturnTuple(args, names)
-
-
-def hjorth_comp(signal=None):
-    """Compute signal complexity hjorth feature.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-
-    Returns
-    -------
-    complexity : float
-        Signal complexity. 
-
-    """
+        """
 
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
-    d = np.diff(signal)
+    # ensure numpy
+    signal = np.array(signal)
 
-    try:
-        mob_signal = hjorth_mob(signal)["mobility"]
-        mob_d = hjorth_mob(d)["mobility"]
-        complexity = mob_d / mob_signal
+    # initialize output
+    feats = utils.ReturnTuple((), ())
 
-    except Exception as e:
-        print("complexity", e)
-        complexity = None
+    # helpers
+    ts = np.arange(0, len(signal)) / sampling_rate
+    energy = np.sum(signal ** 2)
 
-    # output
-    args = (complexity,)
-    names = ('complexity',)
+    # maximum amplitude
+    max_amp = np.abs(signal - np.mean(signal)).max()
+    feats = feats.append(max_amp, 'maxamp')
 
-    return utils.ReturnTuple(args, names)
+    # autocorrelation sum
+    autocorr_sum = np.sum(np.correlate(signal, signal, 'full'))
+    feats = feats.append(autocorr_sum, 'autocorrsum')
 
+    # zero_cross
+    zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
+    feats = feats.append(zero_cross, 'zerocross')
 
-def hjorth_chaos(signal=None):
-    """Compute signal chaos hjorth feature.
+    # number of minimum peaks
+    min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
+    feats = feats.append(min_peaks, 'minpeaks')
 
-    Parameters
-    ----------
-    signal : array
-        Input signal.
+    # number of maximum peaks
+    max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
+    feats = feats.append(max_peaks, 'maxpeaks')
 
-    Returns
-    -------
-    chaos : float
-        Signal chaos. 
+    # total energy
+    total_energy = np.sum(energy)
+    feats = feats.append(total_energy, 'totalenergy')
 
-    """
+    # hjorth mobility
+    mobility = hjorth_mob(signal)['mobility']
+    feats = feats.append(mobility, 'mobility')
 
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
+    # hjorth complexity
+    complexity = hjorth_comp(signal)['complexity']
+    feats = feats.append(complexity, 'complexity')
 
-    d = np.diff(signal)
+    # hjorth chaos
+    chaos = hjorth_chaos(signal)['chaos']
+    feats = feats.append(chaos, 'chaos')
 
-    try:
-        comp_signal = hjorth_comp(signal)['complexity']
-        comp_d = hjorth_comp(d)['complexity']
-        chaos = comp_d / comp_signal
+    # hazard
+    hazard = hjorth_hazard(signal)['hazard']
+    feats = feats.append(hazard, 'hazard')
 
-    except Exception as e:
-        print("chaos", e)
-        chaos = None
-
-    # output
-    args = (chaos,)
-    names = ('chaos',)
-
-    return utils.ReturnTuple(args, names)
+    return feats
 
 
-def time_features(signal=None, sampling_rate=1000.):
+def time_feats(signal=None, sampling_rate=1000.):
     """Compute various time metrics describing the signal.
 
     Parameters
@@ -252,7 +216,7 @@ def time_features(signal=None, sampling_rate=1000.):
 
     # ensure numpy
     signal = np.array(signal)
-   
+
     # helpers
     args, names = [], []
     sig_diff = np.diff(signal)  # 1st derivative
@@ -263,37 +227,7 @@ def time_features(signal=None, sampling_rate=1000.):
     ds = 1/sampling_rate
     energy = np.sum(signal**2*ds)
 
-    # extract features
-    _max = np.max(signal)
-    args += [_max]
-    names += ['max']
-    
-
-    _min = np.min(signal)
-    args += [_min]
-    names += ['min']
-    
-    # range
-    _range = np.max(signal) - np.min(signal)
-    args += [_range]
-    names += ['range']
-
-    # interquartile range
-    _iqr = iqr(signal)
-    args += [_iqr]
-    names += ['iqr']
-
-    # mean
-    mean = np.mean(signal)
-    args += [mean]
-    names += ['mean']
-
-    # std
-    std = np.std(signal)
-    args += [std]
-    names += ['std']
-
-    # max to mean
+    # max to mean ❌
     max_to_mean = np.max(signal - mean)
     args += [max_to_mean]
     names += ['max_to_mean']
@@ -302,102 +236,6 @@ def time_features(signal=None, sampling_rate=1000.):
     dist = np.sum([1 if d == 0 else d for d in np.abs(sig_diff)]) + 1
     args += [dist]
     names += ['dist']
-
-    # mean absolute differences
-    mean_AD1 = np.mean(np.abs(sig_diff))
-
-    args += [mean_AD1]
-    names += ['mean_AD1']
-
-    # median absolute differences
-    med_AD1 = np.median(np.abs(sig_diff))
-    args += [med_AD1]
-    names += ['med_AD1']
-
-    # min absolute differences
-    min_AD1 = np.min(np.abs(sig_diff))
-    args += [min_AD1]
-    names += ['min_AD1']
-
-    # max absolute differences
-    max_AD1 = np.max(np.abs(sig_diff))
-    args += [max_AD1]
-    names += ['max_AD1']
-
-    # mean of differences
-    mean_D1 = np.mean(sig_diff)
-    args += [mean_D1]
-    names += ['mean_D1']
-
-    # median of differences
-    med_D1 = np.median(sig_diff)
-    args += [med_D1]
-    names += ['med_D1']
-
-    # std of differences
-    std_D1 = np.std(sig_diff)
-    args += [std_D1]
-    names += ['std_D1']
-    
-    # max of differences
-    max_D1 = np.max(sig_diff)
-    args += [max_D1]
-    names += ['max_D1']
-
-    # min of differences
-    min_D1 = np.min(sig_diff)
-    args += [min_D1]
-    names += ['min_D1']
-
-    # sum of differences
-    sum_D1 = np.sum(sig_diff)
-    args += [sum_D1]
-    names += ['sum_D1']
-
-    # range of differences
-    range_D1 = np.max(sig_diff) - np.min(sig_diff)
-    args += [range_D1]
-    names += ['range_D1']
-
-    # interquartile range of differences
-    iqr_D1 = iqr(sig_diff)
-    args += [iqr_D1]
-    names += ['iqr_D1']
-
-    # mean of 2nd differences
-    mean_D2 = np.mean(sig_diff_2)
-    args += [mean_D2]
-    names += ['mean_D2']
-
-    # std of 2nd differences
-    std_D2 = np.std(sig_diff_2)
-    args += [std_D2]
-    names += ['std_D2']
-    
-    # max of 2nd differences
-    max_D2 = np.max(sig_diff_2)
-    args += [max_D2]
-    names += ['max_D2']
-
-    # min of 2nd differences
-    min_D2 = np.min(sig_diff_2)
-    args += [min_D2]
-    names += ['min_D2']
-
-    # sum of 2nd differences
-    sum_D2 = np.sum(sig_diff_2)
-    args += [sum_D2]
-    names += ['sum_D2']
-
-    # range of 2nd differences
-    range_D2 = np.max(sig_diff_2) - np.min(sig_diff_2)
-    args += [range_D2]
-    names += ['range_D2']
-
-    # interquartile range of 2nd differences
-    iqr_D2 = iqr(sig_diff_2)
-    args += [iqr_D2]
-    names += ['iqr_D2']
 
     # autocorrelation sum
     if np.sum(np.abs(signal)) > 0:
@@ -449,62 +287,6 @@ def time_features(signal=None, sampling_rate=1000.):
     args += [corr_lin_reg]
     names += ['corr_lin_reg']
 
-    # hjorth features
-    # mobility
-    mobility = hjorth_mob(signal)['mobility']
-    args += [mobility]
-    names += ['mobility']
-
-    # complexity
-    complexity = hjorth_comp(signal)['complexity']
-    args += [complexity]
-    names += ['complexity']
-
-    # chaos
-    _chaos = hjorth_chaos(signal)['chaos']
-    args += [_chaos]
-    names += ['chaos']
-
-    # Hazard
-    if hjorth_chaos(signal)['chaos'] is not None:
-        hazard = hjorth_chaos(sig_diff)['chaos'] / hjorth_chaos(signal)['chaos']
-    else:
-        hazard = None
-    args += [hazard]
-    names += ['hazard']
-
-    # kurtosis
-    kurtosis = stats.kurtosis(signal, bias=False)
-    args += [kurtosis]
-    names += ['kurtosis']
-
-    # skewness
-    skewness = stats.skew(signal, bias=False)
-    args += [skewness]
-    names += ['skewness']
-
-    # root mean square
-    rms = np.sqrt(np.sum(signal ** 2) / len(signal))
-    args += [rms]
-    names += ['rms']
-
-    # midhinge
-    quant = np.quantile(signal, [0.25, 0.5, 0.75])
-    midhinge = (quant[0] + quant[2])/2
-    args += [midhinge]
-    names += ['midhinge']
-
-    # trimean
-    trimean = (quant[1] + midhinge)/2
-    args += [trimean]
-    names += ['trimean']
-
-    # histogram
-    _hist = list(np.histogram(signal, bins=5)[0])
-    _hist = _hist/np.sum(_hist)
-    args += [i for i in _hist]
-    names += ['stat_hist' + str(i) for i in range(len(_hist))]
-
     # entropy
     if np.sum(np.abs(signal)) > 0:
         _entropy = np.nan_to_num(entropy(signal))
@@ -518,3 +300,280 @@ def time_features(signal=None, sampling_rate=1000.):
     names = tuple(names)
 
     return utils.ReturnTuple(args, names)
+
+
+def hjorth_mob(signal=None):
+    """Compute signal mobility hjorth feature, that is, the ratio of the
+    variance between the first derivative and the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+
+    Returns
+    -------
+    mobility : float
+        Signal mobility.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    d = np.diff(signal)
+
+    try:
+        if np.var(signal) > 0:
+            mobility = np.sqrt(np.var(d)/np.var(signal))
+        else:
+            mobility = None
+    except Exception as e:
+        print("mobility", e)
+        mobility = None
+
+    # output
+    args = (mobility,)
+    names = ('mobility',)
+
+    return utils.ReturnTuple(args, names)
+
+
+def hjorth_comp(signal=None):
+    """Compute signal complexity hjorth feature, that is, the ratio between the
+     mobility of the derivative and the mobility of the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+
+    Returns
+    -------
+    complexity : float
+        Signal complexity.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    d = np.diff(signal)
+
+    try:
+        mob_signal = hjorth_mob(signal)["mobility"]
+        mob_d = hjorth_mob(d)["mobility"]
+        complexity = mob_d / mob_signal
+
+    except Exception as e:
+        print("complexity", e)
+        complexity = None
+
+    # output
+    args = (complexity,)
+    names = ('complexity',)
+
+    return utils.ReturnTuple(args, names)
+
+
+def hjorth_chaos(signal=None):
+    """Compute signal chaos hjorth feature, that is, the ratio between the
+    complexity of the derivative and the complexity of the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+
+    Returns
+    -------
+    chaos : float
+        Signal chaos.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    d = np.diff(signal)
+
+    try:
+        comp_signal = hjorth_comp(signal)['complexity']
+        comp_d = hjorth_comp(d)['complexity']
+        chaos = comp_d / comp_signal
+
+    except Exception as e:
+        print("chaos", e)
+        chaos = None
+
+    # output
+    args = (chaos,)
+    names = ('chaos',)
+
+    return utils.ReturnTuple(args, names)
+
+
+def hjorth_hazard(signal=None):
+    """Compute signal hazard hjorth feature, that is, the ratio between the
+    chaos of the derivative and the chaos of the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+
+    Returns
+    -------
+    hazard : float
+        Signal hazard.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    d = np.diff(signal)
+
+    if hjorth_chaos(signal)['chaos'] is not None:
+        hazard = hjorth_chaos(d)['chaos'] / hjorth_chaos(signal)['chaos']
+    else:
+        hazard = None
+
+    # output
+    args = (hazard,)
+    names = ('hazard',)
+
+    return utils.ReturnTuple(args, names)
+
+
+def diff_stats(signal=None):
+    """Compute statistical features from the first signal differences, second
+    signal differences and absolute signal differences.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+
+    Returns
+    -------
+    mean_{diff} : float
+        Mean of the difference signal.
+    median_{diff} : float
+        Median of the difference signal.
+    min_{diff} : float
+        Minimum of the difference signal.
+    max_{diff} : float
+        Maximum of the difference signal.
+    maxamp_{diff} : float
+        Maximum amplitude of the difference signal.
+    range_{diff} : float
+        Range of the difference signal.
+    var_{diff} : float
+        Variance of the difference signal.
+    std_{diff} : float
+        Standard deviation of the difference signal.
+    sum_{diff} : float
+        Sum of the difference signal.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    # initialize output
+    feats = utils.ReturnTuple((), ())
+
+    # compute differences
+    sig_diff = np.diff(signal)
+    sig_diff_2 = np.diff(sig_diff)
+    sig_diff_abs = np.abs(sig_diff)
+
+    diffs = [sig_diff, sig_diff_2, sig_diff_abs]
+    labels = ['firstdiff', 'seconddiff', 'absdiff']
+
+    # extract features
+    for diff, label in zip(diffs, labels):
+        # mean
+        mean = np.mean(diff)
+        feats = feats.append(mean, label + '_' + 'mean')
+
+        # median
+        median = np.median(diff)
+        feats = feats.append(median, label + '_' + 'median')
+
+        # min
+        min_ = diff.min()
+        feats = feats.append(min_, label + '_' + 'min')
+
+        # max
+        max_ = diff.max()
+        feats = feats.append(max_, label + '_' + 'max')
+
+        # maximum amplitude
+        max_amp = np.abs(diff - mean).max()
+        feats = feats.append(max_amp, label + '_' + 'maxamp')
+
+        # range
+        range_ = diff.max() - diff.min()
+        feats = feats.append(range_, label + '_' + 'range')
+
+        # variance
+        var_ = diff.var(ddof=1)
+        feats = feats.append(var_, label + '_' + 'var')
+
+        # standard deviation
+        std_ = diff.std(ddof=1)
+        feats = feats.append(std_, label + '_' + 'std')
+
+        # sum
+        sum_ = np.sum(diff)
+        feats = feats.append(sum_, label + '_' + 'sum')
+
+    return feats
+
+
+def linear_regression_feats(signal=None, sampling_rate=1000.):
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    # initialize output
+    feats = utils.ReturnTuple((), ())
+
+    # compute linear regression
+    ts = np.arange(0, len(signal)) / sampling_rate
+    reg = linear_model.LinearRegression().fit(ts,  signal)
+
+    # slope
+    lin_reg_slope = reg.coef_[0]
+    feats = feats.append(lin_reg_slope, 'lin_reg_slope')
+
+    # intercept
+    lin_reg_b = reg.intercept_
+    feats = feats.append(lin_reg_b, 'lin_reg_b')
+
+    # pearson correlation
+    c = 0
+    if np.sum(np.abs(signal)) > 0 and len(np.unique(signal)) > 1:
+        _r = reg.predict(ts)
+        if np.sum(np.abs(_r)) > 0 and len(np.unique(_r)) > 1:
+            corr_lin_reg = pearson_correlation(signal, reg.predict(ts))[0]
+            c = 1
+    if not c:
+        corr_lin_reg = None
+    feats = feats.append(corr_lin_reg, 'corr_lin_reg')
+
+    return feats
