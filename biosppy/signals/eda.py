@@ -184,7 +184,7 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     return utils.ReturnTuple(args, names)
 
 
-def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="onsets", onsets=None, **kwargs):
+def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", onsets=None, **kwargs):
     """Extracts EDL and EDR signals.
 
     Parameters
