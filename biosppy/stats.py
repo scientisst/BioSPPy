@@ -240,6 +240,47 @@ def unpaired_test(x=None, y=None):
     return statistic, pvalue
 
 
+def histogram(signal=None, bins=5, normalize=True):
+    """Compute histogram of the input signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    bins : int, optional
+        Number of histogram bins. Default is 5.
+    normalize : bool, optional
+        Whether to normalize the histogram counts. Default is True.
+
+    Returns
+    -------
+    hist{bin}_bins : float
+        Number of counts of the bin. If `normalize` is True, the counts are normalized.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure input formats
+    signal = np.array(signal)
+    bins = int(bins)
+
+    # initialize output
+    out = utils.ReturnTuple((), ())
+
+    # compute histogram
+    hist = np.histogram(signal, bins=bins)[0]
+    if normalize:
+        hist = hist / np.sum(hist)  # normalization
+
+    # add counts
+    for index, count in enumerate(hist):
+        out = out.append(count, 'hist' + str(index+1) + '_' + str(bins))
+
+    return out
+
 def diff_stats(signal=None, stats_only=True):
     """Compute statistical features from the first signal differences, second
     signal differences and absolute signal differences.
