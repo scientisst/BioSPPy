@@ -5,24 +5,21 @@ biosppy.features.time
 
 This module provides methods to extract time features.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
 # Imports
 # 3rd party
 import numpy as np
-from sklearn import linear_model 
-from scipy.stats import iqr, stats, entropy
 
 # local
 from .. import utils
 from ..signals import tools
-from ..stats import pearson_correlation
-from . import statistical
+from ..stats import pearson_correlation, histogram, diff_stats, linear_regression
 
 
-def time(signal=None, sampling_rate=1000.):
+def time(signal=None, sampling_rate=1000., include_diff=True):
     """Compute various time metrics describing the signal.
 
         Parameters
@@ -31,11 +28,24 @@ def time(signal=None, sampling_rate=1000.):
             Input signal.
         sampling_rate : int, float, optional
             Sampling Rate (Hz).
+        include_diff : bool, optional
+            Whether to include the features of the signal's differences (first, second and absolute).
 
         Returns
         -------
         feats : ReturnTuple object
-            Signal time features.
+            Signal time features, including:
+                - signal stats (mean, std, median, min, max, skew, kurtosis, etc.)
+                - number of maxima and minima
+                - autocorrelation sum
+                - total energy
+                - quartile features (25th, 50th, 75th percentiles)
+                - midhinge and trimean
+                - histogram relative frequencies
+                - linear regression slope and intercept
+                - pearson correlation coefficient
+                - hjorth mobility, complexity, chaos and hazard
+                - diff stats (mean, std, median, min, max, skew, kurtosis, etc.)
 
         """
 
@@ -49,49 +59,75 @@ def time(signal=None, sampling_rate=1000.):
     # initialize output
     feats = utils.ReturnTuple((), ())
 
-    # helpers
-    ts = np.arange(0, len(signal)) / sampling_rate
-    energy = np.sum(signal ** 2)
+    # basic stats
+    signal_feats = tools.signal_stats(signal)
+    feats = feats.join(signal_feats)
 
-    # maximum amplitude
-    max_amp = np.abs(signal - np.mean(signal)).max()
-    feats = feats.append(max_amp, 'maxamp')
+    # number of maxima
+    nb_maxima = tools.find_extrema(signal, mode="max")
+    feats = feats.append(len(nb_maxima['extrema']), 'nb_maxima')
+
+    # number of minima
+    nb_minima = tools.find_extrema(signal, mode="min")
+    feats = feats.append(len(nb_minima['extrema']), 'nb_minima')
 
     # autocorrelation sum
     autocorr_sum = np.sum(np.correlate(signal, signal, 'full'))
-    feats = feats.append(autocorr_sum, 'autocorrsum')
-
-    # zero_cross
-    zero_cross = len(np.where(np.abs(np.diff(np.sign(signal))) >= 1)[0])
-    feats = feats.append(zero_cross, 'zerocross')
-
-    # number of minimum peaks
-    min_peaks = len(tools.find_extrema(signal, "min")["extrema"])
-    feats = feats.append(min_peaks, 'minpeaks')
-
-    # number of maximum peaks
-    max_peaks = len(tools.find_extrema(signal, "max")["extrema"])
-    feats = feats.append(max_peaks, 'maxpeaks')
+    feats = feats.append(autocorr_sum, 'autocorr_sum')
 
     # total energy
-    total_energy = np.sum(energy)
-    feats = feats.append(total_energy, 'totalenergy')
+    total_energy = np.sum(np.abs(signal)**2)
+    feats = feats.append(total_energy, 'total_energy')
+
+    # quartile features
+    # iqr
+    q1, q3 = signal_feats['q1'], signal_feats['q3']
+    iqr = q3 - q1
+    feats = feats.append(iqr, 'iqr')
+
+    # midhinge
+    midhinge = (q3 + q1) / 2
+    feats = feats.append(midhinge, 'midhinge')
+
+    # trimean
+    trimean = (signal_feats['median'] + midhinge) / 2
+    feats = feats.append(trimean, 'trimean')
+
+    # histogram relative frequency
+    hist_feats = histogram(signal, normalize=True)
+    feats = feats.join(hist_feats)
+
+    # linear regression
+    t_signal = np.arange(0, len(signal)) / sampling_rate
+    linreg = linear_regression(t_signal, signal, show=False)
+    feats = feats.append(linreg['m'], 'linreg_slope')
+    feats = feats.append(linreg['b'], 'linreg_intercept')
+
+    # pearson correlation from linear regression
+    linreg_pred = linreg['m'] * t_signal + linreg['b']
+    pearson_feats = pearson_correlation(signal, linreg_pred)
+    feats = feats.append(pearson_feats['r'], 'pearson_r')
 
     # hjorth mobility
-    mobility = hjorth_mob(signal)['mobility']
-    feats = feats.append(mobility, 'mobility')
+    mobility = hjorth_mobility(signal)
+    feats = feats.join(mobility)
 
     # hjorth complexity
-    complexity = hjorth_comp(signal)['complexity']
-    feats = feats.append(complexity, 'complexity')
+    complexity = hjorth_complexity(signal)
+    feats = feats.join(complexity)
 
     # hjorth chaos
-    chaos = hjorth_chaos(signal)['chaos']
-    feats = feats.append(chaos, 'chaos')
+    chaos = hjorth_chaos(signal)
+    feats = feats.join(chaos)
 
-    # hazard
-    hazard = hjorth_hazard(signal)['hazard']
-    feats = feats.append(hazard, 'hazard')
+    # hjorth hazard
+    hazard = hjorth_hazard(signal)
+    feats = feats.join(hazard)
+
+    # diff stats
+    if include_diff:
+        diff_feats = diff_stats(signal, stats_only=True)
+        feats = feats.join(diff_feats)
 
     return feats
 
