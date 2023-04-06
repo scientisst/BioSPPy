@@ -17,6 +17,7 @@ import six
 # local
 
 from . import utils
+from .signals import tools
 
 # 3rd party
 import numpy as np
@@ -74,10 +75,13 @@ def pearson_correlation(x=None, y=None):
 
     r, pvalue = pearsonr(x, y)
 
-    return r, pvalue
+    args = (r, pvalue)
+    names = ('r', 'pvalue')
+
+    return utils.ReturnTuple(args, names)
 
 
-def linear_regression(x=None, y=None):
+def linear_regression(x=None, y=None, show=True):
     """Plot the linear regression between two signals and get the equation coefficients.
 
     The linear regression uses the least squares method.
@@ -88,6 +92,8 @@ def linear_regression(x=None, y=None):
         First input signal.
     y : array
         Second input signal.
+    show : bool
+        If True, show the plot.
 
     Returns
     -------
@@ -126,19 +132,23 @@ def linear_regression(x=None, y=None):
     y_min = f(x_min)
     y_max = f(x_max)
 
-    plt.scatter(x, y)
-    plt.plot(
-        [x_min, x_max],
-        [y_min, y_max],
-        c="orange",
-        label="y={:.3f}x+{:.3f}".format(coeffs[0], coeffs[1]),
-    )
-    plt.title("Linear Regression")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.legend()
+    if show:
+        plt.scatter(x, y)
+        plt.plot(
+            [x_min, x_max],
+            [y_min, y_max],
+            c="orange",
+            label="y={:.3f}x+{:.3f}".format(coeffs[0], coeffs[1]),
+        )
+        plt.title("Linear Regression")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.legend()
 
-    return coeffs
+    args = (coeffs[0], coeffs[1])
+    labels = ["m", "b"]
+
+    return utils.ReturnTuple(args, labels)
 
 
 def paired_test(x=None, y=None):
