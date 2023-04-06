@@ -6,7 +6,7 @@ biosppy.signals.tools
 This module provides various signal analysis methods in the time and
 frequency domains.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -947,6 +947,10 @@ def signal_stats(signal=None):
         Maximum signal value.
     max_amp : float
         Maximum absolute signal amplitude, in relation to the mean.
+    q1 : float
+        First quartile of the signal.
+    q3 : float
+        Third quartile of the signal.
     var : float
         Signal variance (unbiased).
     std_dev : float
@@ -982,6 +986,9 @@ def signal_stats(signal=None):
     # maximum amplitude
     maxAmp = np.abs(signal - mean).max()
 
+    # quartiles
+    q1, q3 = np.percentile(signal, [25, 75])
+
     # variance
     sigma2 = signal.var(ddof=1)
 
@@ -991,6 +998,9 @@ def signal_stats(signal=None):
     # absolute deviation
     ad = np.mean(np.abs(signal - median))
 
+    # root mean square
+    rms = np.sqrt(np.mean(signal**2))
+
     # kurtosis
     kurt = stats.kurtosis(signal, bias=False)
 
@@ -998,19 +1008,10 @@ def signal_stats(signal=None):
     skew = stats.skew(signal, bias=False)
 
     # output
-    args = (mean, median, minVal, maxVal, maxAmp, sigma2, sigma, ad, kurt, skew)
-    names = (
-        "mean",
-        "median",
-        "min",
-        "max",
-        "max_amp",
-        "var",
-        "std_dev",
-        "abs_dev",
-        "kurtosis",
-        "skewness",
-    )
+    args = (mean, median, minVal, maxVal, maxAmp, q1, q3, sigma2, sigma, ad, rms,
+            kurt, skew)
+    names = ("mean", "median", "min", "max", "max_amp", "q1", "q3", "var", "std_dev",
+             "abs_dev", "rms", "kurtosis", "skew")
 
     return utils.ReturnTuple(args, names)
 
@@ -1098,7 +1099,7 @@ def find_extrema(signal=None, mode="both"):
     Returns
     -------
     extrema : array
-        Indices of the extrama points.
+        Indices of the extrema points.
     values : array
         Signal values at the extrema points.
 
