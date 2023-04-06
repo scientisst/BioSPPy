@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.stats
----------------
+-------------
 
-This module provides statistica functions and related tools.
+This module provides statistical functions and related tools.
 
-:copyright: (c) 2015-2021 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -15,7 +15,6 @@ from __future__ import absolute_import, division, print_function
 import six
 
 # local
-
 from . import utils
 from .signals import tools
 
