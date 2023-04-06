@@ -281,6 +281,58 @@ def histogram(signal=None, bins=5, normalize=True):
 
     return out
 
+
+def compute_quantiles(signal=None, quantiles=[0.25, 0.5, 0.75]):
+    """Compute quantile features of the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    quantiles : list
+        List of quantiles to compute.
+
+    Returns
+    -------
+    q{quantile} : float
+        Quantile value.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure input formats
+    signal = np.array(signal)
+
+    # initialize output
+    out = utils.ReturnTuple((), ())
+
+    # compute quantiles
+    q = np.quantile(signal, quantiles)
+
+    # if quantiles is quartile
+    if quantiles == [0.25, 0.5, 0.75]:
+        # add quartiles
+        for quantile, value in zip(['q1', 'q2', 'q3'], q):
+            out = out.append(value, quantile)
+    else:
+        # add quantiles with names
+        for quantile, value in zip(quantiles, q):
+            # convert quantile to string with two decimal places
+            quantile = str(quantile).replace('0.', '')
+
+            # pad with zeros on the right if necessary
+            if len(quantile) == 1:
+                quantile = quantile.ljust(2, '0')
+
+            quantile = str(quantile).replace('0.', '')
+            out = out.append(value, 'q' + quantile)
+
+    return out
+
+
 def diff_stats(signal=None, stats_only=True):
     """Compute statistical features from the first signal differences, second
     signal differences and absolute signal differences.
