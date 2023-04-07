@@ -37,6 +37,13 @@ def frequency(signal=None, sampling_rate=1000., fbands=None):
     feats : ReturnTuple object
         Frequency features of the signal.
 
+    Notes
+    -----
+    For the list of available features, check:
+    - biosppy.signals.tools.signal_stats
+    - biosppy.features.frequency.spectral_features
+    - biosppy.features.frequency.compute_fbands
+
     """
 
     # check inputs
