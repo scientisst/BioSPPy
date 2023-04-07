@@ -57,53 +57,10 @@ def frequency(signal=None, sampling_rate=1000., fbands=None):
     for arg, name in zip(signal_feats, signal_feats.keys()):
         feats = feats.append(arg, 'FFT_' + name)
 
-    # fundamental frequency
-    fundamental_frequency = freqs[np.argmax(power)]
-    feats = feats.append(fundamental_frequency, 'FFT_fundamental_frequency')
-
-    # harmonic sum
-    if fundamental_frequency > (sampling_rate / 2 + 2):
-        harmonics = np.array([n * fundamental_frequency for n in
-                              range(2, int((sampling_rate / 2) / fundamental_frequency), 1)]).astype(int)
-        sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
-        sum_harmonics = np.sum(sp_hrm)
-    else:
-        sum_harmonics = None
-    feats = feats.append(sum_harmonics, 'FFT_sum_harmonics')
-
-    # spectral roll on
-    en_sp = power ** 2
-    cum_en = np.cumsum(en_sp)
-
-    if cum_en[-1] is None or cum_en[-1] == 0.0:
-        norm_cm_s = None
-    else:
-        norm_cm_s = cum_en / cum_en[-1]
-
-    if norm_cm_s is not None:
-        spectral_roll_on = freqs[np.argwhere(norm_cm_s >= 0.05)[0][0]]
-    else:
-        spectral_roll_on = None
-    feats = feats.append(spectral_roll_on, 'FFT_spectral_roll_on')
-
-    # spectral roll off
-    if norm_cm_s is None:
-        spectral_roll_off = None
-    else:
-        spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
-    feats = feats.append(spectral_roll_off, 'FFT_spectral_roll_off')
-
-    # spectral centroid
-    spectral_centroid = np.sum(power * freqs) / np.sum(power)
-    feats = feats.append(spectral_centroid, 'FFT_spectral_centroid')
-
-    # spectral slope
-    spectral_slope = stats.linear_regression(freqs, power, show=False)['m']
-    feats = feats.append(spectral_slope, 'FFT_spectral_slope')
-
-    # spectral spread
-    spectral_spread = np.sqrt(np.sum(power * (freqs - spectral_centroid) ** 2) / np.sum(power))
-    feats = feats.append(spectral_spread, 'FFT_spectral_spread')
+    # spectral features
+    spectral_feats = spectral_features(freqs, power, sampling_rate)
+    for arg, name in zip(spectral_feats, spectral_feats.keys()):
+        feats = feats.append(arg, 'FFT_' + name)
 
     # histogram
     fft_hist = stats.histogram(power, bins=5, normalize=True)
@@ -193,3 +150,96 @@ def compute_fbands(frequencies=None, power=None, fband=None):
         out = out.append(freq_peak, band_name + '_peak')
 
     return out
+
+
+def spectral_features(freqs=None, power=None, sampling_rate=1000.):
+    """Compute spectral features.
+
+    Parameters
+    ----------
+    freqs : array
+        Frequency values.
+    power : array
+        Power values.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    fundamental_frequency : float
+        Fundamental frequency. The frequency with the highest power.
+    sum_harmonics : float
+        Sum of harmonics.
+    roll_on : float
+        Spectral roll on. The frequency where 95% of the total power is reached.
+    roll_off : float
+        Spectral roll off. The frequency where 5% of the total power is reached.
+    centroid : float
+        Spectral centroid. The weighted mean of the frequencies.
+    slope : float
+        Spectral slope. The slope of the linear regression of the power spectrum.
+    spread : float
+        Spectral spread. The standard deviation of the power spectrum.
+
+    """
+
+    # check inputs
+    if any([power is None, freqs is None]):
+        raise TypeError("Please specify all input parameters.")
+
+    # ensure numpy
+    power = np.array(power)
+    freqs = np.array(freqs)
+
+    # initialize output
+    feats = utils.ReturnTuple((), ())
+
+    # fundamental frequency
+    fundamental_frequency = freqs[np.argmax(power)]
+    feats = feats.append(fundamental_frequency, 'fundamental_frequency')
+
+    # harmonic sum
+    if fundamental_frequency > (sampling_rate / 2 + 2):
+        harmonics = np.array([n * fundamental_frequency for n in
+                              range(2, int((sampling_rate / 2) / fundamental_frequency), 1)]).astype(int)
+        sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
+        sum_harmonics = np.sum(sp_hrm)
+    else:
+        sum_harmonics = None
+    feats = feats.append(sum_harmonics, 'sum_harmonics')
+
+    # spectral roll on
+    en_sp = power ** 2
+    cum_en = np.cumsum(en_sp)
+
+    if cum_en[-1] is None or cum_en[-1] == 0.0:
+        norm_cm_s = None
+    else:
+        norm_cm_s = cum_en / cum_en[-1]
+
+    if norm_cm_s is not None:
+        spectral_roll_on = freqs[np.argwhere(norm_cm_s >= 0.05)[0][0]]
+    else:
+        spectral_roll_on = None
+    feats = feats.append(spectral_roll_on, 'roll_on')
+
+    # spectral roll off
+    if norm_cm_s is None:
+        spectral_roll_off = None
+    else:
+        spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
+    feats = feats.append(spectral_roll_off, 'roll_off')
+
+    # spectral centroid
+    spectral_centroid = np.sum(power * freqs) / np.sum(power)
+    feats = feats.append(spectral_centroid, 'centroid')
+
+    # spectral slope
+    spectral_slope = stats.linear_regression(freqs, power, show=False)['m']
+    feats = feats.append(spectral_slope, 'slope')
+
+    # spectral spread
+    spectral_spread = np.sqrt(np.sum(power * (freqs - spectral_centroid) ** 2) / np.sum(power))
+    feats = feats.append(spectral_spread, 'spread')
+
+    return feats
