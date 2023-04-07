@@ -12,11 +12,9 @@ This module provides methods to extract frequency features.
 # Imports
 # 3rd party
 import numpy as np
-from scipy import interpolate
 
 # local
 from .. import utils
-from . import time
 from ..signals import tools as st
 from .. import stats
 
@@ -158,6 +156,20 @@ def compute_fbands(frequencies=None, power=None, fband=None):
     # frequency resolution
     freq_res = frequencies[1] - frequencies[0]
 
+    # check frequency bands
+    for band_name, band_freq in fband.items():
+        # check if the given frequency bands are within the range of the power spectrum
+        if band_freq[0] < frequencies[0] or band_freq[1] > frequencies[-1]:
+            raise ValueError("The frequency band '{}' is outside the range of the power spectrum.".format(band_name))
+
+        # check if the lower bound is smaller than the upper bound
+        if band_freq[0] > band_freq[1]:
+            raise ValueError("The lower bound of the frequency band '{}' is larger than the upper bound.".format(band_name))
+
+        # check if the frequency band difference is smaller than the frequency resolution
+        if (band_freq[1] - band_freq[0]) < freq_res:
+            raise ValueError("The frequency band '{}' is smaller than the frequency resolution.".format(band_name))
+
     # total power
     total_power = np.sum(power) * freq_res
 
@@ -174,7 +186,7 @@ def compute_fbands(frequencies=None, power=None, fband=None):
         out = out.append(band_rel_power, band_name + '_rel_power')
 
         # compute peak frequency
-        freq_peak = frequencies[np.argmax(power[band])]
+        freq_peak = frequencies[np.argmax(power[band]) + band[0]]
         out = out.append(freq_peak, band_name + '_peak')
 
     return out
