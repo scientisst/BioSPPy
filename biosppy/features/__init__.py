@@ -18,5 +18,5 @@ signal features in:
 # compat
 from __future__ import absolute_import, division, print_function
 # allow lazy loading
-from . import statistical, frequency, time, time_freq, cepstral, phase_space
+from . import frequency, time, time_freq, cepstral, phase_space
 
