@@ -88,8 +88,7 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
     ts = np.linspace(0, t, length, endpoint=True)
 
     # get EDR and EDL
-    edr_signal = edr(signal=filtered, sampling_rate=sampling_rate)["edr"]
-    edl_signal = edl(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)["edl"]
+    edl_signal, edr_signal = biosppy_decomposition(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)
 
     # plot
     if show:
@@ -169,7 +168,8 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     # compute phasic rate
     try:
         phasic_rate = sampling_rate * (60. / np.diff(peaks))
-    except:
+    except Exception as e:
+        print(e)
         phasic_rate = None
 
     # compute rise times
@@ -259,7 +259,7 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
     return utils.ReturnTuple(args, names)
 
 
-def cvx_decomposition(signal, sampling_rate, tau0=2., tau1=0.7, delta_knot=10., alpha=8e-4, gamma=1e-2,
+def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., alpha=8e-4, gamma=1e-2,
            solver=None, options={'reltol':1e-9}):
     """CVXEDA Convex optimization approach to electrodermal activity processing
     This function  implements the cvxEDA algorithm described in "cvxEDA: a
@@ -319,7 +319,7 @@ def cvx_decomposition(signal, sampling_rate, tau0=2., tau1=0.7, delta_knot=10., 
     .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin conductance in judgment and decision making research. A Handbook of Process Tracing Methods for Decision Research. 
     """
 
-    n = len(y)
+    n = len(signal)
     y = cv.matrix(y)
 
     # bateman ARMA model
@@ -395,7 +395,7 @@ def cvx_decomposition(signal, sampling_rate, tau0=2., tau1=0.7, delta_knot=10., 
     return utils.ReturnTuple(args, names)
 
 
-def basic_scr(signal=None, sampling_rate=1000.0):
+def basic_scr(signal=None):
     """Basic method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
 
@@ -500,7 +500,7 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
         raise TypeError("Please specify an input signal.")
     
     # extract edr signal
-    df = edr(signal, sampling_rate=sampling_rate)['edr']
+    df = biosppy_decomposition(signal, sampling_rate=sampling_rate)['edr']
 
     # zero crosses
     (zeros,) = st.zero_cross(signal=df, detrend=False)
@@ -651,7 +651,8 @@ def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
         six_rec_amp = 0.37 * amps[i] + signal[onsets][i]
         try:
             wind = np.array(signal[peaks[i]:onsets[i + 1]])
-        except:
+        except Exception as e:
+            print(e)
             wind = np.array(signal[peaks[i]:])
         half_rec_idx = np.argwhere(wind <= half_rec_amp)
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
