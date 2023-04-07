@@ -133,6 +133,8 @@ def compute_fbands(frequencies=None, power=None, fband=None):
 
     Returns
     -------
+    total_power : float
+        Total power of the signal.
     {fband}_power : float
         Power of the frequency band.
     {fband}_rel_power : float
@@ -172,6 +174,7 @@ def compute_fbands(frequencies=None, power=None, fband=None):
 
     # total power
     total_power = np.sum(power) * freq_res
+    out = out.append(total_power, 'total_power')
 
     # compute frequency bands
     for band_name, band_freq in fband.items():
