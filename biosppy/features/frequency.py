@@ -5,7 +5,7 @@ biosppy.features.frequency
 
 This module provides methods to extract frequency features.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -18,71 +18,26 @@ from scipy import interpolate
 from .. import utils
 from . import time
 from ..signals import tools as st
+from .. import stats
 
 
-def get_bands(frequencies, fband):
-    band = np.argwhere((frequencies >= fband[0]) & (frequencies <= fband[1])).reshape(-1)
-
-    return frequencies[band]
-
-
-def freq_features(signal=None, sampling_rate=1000.):
+def frequency(signal=None, sampling_rate=1000., fbands=None):
     """Compute spectral metrics describing the signal.
-   
+
     Parameters
     ----------
     signal : array
         Input signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    fbands : dict
+        Frequency bands to compute the features, where the keys are the names of the bands and the values are the
+        frequency ranges (in Hz) of the bands.
 
     Returns
     -------
-    spectral_maxpeaks : int
-        Number of peaks in the spectrum signal.
-    spect_var : float
-        Amount of the variation of the spectrum across time.
-    curve_distance : float
-        Euclidean distance between the cumulative sum of the signal spectrum and evenly spaced numbers across the signal lenght.
-    spectral_roll_off : float
-        Frequency so 95% of the signal energy is below that value.
-    spectral_roll_on : float
-        Frequency so 5% of the signal energy is below that value.
-    spectral_dec : float
-        Amount of decreasing in the spectral amplitude.
-    spectral_slope : float
-        Amount of decreasing in the spectral amplitude.
-    spectral_centroid : float
-        Centroid of the signal spectrum.
-    spectral_spread : float
-        Variance of the signal spectrum i.e. how it spreads around its mean value.
-    spectral_kurtosis : float
-        Kurtosis of the signal spectrum i.e. describes the flatness of the spectrum distribution.
-    spectral_skewness : float
-        Skewness of the signal spectrum i.e. describes the asymmetry of the spectrum distribution.
-    max_frequency : float
-        Maximum frequency of the signal spectrum maximum amplitude.
-    fundamental_frequency : float
-        Fundamental frequency of the signal.
-    max_power_spectrum : float
-        Spectrum maximum value.
-    mean_power_spectrum : float
-        Spectrum mean value.
-    spectral_skewness : float
-        Spectrum Skewness.
-    spectral_kurtosis : float
-        Spectrum Kurtosis.
-    spectral_hist_{frequency band} : array
-        Histogram of the signal spectrum on 0.05 - 0.1 (VLF), 0.1 - 0.2 (LF), 0.2 - 0.3 (MF), 0.3 - 0.4 (HF), 0.4 - 0.5 (VHF).
-
-    References
-    ----------
-    - TSFEL library: https://github.com/fraunhoferportugal/tsfel
-    - Peeters, Geoffroy. (2004). A large set of audio features for sound description (similarity and classification) in the CUIDADO project.
-    - [0, 0.1], [0.1,0.2] , [0.2,0.3], [0.3, 0.4]: J. Wang and Y. Gong, “Recognition of multiple drivers’s emotional state,” in 2008 19th International Conference on Pattern Recognition, Dec 2008, pp. 1–4.
-    - [0.05–5] was split into five bands - power + [0.05–1 Hz] - stat - Ghaderyan, P. and Abbasi, A., 2016. An efficient automatic workload estimation method based on electrodermal activity using pattern classifier combinations. International Journal of Psychophysiology, 110, pp.91-101.
-    - temp fts on [0.05−0.50] was split into five bands + stats fts on FFT  - Shukla, Jainendra, et al. "Feature extraction and selection for emotion recognition from electrodermal activity." IEEE Transactions on Affective Computing 12.4 (2019): 857-869
-    - FFT for bands (0.1, 0.2), F2 (0.2, 0.3) and F3 (0.3, 0.4) - Sánchez-Reolid, R., de la Rosa, F.L., Sánchez-Reolid, D., López, M.T., Fernández-Caballero, A. (2021). Feature and Time Series Extraction in Artificial Neural Networks for Arousal Detection from Electrodermal Activity. In: Rojas, I., Joya, G., Català, A. (eds) Advances in Computational Intelligence. IWANN 2021. Lecture Notes in Computer Science(), vol 12861. Springer, Cham. 
+    feats : ReturnTuple object
+        Frequency features of the signal.
 
     """
 
@@ -93,147 +48,133 @@ def freq_features(signal=None, sampling_rate=1000.):
     # ensure numpy
     signal = np.array(signal)
 
+    # initialize output
+    feats = utils.ReturnTuple((), ())
+
+    # Compute power spectrum
     freqs, power = st.power_spectrum(signal, sampling_rate=sampling_rate, decibel=False)
-    power = np.nan_to_num(power)
 
-    args, names = [], []
+    # basic stats
+    signal_feats = st.signal_stats(power)
+    for arg, name in zip(signal_feats, signal_feats.keys()):
+        feats = feats.append(arg, 'FFT_' + name)
 
-    # temporal
-    _fts = time.time_features(power, sampling_rate)
-    fts_name = [str("FFT_" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
-
-    args += fts
-    names += fts_name
-
-    # fundamental_frequency
-    try:
-        fundamental_frequency = freqs[np.argmax(power)]
-    except Exception as e:
-        print("fundamental frequency", e)
-        fundamental_frequency = None
-    args += [fundamental_frequency]
-    names += ['fundamental_frequency']
+    # fundamental frequency
+    fundamental_frequency = freqs[np.argmax(power)]
+    feats = feats.append(fundamental_frequency, 'FFT_fundamental_frequency')
 
     # harmonic sum
-    try:
-        if fundamental_frequency > (sampling_rate / 2 + 2):
-            harmonics = np.array([n * fundamental_frequency for n in
-                                  range(2, int((sampling_rate / 2) / fundamental_frequency), 1)]).astype(int)
-            sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
-            sum_harmonics = np.sum(sp_hrm)
-        else:
-            sum_harmonics = None
-    except Exception as e:
-        print("sum harmonics", e)
+    if fundamental_frequency > (sampling_rate / 2 + 2):
+        harmonics = np.array([n * fundamental_frequency for n in
+                              range(2, int((sampling_rate / 2) / fundamental_frequency), 1)]).astype(int)
+        sp_hrm = power[np.array([np.where(freqs >= h)[0][0] for h in harmonics])]
+        sum_harmonics = np.sum(sp_hrm)
+    else:
         sum_harmonics = None
-    args += [sum_harmonics]
-    names += ['sum_harmonics']
+    feats = feats.append(sum_harmonics, 'FFT_sum_harmonics')
 
-    # spectral_roll_on
-    en_sp = power ** 2  # *(f[1]-f[0])
+    # spectral roll on
+    en_sp = power ** 2
     cum_en = np.cumsum(en_sp)
 
-    try:
-        if cum_en[-1] is None or cum_en[-1] == 0.0:
-            norm_cm_s = None
-        else:
-            norm_cm_s = cum_en / cum_en[-1]
-    except Exception as e:
-        print("norm_cm_s", e)
+    if cum_en[-1] is None or cum_en[-1] == 0.0:
         norm_cm_s = None
+    else:
+        norm_cm_s = cum_en / cum_en[-1]
 
-    try:
-        if norm_cm_s is None:
-            spectral_roll_on = None
-        else:
-            spectral_roll_on = freqs[np.argwhere(norm_cm_s >= 0.05)[0][0]]
-    except Exception as e:
-        print("spectral_roll_on", e)
+    if norm_cm_s is not None:
+        spectral_roll_on = freqs[np.argwhere(norm_cm_s >= 0.05)[0][0]]
+    else:
         spectral_roll_on = None
+    feats = feats.append(spectral_roll_on, 'FFT_spectral_roll_on')
 
-    args += [spectral_roll_on]
-    names += ['spectral_roll_on']
-
-    # spectral_roll_off
-    try:
-        if norm_cm_s is None:
-            spectral_roll_off = None
-        else:
-            spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
-    except Exception as e:
-        print("spectral_roll_off", e)
+    # spectral roll off
+    if norm_cm_s is None:
         spectral_roll_off = None
-    args += [spectral_roll_off]
-    names += ['spectral_roll_off']
+    else:
+        spectral_roll_off = freqs[np.argwhere(norm_cm_s >= 0.95)[0][0]]
+    feats = feats.append(spectral_roll_off, 'FFT_spectral_roll_off')
+
+    # spectral centroid
+    spectral_centroid = np.sum(power * freqs) / np.sum(power)
+    feats = feats.append(spectral_centroid, 'FFT_spectral_centroid')
+
+    # spectral slope
+    spectral_slope = stats.linear_regression(freqs, power, show=False)['m']
+    feats = feats.append(spectral_slope, 'FFT_spectral_slope')
+
+    # spectral spread
+    spectral_spread = np.sqrt(np.sum(power * (freqs - spectral_centroid) ** 2) / np.sum(power))
+    feats = feats.append(spectral_spread, 'FFT_spectral_spread')
 
     # histogram
-    try:
-        _hist = list(np.histogram(power, bins=5)[0])
-        _hist = _hist / np.sum(_hist)
-    except Exception as e:
-        print("frequency hist", e)
-        _hist = [None] * 5
+    fft_hist = stats.histogram(power, bins=5, normalize=True)
+    for arg, name in zip(fft_hist, fft_hist.keys()):
+        feats = feats.append(arg, 'FFT_' + name)
 
-    args += [i for i in _hist]
-    names += ['spectral_hist_' + str(i) for i in range(len(_hist))]
+    # frequency bands
+    if fbands is not None:
+        fband_feats = compute_fbands(freqs, power, fbands)
+        feats = feats.join(fband_feats)
 
-    # bands
-    freqs, power = st.power_spectrum(signal, sampling_rate * 5, decibel=False)
-    power = np.nan_to_num(power)
+    return feats
 
-    # resampling
-    _f = interpolate.interp1d(freqs, power)
-    res_sr = 500  # new sampling rate
-    freqs = np.arange(freqs[0], freqs[-1], 1 / res_sr)
-    f_b = get_bands(freqs, fband=[0.05, 0.1])
 
-    # temporal
-    _fts = time.time_features(f_b, res_sr)
-    fts_name = [str("FFT_VLF" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
+def compute_fbands(frequencies=None, power=None, fband=None):
+    """Compute frequency bands.
 
-    args += fts
-    names += fts_name
+    Parameters
+    ----------
+    frequencies : array
+        Frequency values.
+    power : array
+        Power values.
+    fband : dict
+        Frequency bands to compute the features, where the keys are the names of the bands and the values are
+        two-element lists/tuples with the lower and upper frequency bounds (in Hz) of the bands.
 
-    f_b = get_bands(freqs, fband=[0.1, 0.2])
-    # temporal
-    _fts = time.time_features(f_b, res_sr)
-    fts_name = [str("FFT_LF" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
+    Returns
+    -------
+    {fband}_power : float
+        Power of the frequency band.
+    {fband}_rel_power : float
+        Relative power of the frequency band.
+    {fband}_peak : float
+        Peak frequency of the frequency band.
 
-    args += fts
-    names += fts_name
+    """
 
-    f_b = get_bands(freqs, fband=[0.2, 0.3])
-    # temporal
-    _fts = time.time_features(f_b, res_sr)
-    fts_name = [str("FFT_MD" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
+    # check inputs
+    if any([frequencies is None, power is None, fband is None]):
+        raise TypeError("Please specify all input parameters.")
 
-    args += fts
-    names += fts_name
+    # ensure numpy
+    frequencies = np.array(frequencies)
+    power = np.array(power)
 
-    f_b = get_bands(freqs, fband=[0.3, 0.4])
-    # temporal
-    _fts = time.time_features(f_b, res_sr)
-    fts_name = [str("FFT_HF" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
+    # initialize output
+    out = utils.ReturnTuple((), ())
 
-    args += fts
-    names += fts_name
+    # frequency resolution
+    freq_res = frequencies[1] - frequencies[0]
 
-    f_b = get_bands(freqs, fband=[0.4, 0.5])
-    # temporal
-    _fts = time.time_features(f_b, res_sr)
-    fts_name = [str("FFT_VHF" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
+    # total power
+    total_power = np.sum(power) * freq_res
 
-    args += fts
-    names += fts_name
+    # compute frequency bands
+    for band_name, band_freq in fband.items():
+        band = np.where((frequencies >= band_freq[0]) & (frequencies <= band_freq[1]))[0]
 
-    # output
-    args = tuple(args)
-    names = tuple(names)
+        # compute band power
+        band_power = np.sum(power[band]) * freq_res
+        out = out.append(band_power, band_name + '_power')
 
-    return utils.ReturnTuple(args, names)
+        # compute relative power
+        band_rel_power = band_power / total_power
+        out = out.append(band_rel_power, band_name + '_rel_power')
+
+        # compute peak frequency
+        freq_peak = frequencies[np.argmax(power[band])]
+        out = out.append(freq_peak, band_name + '_peak')
+
+    return out
