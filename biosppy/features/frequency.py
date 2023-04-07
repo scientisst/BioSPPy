@@ -172,6 +172,7 @@ def compute_fbands(frequencies=None, power=None, fband=None):
 
     # total power
     total_power = np.sum(power) * freq_res
+    out = out.append(total_power, 'total_power')
 
     # compute frequency bands
     for band_name, band_freq in fband.items():
