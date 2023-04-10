@@ -998,13 +998,13 @@ def signal_stats(signal=None):
     # absolute deviation
     ad = np.mean(np.abs(signal - median))
 
-    # root mean square
+    # root-mean-square
     rms = np.sqrt(np.mean(signal**2))
 
     # kurtosis
     kurt = stats.kurtosis(signal, bias=False)
 
-    # skweness
+    # skewness
     skew = stats.skew(signal, bias=False)
 
     # output
