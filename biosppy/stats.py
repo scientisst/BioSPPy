@@ -291,7 +291,7 @@ def histogram(signal=None, bins=5, normalize=True):
     return out
 
 
-def compute_quantiles(signal=None, quantiles=[0.25, 0.5, 0.75]):
+def quantiles(signal=None, quantiles=[0.25, 0.5, 0.75]):
     """Compute quantile features of the signal.
 
     Parameters
