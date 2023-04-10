@@ -5,7 +5,7 @@ biosppy.features.cepstral
 
 This module provides methods to extract cepstral features.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -18,6 +18,44 @@ from scipy import fft
 from .. import utils
 from . import time
 from ..signals import tools as st
+
+
+def cepstral(signal=None, sampling_rate=1000.):
+    """Compute quefrency metrics describing the signal.
+
+    Parameters
+    ----------
+    signal : array
+        Input signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    feats : ReturnTuple object
+        Time features computed over the signal mel-frequency cepstral coefficients.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    # initialize output
+    feats = utils.ReturnTuple((), ())
+
+    # compute mel coefficients
+    mel_coeff = mfcc(signal, sampling_rate)["mfcc"]
+
+    # time features
+    time_feats = time.time(signal=mel_coeff, sampling_rate=sampling_rate)
+    for arg, name in zip(time_feats, time_feats.keys()):
+        feats = feats.append(arg, 'mfcc_' + name)
+
+    return feats
 
 
 def freq_to_mel(hertz):
@@ -66,9 +104,9 @@ def mel_to_freq(mel):
     return 700 * (np.exp(mel / 1125) - 1)
 
 
-def mfcc(signal, sampling_rate=1000., window_size=100, num_filters=10):
+def mfcc(signal=None, sampling_rate=1000., window_size=100, num_filters=10):
     """Computes the mel-frequency cepstral coefficients.
-    
+
     Parameters
     ----------
     signal : array
@@ -87,12 +125,16 @@ def mfcc(signal, sampling_rate=1000., window_size=100, num_filters=10):
 
     References
     ----------
-    - https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
-    - https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
-    - https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
-    - https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
-    - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
-   
+    .. [Haytham16] Fayek, Haytham. "Speech Processing for Machine Learning: Filter
+    banks, Mel-Frequency Cepstral Coefficients (MFCCs) and What's In-Between."
+    Blog post. 2016. https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
+    .. 'Vanilla STFT and MFCC' by brihijoshi, accessed in october 2022:
+    https://github.com/brihijoshi/vanilla-stft-mfcc/
+    .. 'Time Series Feature Extraction Library' by fraunhoferportugal, accessed in october 2022:
+    https://github.com/fraunhoferportugal/tsfel/
+    .. 'MFCC implementation and tutorial' by ilyamich, accessed in october 2022:
+    https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
+
    """
 
     # check inputs
@@ -161,52 +203,5 @@ def mfcc(signal, sampling_rate=1000., window_size=100, num_filters=10):
     # output
     args = (mel_coeff,)
     names = ("mfcc",)
-
-    return utils.ReturnTuple(args, names)
-    
-
-def cepstral_features(signal=None, sampling_rate=1000.):
-    """Compute quefrency metrics describing the signal.
-   
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-    sampling_rate : int, float, optional
-        Sampling frequency (Hz).
-
-    Returns
-    -------
-    mfcc_{time_features} : array
-        Time features computed over the signal mel-frequency cepstral coefficients.
-
-    References
-    ----------
-    - https://github.com/brihijoshi/vanilla-stft-mfcc/blob/master/notebook.ipynb
-    - https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
-    - https://github.com/fraunhoferportugal/tsfel/blob/4e078301cfbf09f9364c758f72f5fe378f3229c8/tsfel/feature_extraction/features.py
-    - https://www.youtube.com/watch?v=9GHCiiDLHQ4&list=PL-wATfeyAMNqIee7cH3q1bh4QJFAaeNv0&index=17
-    - https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
-    
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    # ensure numpy
-    signal = np.array(signal)
-
-    # compute mel coefficients
-    mel_coeff = mfcc(signal, sampling_rate)["mfcc"]
-
-    # temporal
-    _fts = time.time_features(mel_coeff, sampling_rate)
-    fts_name = [str("mfcc_" + i) for i in _fts.keys()]
-    fts = list(_fts[:])
-
-    # output
-    args = tuple(fts)
-    names = tuple(fts_name)
 
     return utils.ReturnTuple(args, names)
