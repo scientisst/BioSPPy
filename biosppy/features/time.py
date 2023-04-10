@@ -15,8 +15,8 @@ import numpy as np
 
 # local
 from .. import utils
-from ..signals import tools
-from ..stats import pearson_correlation, histogram, diff_stats, linear_regression
+from ..signals import tools as st
+from .. import stats
 
 
 def time(signal=None, sampling_rate=1000., include_diff=True):
@@ -34,18 +34,13 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
         Returns
         -------
         feats : ReturnTuple object
-            Signal time features, including:
-                - signal stats (mean, std, median, min, max, skew, kurtosis, etc.)
-                - number of maxima and minima
-                - autocorrelation sum
-                - total energy
-                - quartile features (25th, 50th, 75th percentiles)
-                - midhinge and trimean
-                - histogram relative frequencies
-                - linear regression slope and intercept
-                - pearson correlation coefficient
-                - hjorth mobility, complexity, chaos and hazard
-                - diff stats (mean, std, median, min, max, skew, kurtosis, etc.)
+            Time features of the signal.
+
+        Notes
+        -----
+        Besides the features directly extracted in this function, it also calls:
+        - biosppy.signals.tools.signal_stats
+        - biosppy.stats.histogram
 
         """
 
@@ -60,15 +55,15 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     feats = utils.ReturnTuple((), ())
 
     # basic stats
-    signal_feats = tools.signal_stats(signal)
+    signal_feats = st.signal_stats(signal)
     feats = feats.join(signal_feats)
 
     # number of maxima
-    nb_maxima = tools.find_extrema(signal, mode="max")
+    nb_maxima = st.find_extrema(signal, mode="max")
     feats = feats.append(len(nb_maxima['extrema']), 'nb_maxima')
 
     # number of minima
-    nb_minima = tools.find_extrema(signal, mode="min")
+    nb_minima = st.find_extrema(signal, mode="min")
     feats = feats.append(len(nb_minima['extrema']), 'nb_minima')
 
     # autocorrelation sum
@@ -94,18 +89,18 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     feats = feats.append(trimean, 'trimean')
 
     # histogram relative frequency
-    hist_feats = histogram(signal, normalize=True)
+    hist_feats = stats.histogram(signal, normalize=True)
     feats = feats.join(hist_feats)
 
     # linear regression
     t_signal = np.arange(0, len(signal)) / sampling_rate
-    linreg = linear_regression(t_signal, signal, show=False)
+    linreg = stats.linear_regression(t_signal, signal, show=False)
     feats = feats.append(linreg['m'], 'linreg_slope')
     feats = feats.append(linreg['b'], 'linreg_intercept')
 
     # pearson correlation from linear regression
     linreg_pred = linreg['m'] * t_signal + linreg['b']
-    pearson_feats = pearson_correlation(signal, linreg_pred)
+    pearson_feats = stats.pearson_correlation(signal, linreg_pred)
     feats = feats.append(pearson_feats['r'], 'pearson_r')
 
     # hjorth mobility
@@ -126,7 +121,7 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
 
     # diff stats
     if include_diff:
-        diff_feats = diff_stats(signal, stats_only=True)
+        diff_feats = stats.diff_stats(signal, stats_only=True)
         feats = feats.join(diff_feats)
 
     return feats
