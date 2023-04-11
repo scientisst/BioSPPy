@@ -286,25 +286,33 @@ def histogram(signal=None, bins=5, normalize=True):
 
     # add counts
     for index, count in enumerate(hist):
-        out = out.append(count, 'hist' + str(index+1) + '_' + str(bins))
+        out = out.append(count, 'hist_' + str(index+1) + '_' + str(bins))
 
     return out
 
 
-def quantiles(signal=None, quantiles=[0.25, 0.5, 0.75]):
-    """Compute quantile features of the signal.
+def quartiles(signal=None):
+    """Compute quartile features of the signal.
 
     Parameters
     ----------
     signal : array
         Input signal.
-    quantiles : list
-        List of quantiles to compute.
 
     Returns
     -------
-    q{quantile} : float
-        Quantile value.
+    q1 : float
+        First quartile.
+    q2 : float
+        Second quartile, also known as median.
+    q3 : float
+        Third quartile.
+    iqr : float
+        Interquartile range.
+    midhinge : float
+        Midhinge.
+    trimean : float
+        Trimean.
 
     """
 
@@ -318,26 +326,21 @@ def quantiles(signal=None, quantiles=[0.25, 0.5, 0.75]):
     # initialize output
     out = utils.ReturnTuple((), ())
 
-    # compute quantiles
-    q = np.quantile(signal, quantiles)
+    # compute quartiles
+    q1, q2, q3 = np.quantile(signal, [0.25, 0.5, 0.75])
+    out = out.append([q1, q2, q3], ['q1', 'q2', 'q3'])
 
-    # if quantiles is quartile
-    if quantiles == [0.25, 0.5, 0.75]:
-        # add quartiles
-        for quantile, value in zip(['q1', 'q2', 'q3'], q):
-            out = out.append(value, quantile)
-    else:
-        # add quantiles with names
-        for quantile, value in zip(quantiles, q):
-            # convert quantile to string with two decimal places
-            quantile = str(quantile).replace('0.', '')
+    # iqr
+    iqr = q3 - q1
+    out = out.append(iqr, 'iqr')
 
-            # pad with zeros on the right if necessary
-            if len(quantile) == 1:
-                quantile = quantile.ljust(2, '0')
+    # midhinge
+    midhinge = (q3 + q1) / 2
+    out = out.append(midhinge, 'midhinge')
 
-            quantile = str(quantile).replace('0.', '')
-            out = out.append(value, 'q' + quantile)
+    # trimean
+    trimean = (q2 + midhinge) / 2
+    out = out.append(trimean, 'trimean')
 
     return out
 
