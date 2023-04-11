@@ -19,6 +19,13 @@ from ..signals import tools as st
 from .. import stats
 
 
+# variables
+# Suggested frequency bands
+EDA_FBANDS = {'VLF': (0.05, 0.1), 'LF': (0.1, 0.2), 'HF': (0.2, 0.3), 'VHF': (0.3, 0.4), 'UHF': (0.4, 0.5)}
+EEG_FBANDS = {'Delta': (0.5, 4.), 'Theta': (4., 8.), 'Alpha': (8., 13.), 'Beta': (13., 30.), 'Gamma': (30., 100.)}
+HRV_FBANDS = {'ULF': (0, 0.003), 'VLF': (0.003, 0.04), 'LF': (0.04, 0.15), 'HF': (0.15, 0.4), 'VHF': (0.4, 0.5)}
+
+
 def frequency(signal=None, sampling_rate=1000., fbands=None):
     """Compute spectral metrics describing the signal.
 
