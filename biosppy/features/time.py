@@ -40,7 +40,9 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
         -----
         Besides the features directly extracted in this function, it also calls:
         - biosppy.signals.tools.signal_stats
+        - biosppy.stats.quartiles
         - biosppy.stats.histogram
+        - biosppy.features.time.hjorth_features
 
         """
 

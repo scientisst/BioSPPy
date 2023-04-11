@@ -35,6 +35,10 @@ def cepstral(signal=None, sampling_rate=1000.):
     feats : ReturnTuple object
         Time features computed over the signal mel-frequency cepstral coefficients.
 
+    Notes
+    -----
+    Check biosppy.features.time for the list of time features.
+
     """
 
     # check inputs
