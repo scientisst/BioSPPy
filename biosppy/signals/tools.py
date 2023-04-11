@@ -947,6 +947,8 @@ def signal_stats(signal=None):
         Maximum signal value.
     max_amp : float
         Maximum absolute signal amplitude, in relation to the mean.
+    range : float
+        Signal range (max - min).
     q1 : float
         First quartile of the signal.
     q3 : float
@@ -986,6 +988,9 @@ def signal_stats(signal=None):
     # maximum amplitude
     maxAmp = np.abs(signal - mean).max()
 
+    # range
+    rng = maxVal - minVal
+
     # quartiles
     q1, q3 = np.percentile(signal, [25, 75])
 
@@ -1008,9 +1013,9 @@ def signal_stats(signal=None):
     skew = stats.skew(signal, bias=False)
 
     # output
-    args = (mean, median, minVal, maxVal, maxAmp, q1, q3, sigma2, sigma, ad, rms,
+    args = (mean, median, minVal, maxVal, maxAmp, rng, q1, q3, sigma2, sigma, ad, rms,
             kurt, skew)
-    names = ("mean", "median", "min", "max", "max_amp", "q1", "q3", "var", "std_dev",
+    names = ("mean", "median", "min", "max", "max_amp", "range", "q1", "q3", "var", "std_dev",
              "abs_dev", "rms", "kurtosis", "skew")
 
     return utils.ReturnTuple(args, names)
