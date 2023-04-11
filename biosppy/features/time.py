@@ -93,21 +93,9 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     pearson_feats = stats.pearson_correlation(signal, linreg_pred)
     feats = feats.append(pearson_feats['r'], 'pearson_r')
 
-    # hjorth mobility
-    mobility = hjorth_mobility(signal)
-    feats = feats.join(mobility)
-
-    # hjorth complexity
-    complexity = hjorth_complexity(signal)
-    feats = feats.join(complexity)
-
-    # hjorth chaos
-    chaos = hjorth_chaos(signal)
-    feats = feats.join(chaos)
-
-    # hjorth hazard
-    hazard = hjorth_hazard(signal)
-    feats = feats.join(hazard)
+    # hjorth features
+    hjorth_feats = hjorth_features(signal)
+    feats = feats.join(hjorth_feats)
 
     # diff stats
     if include_diff:
@@ -117,9 +105,8 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     return feats
 
 
-def hjorth_mobility(signal=None):
-    """Compute signal mobility hjorth feature, that is, the ratio of the
-    variance between the first derivative and the signal.
+def hjorth_features(signal=None):
+    """Compute Hjorth mobility, complexity, chaos and hazard.
 
     Parameters
     ----------
@@ -129,137 +116,76 @@ def hjorth_mobility(signal=None):
     Returns
     -------
     hjorth_mobility : float
-        Signal mobility.
-
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    d = np.diff(signal)
-
-    try:
-        if np.var(signal) > 0:
-            mobility = np.sqrt(np.var(d)/np.var(signal))
-        else:
-            mobility = None
-    except Exception as e:
-        print("mobility", e)
-        mobility = None
-
-    # output
-    args = (mobility,)
-    names = ('hjorth_mobility',)
-
-    return utils.ReturnTuple(args, names)
-
-
-def hjorth_complexity(signal=None):
-    """Compute signal complexity hjorth feature, that is, the ratio between the
-     mobility of the derivative and the mobility of the signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-
-    Returns
-    -------
+        Hjorth mobility.
     hjorth_complexity : float
-        Signal complexity.
-
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    d = np.diff(signal)
-
-    try:
-        mob_signal = hjorth_mobility(signal)["hjorth_mobility"]
-        mob_d = hjorth_mobility(d)["hjorth_mobility"]
-        complexity = mob_d / mob_signal
-
-    except Exception as e:
-        print("complexity", e)
-        complexity = None
-
-    # output
-    args = (complexity,)
-    names = ('hjorth_complexity',)
-
-    return utils.ReturnTuple(args, names)
-
-
-def hjorth_chaos(signal=None):
-    """Compute signal chaos hjorth feature, that is, the ratio between the
-    complexity of the derivative and the complexity of the signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-
-    Returns
-    -------
+        Hjorth complexity.
     hjorth_chaos : float
-        Signal chaos.
-
-    """
-
-    # check inputs
-    if signal is None:
-        raise TypeError("Please specify an input signal.")
-
-    d = np.diff(signal)
-
-    try:
-        comp_signal = hjorth_complexity(signal)['hjorth_complexity']
-        comp_d = hjorth_complexity(d)['hjorth_complexity']
-        chaos = comp_d / comp_signal
-
-    except Exception as e:
-        print("chaos", e)
-        chaos = None
-
-    # output
-    args = (chaos,)
-    names = ('hjorth_chaos',)
-
-    return utils.ReturnTuple(args, names)
-
-
-def hjorth_hazard(signal=None):
-    """Compute signal hazard hjorth feature, that is, the ratio between the
-    chaos of the derivative and the chaos of the signal.
-
-    Parameters
-    ----------
-    signal : array
-        Input signal.
-
-    Returns
-    -------
+        Hjorth chaos.
     hjorth_hazard : float
-        Signal hazard.
+        Hjorth hazard.
+
+    Notes
+    -----
+    Hjorth activity corresponds to the variance of the signal.
 
     """
+
+    # helper functions
+    def _hjorth_mobility(s):
+        if np.var(s) == 0:
+            return None
+        return np.sqrt(np.var(np.diff(s)) / np.var(s))
+
+    def _hjorth_complexity(s):
+        mobility = _hjorth_mobility(s)
+        if mobility is None or mobility == 0:
+            return None
+        return _hjorth_mobility(np.diff(s)) / mobility
+
+    def _hjorth_chaos(s):
+        complexity = _hjorth_complexity(s)
+        if complexity is None or complexity == 0:
+            return None
+        return _hjorth_complexity(np.diff(s)) / complexity
+
+    def _hjorth_hazard(s):
+        chaos = _hjorth_chaos(s)
+        if chaos is None or chaos == 0:
+            return None
+        return _hjorth_chaos(np.diff(s)) / chaos
 
     # check inputs
     if signal is None:
         raise TypeError("Please specify an input signal.")
 
-    d = np.diff(signal)
+    # ensure numpy
+    signal = np.array(signal)
 
-    if hjorth_chaos(signal)['hjorth_chaos'] is not None:
-        hazard = hjorth_chaos(d)['hjorth_chaos'] / hjorth_chaos(signal)['hjorth_chaos']
-    else:
-        hazard = None
+    # initialize output
+    feats = utils.ReturnTuple((), ())
 
-    # output
-    args = (hazard,)
-    names = ('hjorth_hazard',)
+    # hjorth mobility
+    signal_mobility = _hjorth_mobility(signal)
+    feats = feats.append(signal_mobility, 'hjorth_mobility')
+    if signal_mobility is None:
+        print("Hjorth mobility is undefined. Returning None.")
 
-    return utils.ReturnTuple(args, names)
+    # hjorth complexity
+    signal_complexity = _hjorth_complexity(signal)
+    feats = feats.append(signal_complexity, 'hjorth_complexity')
+    if signal_complexity is None:
+        print("Hjorth complexity is undefined. Returning None.")
+
+    # hjorth chaos
+    signal_chaos = _hjorth_chaos(signal)
+    feats = feats.append(signal_chaos, 'hjorth_chaos')
+    if signal_chaos is None:
+        print("Hjorth chaos is undefined. Returning None.")
+
+    # hjorth hazard
+    signal_hazard = _hjorth_hazard(signal)
+    feats = feats.append(signal_hazard, 'hjorth_hazard')
+    if signal_hazard is None:
+        print("Hjorth hazard is undefined. Returning None.")
+
+    return feats
