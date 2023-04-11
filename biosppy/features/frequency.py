@@ -129,26 +129,34 @@ def compute_fbands(frequencies=None, power=None, fband=None):
     # frequency resolution
     freq_res = frequencies[1] - frequencies[0]
 
-    # check frequency bands
-    for band_name, band_freq in fband.items():
-        # check if the given frequency bands are within the range of the power spectrum
-        if band_freq[0] < frequencies[0] or band_freq[1] > frequencies[-1]:
-            raise ValueError("The frequency band '{}' is outside the range of the power spectrum.".format(band_name))
-
-        # check if the lower bound is smaller than the upper bound
-        if band_freq[0] > band_freq[1]:
-            raise ValueError("The lower bound of the frequency band '{}' is larger than the upper bound.".format(band_name))
-
-        # check if the frequency band difference is smaller than the frequency resolution
-        if (band_freq[1] - band_freq[0]) < freq_res:
-            raise ValueError("The frequency band '{}' is smaller than the frequency resolution.".format(band_name))
-
     # total power
     total_power = np.sum(power) * freq_res
     out = out.append(total_power, 'total_power')
 
     # compute frequency bands
     for band_name, band_freq in fband.items():
+
+        # check if the given frequency bands are within the range of the power spectrum
+        if band_freq[0] < frequencies[0] or band_freq[1] > frequencies[-1]:
+            out = out.append([None, None, None],
+                             [band_name + '_power', band_name + '_rel_power', band_name + '_peak'])
+            print("The frequency band '{}' is outside the range of the power spectrum.".format(band_name))
+            continue
+
+        # check if the lower bound is smaller than the upper bound
+        if band_freq[0] > band_freq[1]:
+            out = out.append([None, None, None],
+                             [band_name + '_power', band_name + '_rel_power', band_name + '_peak'])
+            print("The lower bound of the frequency band '{}' is larger than the upper bound.".format(band_name))
+            continue
+
+        # check if the frequency band difference is smaller than the frequency resolution
+        if (band_freq[1] - band_freq[0]) < freq_res:
+            out = out.append([None, None, None],
+                             [band_name + '_power', band_name + '_rel_power', band_name + '_peak'])
+            print("The frequency band '{}' is smaller than the frequency resolution.".format(band_name))
+            continue
+
         band = np.where((frequencies >= band_freq[0]) & (frequencies <= band_freq[1]))[0]
 
         # compute band power
