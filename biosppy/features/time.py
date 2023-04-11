@@ -58,6 +58,10 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     signal_feats = st.signal_stats(signal)
     feats = feats.join(signal_feats)
 
+    # quartile features
+    quartile_feats = stats.quartiles(signal)
+    feats = feats.join(quartile_feats)
+
     # number of maxima
     nb_maxima = st.find_extrema(signal, mode="max")
     feats = feats.append(len(nb_maxima['extrema']), 'nb_maxima')
@@ -73,20 +77,6 @@ def time(signal=None, sampling_rate=1000., include_diff=True):
     # total energy
     total_energy = np.sum(np.abs(signal)**2)
     feats = feats.append(total_energy, 'total_energy')
-
-    # quartile features
-    # iqr
-    q1, q3 = signal_feats['q1'], signal_feats['q3']
-    iqr = q3 - q1
-    feats = feats.append(iqr, 'iqr')
-
-    # midhinge
-    midhinge = (q3 + q1) / 2
-    feats = feats.append(midhinge, 'midhinge')
-
-    # trimean
-    trimean = (signal_feats['median'] + midhinge) / 2
-    feats = feats.append(trimean, 'trimean')
 
     # histogram relative frequency
     hist_feats = stats.histogram(signal, normalize=True)
