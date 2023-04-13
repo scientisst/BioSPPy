@@ -62,13 +62,15 @@ def phase_space(signal=None):
     return feats
 
 
-def compute_recurrence_plot(signal=None):
+def compute_recurrence_plot(signal=None, out_dim=224):
     """Compute recurrence plot (distance matrix).
 
     Parameters
     ----------
     signal : array
         Input signal.
+    out_dim : int, optional
+        Output dimension of the recurrence plot.
     
     Returns
     -------
@@ -84,8 +86,8 @@ def compute_recurrence_plot(signal=None):
     # ensure numpy
     signal = np.array(signal)
 
-    # resample to 224 points
-    sig_down = resample(signal, 224)
+    # resample to out_dim points
+    sig_down = resample(signal, out_dim)
     d = pdist(sig_down[:,None])
     rec = squareform(d)
 
