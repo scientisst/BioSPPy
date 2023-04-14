@@ -263,6 +263,7 @@ def get_filter(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
+            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -280,6 +281,8 @@ def get_filter(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
+        - Q : float
+            Quality factor (only for 'notch' filter). Default: 30.
 
     Returns
     -------
@@ -294,13 +297,13 @@ def get_filter(
     """
 
     # check inputs
-    if order is None:
+    if order is None and ftype != "notch":
         raise TypeError("Please specify the filter order.")
     if frequency is None:
         raise TypeError("Please specify the cutoff frequency.")
-    if band not in ["lowpass", "highpass", "bandpass", "bandstop"]:
+    if band not in ["lowpass", "highpass", "bandpass", "bandstop"] and ftype != "notch":
         raise ValueError(
-            "Unknown filter type '%r'; choose 'lowpass', 'highpass', \
+            "Unknown filter band type '%r'; choose 'lowpass', 'highpass', \
             'bandpass', or 'bandstop'."
             % band
         )
@@ -343,6 +346,11 @@ def get_filter(
         # Bessel filter
         b, a = ss.bessel(
             N=order, Wn=frequency, btype=band, analog=False, output="ba", **kwargs
+        )
+    elif ftype == "notch":
+        # Notch filter
+        b, a = ss.iirnotch(
+            w0=frequency, Q=kwargs.get("Q", 30)
         )
 
     return utils.ReturnTuple((b, a), ("b", "a"))
