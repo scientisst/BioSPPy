@@ -281,6 +281,8 @@ def get_filter(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
+        - Q : float
+            Quality factor (only for 'notch' filter). Default: 30.
 
     Returns
     -------
