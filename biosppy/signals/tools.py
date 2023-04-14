@@ -441,6 +441,7 @@ def filter_signal(
         "order": order,
         "frequency": frequency,
         "band": band,
+        **kwargs,
     }
     params.update(kwargs)
 
