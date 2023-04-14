@@ -378,6 +378,7 @@ def filter_signal(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
+            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -428,6 +429,11 @@ def filter_signal(
 
     # filter
     filtered, _ = _filter_signal(b, a, signal, check_phase=True)
+
+    # parameters for notch filter
+    if ftype == "notch":
+        order = 2
+        band = "bandstop"
 
     # output
     params = {
