@@ -1,3 +1,7 @@
+```
+🎉 New feature: We just added the Notch filter to the list of supported filters!
+```
+
 # BioSPPy - Biosignal Processing in Python
 
 *A toolbox for biosignal processing written in Python.*
