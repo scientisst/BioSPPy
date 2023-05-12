@@ -25,7 +25,7 @@ from scipy.signal import welch
 # local
 from .. import utils
 from .. import plotting
-from . import tools
+from . import tools as st
 
 # Global variables
 FBANDS = {'ulf': [0, 0.003],
@@ -738,14 +738,14 @@ def detrend_window(rri, win_len=2000, **kwargs):
         # compute the detrended signal for each split
         rri_det = []
         for split in rri_splits:
-            split_det = tools.detrend_smoothness_priors(split, smoothing_factor)['detrended']
+            split_det = st.detrend_smoothness_priors(split, smoothing_factor)['detrended']
             rri_det.append(split_det)
 
         # concantenate detrended splits
         rri_det = np.concatenate(rri_det)
 
     else:
-        rri_det = tools.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
+        rri_det = st.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
 
     return rri_det
 
