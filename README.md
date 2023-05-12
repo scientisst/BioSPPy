@@ -3,7 +3,7 @@
 ```
 
 ```
-⚠️ **This branch is still under development and the HRV features are not yet validated.**
+🚧 **This branch is still under development and the HRV features are not yet validated.**
 ```
 
 # BioSPPy - Biosignal Processing in Python
