@@ -210,6 +210,42 @@ def rri_filter(rri=None, threshold=1200):
     return rri_filt
 
 
+def rri_correction(rri=None, threshold=250):
+    """Corrects artifacts in an RRI sequence based on a local average threshold. Artifacts are replaced with cubic
+    spline interpolation.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    threshold : int, float, optional
+        Local average threshold (ms). Default: 250.
+
+    Returns
+    -------
+    rri : array
+        Corrected RR-intervals (ms).
+    """
+
+    # check inputs
+    if rri is None:
+        raise ValueError("Please specify an RRI list or array.")
+
+    # ensure input format
+    rri = np.array(rri, dtype=float)
+
+    # compute local average
+    rri_filt, _ = st.smoother(signal=rri, kernel='median', size=3)
+
+    # find artifacts
+    artifacts = np.abs(rri - rri_filt) > threshold
+
+    # replace artifacts with cubic spline interpolation
+    rri[artifacts] = interp1d(np.where(~artifacts)[0], rri[~artifacts], kind='cubic')(np.where(artifacts)[0])
+
+    return rri
+
+
 def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
     """ Computes the time domain HRV features from a sequence of RR intervals in milliseconds.
 
