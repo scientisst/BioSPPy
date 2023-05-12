@@ -36,7 +36,7 @@ FBANDS = {'ulf': [0, 0.003],
           }
 
 
-def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rri=True, detrend_rri=True,
+def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers='interpolate', detrend_rri=True,
         features_only=False, show=False):
     """ Extracts the RR-interval sequence from a list of R-peak indexes and extracts HRV features.
 
@@ -54,8 +54,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
         only time-domain features. If 'frequency' computes only
         frequency-domain features. If 'non-linear' computes only non-linear
         features. If 'all' computes all available HRV features. Default: 'auto'.
-    filter_rri : bool, optional
-        Whether to filter the RRI sequence with a predefined threshold. Default: True.
+    outliers : str, optional
+        Determines the method to handle outliers. If 'interpolate', replaces the outlier RR-intervals
+        with cubic spline interpolation based on a local threshold. If 'filter', the RR-interval sequence
+        is cut at the outliers. If None, no correction is performed. Default: 'interpolate'.
     detrend_rri : bool, optional
         Whether to detrend the RRI sequence with the default method smoothness priors. Default: True.
     features_only : bool, optional
@@ -95,8 +97,12 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', filter_rr
     # compute duration
     duration = np.sum(rri) / 1000.  # seconds
 
-    # filter rri sequence
-    if filter_rri:
+    # handle outliers
+    if outliers is None:
+        pass
+    elif outliers == 'interpolate':
+        rri = rri_correction(rri)
+    elif outliers == 'filter':
         rri = rri_filter(rri)
 
     # add rri to output
