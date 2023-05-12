@@ -5,7 +5,7 @@ biosppy
 
 A toolbox for biosignal processing written in Python.
 
-:copyright: (c) 2015-2021 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -16,6 +16,6 @@ from __future__ import absolute_import, division, print_function
 from .__version__ import __version__
 
 # allow lazy loading
-from .signals import acc, abp, bvp, ppg, pcg, ecg, eda, eeg, emg, resp, tools
+from .signals import acc, abp, bvp, ppg, pcg, ecg, eda, eeg, emg, resp, tools, hrv
 from .synthesizers import ecg
 from .inter_plotting import ecg, acc
