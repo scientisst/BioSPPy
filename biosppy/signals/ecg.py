@@ -1381,7 +1381,7 @@ def getQPositions(ecg_proc=None, show=False):
     
     Parameters
     ----------
-    signal : object
+    ecg_proc : object
     object return by the function ecg.
     show : bool, optional
     If True, show a plot of the Q Positions on every signal sample/template.
@@ -1459,7 +1459,7 @@ def getSPositions(ecg_proc=None, show=False):
     
     Parameters
     ----------
-    signal : object
+    ecg_proc : object
     object return by the function ecg.
     show : bool, optional
     If True, show a plot of the S Positions on every signal sample/template.
@@ -1534,7 +1534,7 @@ def getPPositions(ecg_proc=None, show=False):
     
     Parameters
     ----------
-    signal : object
+    ecg_proc : object
     object return by the function ecg.
     show : bool, optional
     If True, show a plot of the P Positions on every signal sample/template.
@@ -1645,7 +1645,7 @@ def getTPositions(ecg_proc=None, show=False):
     
     Parameters
     ----------
-    signal : object
+    ecg_proc : object
     object return by the function ecg.
     show : bool, optional
     If True, show a plot of the T Positions on every signal sample/template.
@@ -1853,7 +1853,7 @@ def pSQI(signal, f_thr=0.01):
     Returns
     -------
     flatline_percentage : float
-        Percentage of signal where the absolute value of the derivative is lower then the threshold.
+        Percentage of signal where the absolute value of the derivative is lower than the threshold.
 
     """
 
@@ -1926,7 +1926,7 @@ def ZZ2018(
 ):
     import numpy as np
 
-    """ Signal quality estimator. Designed for signal with a lenght of 10 seconds.
+    """ Signal quality estimator. Designed for signal with a length of 10 seconds.
         Follows the approach by Zhao *et la.* [Zhao18]_.
 
     Parameters
