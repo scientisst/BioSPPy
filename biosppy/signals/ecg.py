@@ -82,9 +82,11 @@ def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=Tru
         ftype="FIR",
         band="bandpass",
         order=order,
-        frequency=[3, 45],
+        frequency=[0.5, 45],
         sampling_rate=sampling_rate,
     )
+
+    filtered = filtered - np.mean(filtered)
 
     # segment
     (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=sampling_rate)
