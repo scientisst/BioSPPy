@@ -86,7 +86,7 @@ def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=Tru
         sampling_rate=sampling_rate,
     )
 
-    filtered = filtered - np.mean(filtered)
+    filtered = filtered - np.mean(filtered)  # remove DC offset
 
     # segment
     (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=sampling_rate)
