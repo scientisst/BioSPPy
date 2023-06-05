@@ -1,4 +1,8 @@
 ```
+✨️ Update: The ECG preprocessing pipeline has been improved! (Check PR #12)
+```
+
+```
 🎉 New feature: We just added the Notch filter to the list of supported filters!
 ```
 
