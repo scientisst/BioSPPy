@@ -5,6 +5,7 @@ biosppy.signals
 
 This package provides methods to interactively display plots for the
 following physiological signals (biosignals):
+    * Acceleration (ACC)
     * Electrocardiogram (ECG)
 
 :copyright: (c) 2015-2021 by Instituto de Telecomunicacoes
