@@ -77,9 +77,8 @@ class event_annotator:
 
         self.raw_signal = input_raw_signal
 
-        # window_size is in seconds. Nr samples in window = seconds x freq (nr samples / second)
-        self.moving_window_size = window_size # * 1000 # * self.sampling_rate
-        self.window_shift = window_stride # * 1000 # * self.sampling_rate  # overlap of 2.5 seconds to confirm labels on the previous window
+        self.moving_window_size = window_size
+        self.window_shift = window_stride
 
         self.time_arr = np.arange(0, self.raw_signal.shape[0] // self.sampling_rate, 1 / self.sampling_rate)
 
@@ -89,9 +88,12 @@ class event_annotator:
         self.root = Tk()
         self.root.resizable(False, False)
 
-        self.figure = plt.Figure(figsize=(9, 2.4), dpi=100)
+        self.figure = plt.Figure(figsize=(8, 4), dpi=100)
 
         self.ax = self.figure.add_subplot(111)
+        self.ax.set_ylabel("Amplitude [-]")
+        self.ax.set_xlabel("Time [s]")
+
         self.canvas_plot = FigureCanvasTkAgg(self.figure, self.root)
         self.canvas_plot.get_tk_widget().grid(row=0, column=0, columnspan=1, sticky='w', padx=10)
         self.canvas_plot.callbacks.connect('button_press_event', self.on_click_ax1)
