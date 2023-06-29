@@ -22,6 +22,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
+from matplotlib.figure import Figure
 
 # local
 from . import utils
@@ -239,6 +240,8 @@ def plot_acc(ts=None,
 
     fig = plt.figure()
     fig.suptitle('ACC Summary')
+    plt.subplots_adjust(left=0.25, bottom=0.25)
+
     gs = gridspec.GridSpec(6, 2)
 
     # raw signal (acc_x)

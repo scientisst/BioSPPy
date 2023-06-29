@@ -102,7 +102,46 @@ def ppg(signal=None, sampling_rate=1000., show=True):
 
     return utils.ReturnTuple(args, names)
 
-def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, beatwindow=0.667, beatoffset=0.02, mindelay=0.3):
+
+def preprocess_ppg(signal=None, sampling_rate=1000.):
+    """Pre-processes a raw PPG signal and extract relevant signal features using
+    default parameters.
+
+    Parameters
+    ----------
+    signal : array
+        Raw PPG signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    filtered : array
+        Filtered PPG signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # filter signal
+    filtered, _, _ = st.filter_signal(signal=signal,
+                                      ftype='butter',
+                                      band='bandpass',
+                                      order=4,
+                                      frequency=[1, 8],
+                                      sampling_rate=sampling_rate)
+
+    return utils.ReturnTuple((filtered,), ("filtered",))
+
+
+def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, beatwindow=0.667, beatoffset=0.02,
+                            mindelay=0.3):
     """
     Determines onsets of PPG pulses.
 
@@ -219,7 +258,8 @@ def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, 
     onsets = np.array(onsets, dtype='int')
 
     # output
-    params = {'signal': signal, 'sampling_rate': sampling_rate, 'peakwindow': peakwindow, 'beatwindow': beatwindow, 'beatoffset': beatoffset, 'mindelay': mindelay}
+    params = {'signal': signal, 'sampling_rate': sampling_rate, 'peakwindow': peakwindow, 'beatwindow': beatwindow,
+              'beatoffset': beatoffset, 'mindelay': mindelay}
 
     args = (onsets, params)
     names = ('onsets', 'params')
@@ -228,13 +268,13 @@ def find_onsets_elgendi2013(signal=None, sampling_rate=1000., peakwindow=0.111, 
 
 
 def find_onsets_kavsaoglu2016(
-    signal=None,
-    sampling_rate=1000.0,
-    alpha=0.2,
-    k=4,
-    init_bpm=90,
-    min_delay=0.6,
-    max_BPM=150,
+        signal=None,
+        sampling_rate=1000.0,
+        alpha=0.2,
+        k=4,
+        init_bpm=90,
+        min_delay=0.6,
+        max_BPM=150,
 ):
     """
     Determines onsets of PPG pulses.
@@ -333,24 +373,24 @@ def find_onsets_kavsaoglu2016(
         min_buffer.pop(0)
 
         # add the index of the minimum value of the current segment to buffer
-        idx_buffer.append(int(i + np.argmin(signal[i : i + window])))
+        idx_buffer.append(int(i + np.argmin(signal[i: i + window])))
 
         # add the minimum value of the current segment to buffer
         min_buffer.append(signal[idx_buffer[-1]])
 
         if (
-            # the buffer has to be filled with valid values
-            idx_buffer[0] > -1
-            # the center value of the buffer must be smaller than its neighbours
-            and (min_buffer[1] < min_buffer[0] and min_buffer[1] <= min_buffer[2])
-            # if an onset was previously detected, guarantee that the new onset respects the minimum delay, minimum BPM and maximum BPM
-            and (
+                # the buffer has to be filled with valid values
+                idx_buffer[0] > -1
+                # the center value of the buffer must be smaller than its neighbours
+                and (min_buffer[1] < min_buffer[0] and min_buffer[1] <= min_buffer[2])
+                # if an onset was previously detected, guarantee that the new onset respects the minimum delay, minimum BPM and maximum BPM
+                and (
                 len(onsets) == 0
                 or (
-                    (idx_buffer[1] - onsets[-1]) / sampling_rate >= min_delay * 60 / bpm
-                    and (idx_buffer[1] - onsets[-1]) / sampling_rate > 60 / max_BPM
+                        (idx_buffer[1] - onsets[-1]) / sampling_rate >= min_delay * 60 / bpm
+                        and (idx_buffer[1] - onsets[-1]) / sampling_rate > 60 / max_BPM
                 )
-            )
+        )
         ):
             # store the onset
             onsets.append(idx_buffer[1])
@@ -467,7 +507,7 @@ def ppg_segmentation(filtered,
     if peak_threshold == None and selection:
         density = gaussian_kde(filtered[peaks])
         xs = np.linspace(0, max(filtered[peaks]), 1000)
-        density.covariance_factor = lambda : .25
+        density.covariance_factor = lambda: .25
         density._compute_covariance()
         peak_threshold = xs[np.argmax(density(xs))]
 
@@ -484,29 +524,29 @@ def ppg_segmentation(filtered,
         # search segments with at least 4 max+min (standard waveform) and
         # peak height greater than threshold for pulse selection
         if selection:
-            seg = filtered[segments[i, 0] : segments[i, 1]]
+            seg = filtered[segments[i, 0]: segments[i, 1]]
             if max(seg) > peak_threshold:
                 if len(np.where(np.diff(np.sign(np.diff(seg))))[0]) > 3:
                     segments_sel.append(i)
 
-            if len(segments_sel) == 0 :
+            if len(segments_sel) == 0:
                 print('Warning: Suitable waves not found. [-0.1, 0.4]s cut from peak is made.')
 
     # find earliest onset-peak duration (ensure minimal shift of 0.1s)
     shifts = peaks - onsets
 
-    cut1 = 0.1*sampling_rate
+    cut1 = 0.1 * sampling_rate
     if len(segments_sel) > 0 and selection:
         shifts_sel = np.take(shifts, segments_sel)
-        shifts_sel = shifts_sel[shifts_sel > 0.1*sampling_rate]
+        shifts_sel = shifts_sel[shifts_sel > 0.1 * sampling_rate]
         cut1 = min(shifts_sel)
 
     # find shortest peak-end duration (ensure minimal duration of 0.4s)
-    cut2 = 0.4*sampling_rate
-    ep_d = segments[:, 1] - peaks[0 : len(segments)]
+    cut2 = 0.4 * sampling_rate
+    ep_d = segments[:, 1] - peaks[0: len(segments)]
     if len(segments_sel) > 0 and selection:
         ep_d_sel = np.take(ep_d, segments_sel)
-        ep_d_sel = ep_d_sel[ep_d_sel > 0.4*sampling_rate]
+        ep_d_sel = ep_d_sel[ep_d_sel > 0.4 * sampling_rate]
         cut2 = min(ep_d_sel)
 
     # clipping segments
@@ -517,9 +557,8 @@ def ppg_segmentation(filtered,
 
     cut_length = c_segments[0, 1] - c_segments[0, 0]
 
-
     # time axis
-    mean_pulse_ts = np.arange(0, cut_length/sampling_rate, 1./sampling_rate)
+    mean_pulse_ts = np.arange(0, cut_length / sampling_rate, 1. / sampling_rate)
 
     # plot
     if show:
@@ -541,7 +580,7 @@ def ppg_segmentation(filtered,
     # plot segments
     if selection:
         for i in segments_sel:
-            wave = filtered[c_segments[i, 0] : c_segments[i, 1]]
+            wave = filtered[c_segments[i, 0]: c_segments[i, 1]]
             if show:
                 ax.plot(mean_pulse_ts, wave, color='tab:blue', alpha=alpha)
             sum_segments = sum_segments + wave
@@ -549,14 +588,14 @@ def ppg_segmentation(filtered,
 
     else:
         for i in range(nb_segments):
-            wave = filtered[c_segments[i, 0] : c_segments[i, 1]]
+            wave = filtered[c_segments[i, 0]: c_segments[i, 1]]
             if show:
                 ax.plot(mean_pulse_ts, wave, color='tab:blue', alpha=alpha)
                 ax.set_title(f'[{nb_segments} segment(s)]')
             sum_segments = sum_segments + wave
 
     # plot mean pulse
-    mean_pulse = sum_segments/len(segments_sel)
+    mean_pulse = sum_segments / len(segments_sel)
     if show and show_mean:
         ax.plot(mean_pulse_ts, mean_pulse, color='tab:orange', label='Mean wave')
         ax.legend()

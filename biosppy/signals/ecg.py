@@ -162,6 +162,48 @@ def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=Tru
     return utils.ReturnTuple(args, names)
 
 
+def preprocess_ecg(signal=None, sampling_rate=1000.0):
+    """Pre-processes a raw ECG signal.
+
+    Parameters
+    ----------
+    signal : array
+        Raw ECG signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    filtered : array
+        Filtered ECG signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # filter signal
+    order = int(1.5 * sampling_rate)
+    filtered, _, _ = st.filter_signal(
+        signal=signal,
+        ftype="FIR",
+        band="bandpass",
+        order=order,
+        frequency=[0.67, 45],
+        sampling_rate=sampling_rate,
+    )
+
+    filtered = filtered - np.mean(filtered)  # remove DC offset
+
+    # output
+    return utils.ReturnTuple((filtered,), ("filtered",))
+
+
 def _extract_heartbeats(signal=None, rpeaks=None, before=200, after=400):
     """Extract heartbeat templates from an ECG signal, given a list of
     R-peak locations.
@@ -209,7 +251,7 @@ def _extract_heartbeats(signal=None, rpeaks=None, before=200, after=400):
 
 
 def extract_heartbeats(
-    signal=None, rpeaks=None, sampling_rate=1000.0, before=0.2, after=0.4
+        signal=None, rpeaks=None, sampling_rate=1000.0, before=0.2, after=0.4
 ):
     """Extract heartbeat templates from an ECG signal, given a list of
     R-peak locations.
@@ -262,7 +304,7 @@ def extract_heartbeats(
 
 
 def compare_segmentation(
-    reference=None, test=None, sampling_rate=1000.0, offset=0, minRR=None, tol=0.05
+        reference=None, test=None, sampling_rate=1000.0, offset=0, minRR=None, tol=0.05
 ):
     """Compare the segmentation performance of a list of R-peak positions
     against a reference list.
@@ -513,7 +555,7 @@ def correct_rpeaks(signal=None, rpeaks=None, sampling_rate=1000.0, tol=0.05):
 
 
 def ssf_segmenter(
-    signal=None, sampling_rate=1000.0, threshold=20, before=0.03, after=0.01
+        signal=None, sampling_rate=1000.0, threshold=20, before=0.03, after=0.01
 ):
     """ECG R-peak segmentation based on the Slope Sum Function (SSF).
 
@@ -551,7 +593,7 @@ def ssf_segmenter(
     # diff
     dx = np.diff(signal)
     dx[dx >= 0] = 0
-    dx = dx**2
+    dx = dx ** 2
 
     # detection
     (idx,) = np.nonzero(dx > threshold)
@@ -685,7 +727,7 @@ def christov_segmenter(signal=None, sampling_rate=1000.0):
             # No detection is allowed 200 ms after the current one. In
             # the interval QRS to QRS+200ms a new value of M5 is calculated: newM5 = 0.6*max(Yi)
             if current_sample <= QRS[-1] + v200ms:
-                Mnew = M_th * max(Y[QRS[-1] : QRS[-1] + v200ms])
+                Mnew = M_th * max(Y[QRS[-1]: QRS[-1] + v200ms])
                 # The estimated newM5 value can become quite high, if
                 # steep slope premature ventricular contraction or artifact
                 # appeared, and for that reason it is limited to newM5 = 1.1*M5 if newM5 > 1.5* M5
@@ -701,8 +743,8 @@ def christov_segmenter(signal=None, sampling_rate=1000.0):
             # the last QRS detection at a low slope, reaching 60 % of its
             # refreshed value at 1200 ms.
             elif (
-                current_sample >= QRS[-1] + v200ms
-                and current_sample < QRS[-1] + v1200ms
+                    current_sample >= QRS[-1] + v200ms
+                    and current_sample < QRS[-1] + v1200ms
             ):
                 M = Mtemp * slope[current_sample - QRS[-1] - v200ms]
             # After 1200 ms M remains unchanged.
@@ -713,8 +755,8 @@ def christov_segmenter(signal=None, sampling_rate=1000.0):
             # 1.4 times slower then the decrease of the previously discussed
             # steep slope threshold (M in the 200 to 1200 ms interval).
             elif (
-                current_sample >= QRS[-1] + (2 / 3.0) * Rm
-                and current_sample < QRS[-1] + Rm
+                    current_sample >= QRS[-1] + (2 / 3.0) * Rm
+                    and current_sample < QRS[-1] + Rm
             ):
                 R += Rdec
             # After QRS + Rm the decrease of R is stopped
@@ -723,7 +765,7 @@ def christov_segmenter(signal=None, sampling_rate=1000.0):
         # QRS or beat complex is detected if Yi = MFR
         if not skip and Y[current_sample] >= MFR:
             QRS += [current_sample]
-            Rpeak += [QRS[-1] + np.argmax(Y[QRS[-1] : QRS[-1] + v300ms])]
+            Rpeak += [QRS[-1] + np.argmax(Y[QRS[-1]: QRS[-1] + v300ms])]
             if len(QRS) >= 2:
                 # A buffer with the 5 last RR intervals is updated at any new QRS detection.
                 RR[RRidx] = QRS[-1] - QRS[-2]
@@ -733,8 +775,8 @@ def christov_segmenter(signal=None, sampling_rate=1000.0):
         # of Y in the latest 50 ms of the 350 ms interval and
         # subtracting maxY in the earliest 50 ms of the interval.
         if current_sample >= v350ms:
-            Y_latest50 = Y[current_sample - v50ms : current_sample]
-            Y_earliest50 = Y[current_sample - v350ms : current_sample - v300ms]
+            Y_latest50 = Y[current_sample - v50ms: current_sample]
+            Y_earliest50 = Y[current_sample - v350ms: current_sample - v300ms]
             F += (max(Y_latest50) - max(Y_earliest50)) / 1000.0
         # Rm is the mean value of the buffer RR.
         Rm = np.mean(RR)
@@ -809,7 +851,7 @@ def engzee_segmenter(signal=None, sampling_rate=1000.0, threshold=0.48):
 
     # Low pass filter (2)
     c = [1, 4, 6, 4, 1, -1, -4, -6, -4, -1]
-    y2 = np.array([np.dot(c, y1[n - 9 : n + 1]) for n in range(9, len(y1))])
+    y2 = np.array([np.dot(c, y1[n - 9: n + 1]) for n in range(9, len(y1))])
     y2_len = len(y2)
 
     # vars
@@ -853,7 +895,7 @@ def engzee_segmenter(signal=None, sampling_rate=1000.0, threshold=0.48):
             lastp = nthfpluss[-1] + 1
             if lastp < (inc - 1) * changeM:
                 lastp = (inc - 1) * changeM
-            y22 = y2[lastp : inc * changeM + err_kill]
+            y22 = y2[lastp: inc * changeM + err_kill]
             # find intersection with Th
             try:
                 nthfplus = np.intersect1d(
@@ -880,13 +922,13 @@ def engzee_segmenter(signal=None, sampling_rate=1000.0, threshold=0.48):
         else:
             try:
                 aux = np.nonzero(
-                    y2[(inc - 1) * changeM : inc * changeM + err_kill] > Th
+                    y2[(inc - 1) * changeM: inc * changeM + err_kill] > Th
                 )[0]
                 bux = (
-                    np.nonzero(y2[(inc - 1) * changeM : inc * changeM + err_kill] < Th)[
-                        0
-                    ]
-                    - 1
+                        np.nonzero(y2[(inc - 1) * changeM: inc * changeM + err_kill] < Th)[
+                            0
+                        ]
+                        - 1
                 )
                 nthfplus = int((inc - 1) * changeM) + np.intersect1d(aux, bux)[0]
             except IndexError:
@@ -909,7 +951,7 @@ def engzee_segmenter(signal=None, sampling_rate=1000.0, threshold=0.48):
                 if cont == p10ms - 1:  # -1 is because diff eats a sample
                     max_shift = p20ms  # looks for X's max a bit to the right
                     if nthfpluss[-1] > max_shift:
-                        rpeaks += [np.argmax(signal[i - max_shift : f]) + i - max_shift]
+                        rpeaks += [np.argmax(signal[i - max_shift: f]) + i - max_shift]
                     else:
                         rpeaks += [np.argmax(signal[i:f]) + i]
                     break
@@ -975,7 +1017,7 @@ def gamboa_segmenter(signal=None, sampling_rate=1000.0, tol=0.002):
         for i in b[1:]:
             if i - previous > v_300ms:
                 previous = i
-                rpeaks.append(np.argmax(signal[int(i) : int(i + v_100ms)]) + i)
+                rpeaks.append(np.argmax(signal[int(i): int(i + v_100ms)]) + i)
 
     rpeaks = sorted(list(set(rpeaks)))
     rpeaks = np.array(rpeaks, dtype="int")
@@ -1106,11 +1148,11 @@ def hamilton_segmenter(signal=None, sampling_rate=1000.0):
         if dx[f] > DT:
             # 2 - look for both positive and negative slopes in raw signal
             if f < diff_nr:
-                diff_now = np.diff(signal[0 : f + diff_nr])
+                diff_now = np.diff(signal[0: f + diff_nr])
             elif f + diff_nr >= len(signal):
-                diff_now = np.diff(signal[f - diff_nr : len(dx)])
+                diff_now = np.diff(signal[f - diff_nr: len(dx)])
             else:
-                diff_now = np.diff(signal[f - diff_nr : f + diff_nr])
+                diff_now = np.diff(signal[f - diff_nr: f + diff_nr])
             diff_signer = diff_now[diff_now > 0]
             if len(diff_signer) == 0 or len(diff_signer) == len(diff_now):
                 continue
@@ -1125,12 +1167,12 @@ def hamilton_segmenter(signal=None, sampling_rate=1000.0):
                 if elapsed < TH_elapsed:
                     # check current and previous slopes
                     if prev_rpeak < diff_nr:
-                        diff_prev = np.diff(signal[0 : prev_rpeak + diff_nr])
+                        diff_prev = np.diff(signal[0: prev_rpeak + diff_nr])
                     elif prev_rpeak + diff_nr >= len(signal):
-                        diff_prev = np.diff(signal[prev_rpeak - diff_nr : len(dx)])
+                        diff_prev = np.diff(signal[prev_rpeak - diff_nr: len(dx)])
                     else:
                         diff_prev = np.diff(
-                            signal[prev_rpeak - diff_nr : prev_rpeak + diff_nr]
+                            signal[prev_rpeak - diff_nr: prev_rpeak + diff_nr]
                         )
 
                     slope_now = max(diff_now)
@@ -1221,13 +1263,13 @@ def hamilton_segmenter(signal=None, sampling_rate=1000.0):
     for i in beats:
         error = [False, False]
         if i - lim < 0:
-            window = signal[0 : i + lim]
+            window = signal[0: i + lim]
             add = 0
         elif i + lim >= length:
-            window = signal[i - lim : length]
+            window = signal[i - lim: length]
             add = i - lim
         else:
-            window = signal[i - lim : i + lim]
+            window = signal[i - lim: i + lim]
             add = i - lim
         # meanval = np.mean(window)
         w_peaks, _ = st.find_extrema(signal=window, mode="max")
@@ -1397,7 +1439,8 @@ def getQPositions(ecg_proc=None, show=False):
     """
 
     templates_ts = ecg_proc["templates_ts"]
-    template_r_position = np.argmin(np.abs(templates_ts - 0))  # R peak on the template is always on time instant 0 seconds
+    template_r_position = np.argmin(
+        np.abs(templates_ts - 0))  # R peak on the template is always on time instant 0 seconds
     Q_positions = []
     Q_start_positions = []
     Q_positions_template = []
@@ -1405,25 +1448,25 @@ def getQPositions(ecg_proc=None, show=False):
 
     for n, each in enumerate(ecg_proc["templates"]):
         # Get Q Position
-        template_left = each[0 : template_r_position + 1]
+        template_left = each[0: template_r_position + 1]
         mininums_from_template_left = argrelextrema(template_left, np.less)
         try:
             Q_position = ecg_proc["rpeaks"][n] - (
-                template_r_position - mininums_from_template_left[0][-1]
+                    template_r_position - mininums_from_template_left[0][-1]
             )
             Q_positions.append(Q_position)
             Q_positions_template.append(mininums_from_template_left[0][-1])
         except:
             pass
-        
+
         # Get Q start position
-        template_Q_left = each[0 : mininums_from_template_left[0][-1] + 1]
+        template_Q_left = each[0: mininums_from_template_left[0][-1] + 1]
         maximum_from_template_Q_left = argrelextrema(template_Q_left, np.greater)
         try:
             Q_start_position = (
-                ecg_proc["rpeaks"][n]
-                - template_r_position
-                + maximum_from_template_Q_left[0][-1]
+                    ecg_proc["rpeaks"][n]
+                    - template_r_position
+                    + maximum_from_template_Q_left[0][-1]
             )
             Q_start_positions.append(Q_start_position)
             Q_start_positions_template.append(maximum_from_template_Q_left[0][-1])
@@ -1433,26 +1476,25 @@ def getQPositions(ecg_proc=None, show=False):
         plt.figure()
         plt.plot(ecg_proc["templates"].T)
         plt.axvline(x=template_r_position, color="r", label="R peak")
-        plt.axvline(x=Q_positions_template[0],color="yellow",label="Q positions")
-        for position in range(1,len(Q_positions_template)):
+        plt.axvline(x=Q_positions_template[0], color="yellow", label="Q positions")
+        for position in range(1, len(Q_positions_template)):
             plt.axvline(
                 x=Q_positions_template[position],
                 color="yellow",
             )
-        plt.axvline(x=Q_start_positions_template[0],color="green",label="Q Start positions")
-        for position in range(1,len(Q_start_positions_template)):
+        plt.axvline(x=Q_start_positions_template[0], color="green", label="Q Start positions")
+        for position in range(1, len(Q_start_positions_template)):
             plt.axvline(
                 x=Q_start_positions_template[position],
                 color="green",
             )
         plt.legend()
         plt.show()
-        
+
         Q_positions = np.array(Q_positions)
         Q_start_positions = np.array(Q_start_positions)
-        
-    return utils.ReturnTuple((Q_positions, Q_start_positions,), ("Q_positions","Q_start_positions",))
 
+    return utils.ReturnTuple((Q_positions, Q_start_positions,), ("Q_positions", "Q_start_positions",))
 
 
 def getSPositions(ecg_proc=None, show=False):
@@ -1475,7 +1517,8 @@ def getSPositions(ecg_proc=None, show=False):
     """
 
     templates_ts = ecg_proc["templates_ts"]
-    template_r_position = np.argmin(np.abs(templates_ts - 0))  # R peak on the template is always on time instant 0 seconds
+    template_r_position = np.argmin(
+        np.abs(templates_ts - 0))  # R peak on the template is always on time instant 0 seconds
     S_positions = []
     S_end_positions = []
     S_positions_template = []
@@ -1484,9 +1527,9 @@ def getSPositions(ecg_proc=None, show=False):
 
     for n, each in enumerate(ecg_proc["templates"]):
         # Get S Position
-        template_right = each[template_r_position : template_size + 1]
+        template_right = each[template_r_position: template_size + 1]
         mininums_from_template_right = argrelextrema(template_right, np.less)
-        
+
         try:
             S_position = ecg_proc["rpeaks"][n] + mininums_from_template_right[0][0]
             S_positions.append(S_position)
@@ -1500,34 +1543,33 @@ def getSPositions(ecg_proc=None, show=False):
             S_end_positions.append(S_end_position)
             S_end_positions_template.append(template_r_position + maximums_from_template_right[0][0])
         except:
-            pass       
+            pass
 
     if show:
         plt.figure()
         plt.plot(ecg_proc["templates"].T)
         plt.axvline(x=template_r_position, color="r", label="R peak")
-        plt.axvline(x=S_positions_template[0],color="yellow",label="S positions")
-        for position in range(1,len(S_positions_template)):
+        plt.axvline(x=S_positions_template[0], color="yellow", label="S positions")
+        for position in range(1, len(S_positions_template)):
             plt.axvline(
                 x=S_positions_template[position],
                 color="yellow",
             )
-            
-        plt.axvline(x=S_end_positions_template[0],color="green",label="S end positions")
-        for position in range(1,len(S_end_positions_template)):
+
+        plt.axvline(x=S_end_positions_template[0], color="green", label="S end positions")
+        for position in range(1, len(S_end_positions_template)):
             plt.axvline(
                 x=S_end_positions_template[position],
                 color="green",
             )
-       
+
         plt.legend()
         plt.show()
-        
+
         S_positions = np.array(S_positions)
         S_end_positions = np.array(S_end_positions)
 
-    return utils.ReturnTuple((S_positions, S_end_positions,), ("S_positions","S_end_positions",))
-
+    return utils.ReturnTuple((S_positions, S_end_positions,), ("S_positions", "S_end_positions",))
 
 
 def getPPositions(ecg_proc=None, show=False):
@@ -1550,59 +1592,59 @@ def getPPositions(ecg_proc=None, show=False):
     P_end_ positions : array
             Array with all P end positions on the signal
     """
-    
+
     templates_ts = ecg_proc["templates_ts"]
     # R peak on the template is always on time instant 0 seconds
-    template_r_position = np.argmin(np.abs(templates_ts - 0))  
+    template_r_position = np.argmin(np.abs(templates_ts - 0))
     # the P wave end is approximately 0.04 seconds before the R peak
-    template_p_position_max = np.argmin(np.abs(templates_ts - (-0.04)))  
-    
+    template_p_position_max = np.argmin(np.abs(templates_ts - (-0.04)))
+
     P_positions = []
     P_start_positions = []
     P_end_positions = []
-    
+
     P_positions_template = []
     P_start_positions_template = []
     P_end_positions_template = []
-    
+
     for n, each in enumerate(ecg_proc["templates"]):
         # Get P position
-        template_left = each[0 : template_p_position_max + 1]
+        template_left = each[0: template_p_position_max + 1]
         max_from_template_left = np.argmax(template_left)
         # print("P Position=" + str(max_from_template_left))
         P_position = (
-            ecg_proc["rpeaks"][n] - template_r_position + max_from_template_left
+                ecg_proc["rpeaks"][n] - template_r_position + max_from_template_left
         )
         P_positions.append(P_position)
         P_positions_template.append(max_from_template_left)
-        
+
         # Get P start position
-        template_P_left = each[0 : max_from_template_left + 1]
+        template_P_left = each[0: max_from_template_left + 1]
         mininums_from_template_left = argrelextrema(template_P_left, np.less)
         # print("P start position=" + str(mininums_from_template_left[0][-1]))
         try:
             P_start_position = (
-                ecg_proc["rpeaks"][n]
-                - template_r_position
-                + mininums_from_template_left[0][-1]
+                    ecg_proc["rpeaks"][n]
+                    - template_r_position
+                    + mininums_from_template_left[0][-1]
             )
             P_start_positions.append(P_start_position)
             P_start_positions_template.append(mininums_from_template_left[0][-1])
         except:
             pass
-        
+
         # Get P end position
-        template_P_right = each[max_from_template_left : template_p_position_max + 1]
+        template_P_right = each[max_from_template_left: template_p_position_max + 1]
         mininums_from_template_right = argrelextrema(template_P_right, np.less)
-        
+
         try:
             P_end_position = (
-                ecg_proc["rpeaks"][n]
-                - template_r_position
-                + max_from_template_left
-                + mininums_from_template_right[0][0]
+                    ecg_proc["rpeaks"][n]
+                    - template_r_position
+                    + max_from_template_left
+                    + mininums_from_template_right[0][0]
             )
-            
+
             P_end_positions.append(P_end_position)
             P_end_positions_template.append(max_from_template_left + mininums_from_template_right[0][0])
         except:
@@ -1612,33 +1654,34 @@ def getPPositions(ecg_proc=None, show=False):
         plt.figure()
         plt.plot(ecg_proc["templates"].T)
         plt.axvline(x=template_r_position, color="r", label="R peak")
-        plt.axvline(x=P_positions_template[0],color="yellow",label="P positions")
-        for position in range(1,len(P_positions_template)):
+        plt.axvline(x=P_positions_template[0], color="yellow", label="P positions")
+        for position in range(1, len(P_positions_template)):
             plt.axvline(
                 x=P_positions_template[position],
                 color="yellow",
             )
-        plt.axvline(x=P_start_positions_template[0],color="green",label="P starts")
-        for position in range(1,len(P_start_positions_template)):
+        plt.axvline(x=P_start_positions_template[0], color="green", label="P starts")
+        for position in range(1, len(P_start_positions_template)):
             plt.axvline(
                 x=P_start_positions_template[position],
                 color="green",
             )
-        plt.axvline(x=P_end_positions_template[0],color="green",label="P ends")
-        for position in range(1,len(P_end_positions_template)):
+        plt.axvline(x=P_end_positions_template[0], color="green", label="P ends")
+        for position in range(1, len(P_end_positions_template)):
             plt.axvline(
                 x=P_end_positions_template[position],
                 color="green",
             )
-        
+
         plt.legend()
         plt.show()
-        
+
         P_positions = np.array(P_positions)
         P_start_positions = np.array(P_start_positions)
         P_end_positions = np.array(P_end_positions)
-        
-    return utils.ReturnTuple((P_positions, P_start_positions, P_end_positions,), ("P_positions","P_start_positions","P_end_positions",))
+
+    return utils.ReturnTuple((P_positions, P_start_positions, P_end_positions,),
+                             ("P_positions", "P_start_positions", "P_end_positions",))
 
 
 def getTPositions(ecg_proc=None, show=False):
@@ -1661,101 +1704,102 @@ def getTPositions(ecg_proc=None, show=False):
     T_end_ positions : array
         Array with all T end positions on the signal
     """
-    
+
     templates_ts = ecg_proc["templates_ts"]
-    
+
     # R peak on the template is always on time instant 0 seconds
-    template_r_position = np.argmin(np.abs(templates_ts - 0))  
+    template_r_position = np.argmin(np.abs(templates_ts - 0))
     # the T wave start is approximately 0.14 seconds after R-peak
-    template_T_position_min = np.argmin(np.abs(templates_ts - 0.14))  
-    
+    template_T_position_min = np.argmin(np.abs(templates_ts - 0.14))
+
     T_positions = []
     T_start_positions = []
     T_end_positions = []
-    
+
     T_positions_template = []
     T_start_positions_template = []
     T_end_positions_template = []
-    
+
     for n, each in enumerate(ecg_proc["templates"]):
         # Get T position
         template_right = each[template_T_position_min:]
         max_from_template_right = np.argmax(template_right)
         # print("T Position=" + str(template_T_position_min + max_from_template_right))
         T_position = (
-            ecg_proc["rpeaks"][n]
-            - template_r_position
-            + template_T_position_min
-            + max_from_template_right
+                ecg_proc["rpeaks"][n]
+                - template_r_position
+                + template_T_position_min
+                + max_from_template_right
         )
-        
+
         T_positions.append(T_position)
         T_positions_template.append(template_T_position_min + max_from_template_right)
 
         # Get T start position
         template_T_left = each[
-            template_r_position : template_T_position_min + max_from_template_right
-        ]
+                          template_r_position: template_T_position_min + max_from_template_right
+                          ]
         min_from_template_T_left = argrelextrema(template_T_left, np.less)
-        
+
         try:
             T_start_position = ecg_proc["rpeaks"][n] + min_from_template_T_left[0][-1]
-            
+
             T_start_positions.append(T_start_position)
             T_start_positions_template.append(template_r_position + min_from_template_T_left[0][-1])
         except:
             pass
-        
+
         # Get T end position
-        template_T_right = each[template_T_position_min + max_from_template_right :]
+        template_T_right = each[template_T_position_min + max_from_template_right:]
 
         mininums_from_template_T_right = argrelextrema(template_T_right, np.less)
-        
+
         try:
             T_end_position = (
-                ecg_proc["rpeaks"][n]
-                - template_r_position
-                + template_T_position_min
-                + max_from_template_right
-                + mininums_from_template_T_right[0][0]
+                    ecg_proc["rpeaks"][n]
+                    - template_r_position
+                    + template_T_position_min
+                    + max_from_template_right
+                    + mininums_from_template_T_right[0][0]
             )
-            
+
             T_end_positions.append(T_end_position)
-            T_end_positions_template.append(template_T_position_min+ max_from_template_right+ mininums_from_template_T_right[0][0])
+            T_end_positions_template.append(
+                template_T_position_min + max_from_template_right + mininums_from_template_T_right[0][0])
         except:
             pass
-        
-    if show:        
+
+    if show:
         plt.figure()
         plt.plot(ecg_proc["templates"].T)
         plt.axvline(x=template_r_position, color="r", label="R peak")
-        plt.axvline(x=T_positions_template[0],color="yellow",label="T positions")
-        for position in range(1,len(T_positions_template)):
+        plt.axvline(x=T_positions_template[0], color="yellow", label="T positions")
+        for position in range(1, len(T_positions_template)):
             plt.axvline(
                 x=T_positions_template[position],
                 color="yellow",
             )
-        plt.axvline(x=T_start_positions_template[0],color="green",label="T starts")
-        for position in range(1,len(T_start_positions_template)):
+        plt.axvline(x=T_start_positions_template[0], color="green", label="T starts")
+        for position in range(1, len(T_start_positions_template)):
             plt.axvline(
                 x=T_start_positions_template[position],
                 color="green",
             )
-        plt.axvline(x=T_end_positions_template[0],color="green",label="T ends")
-        for position in range(1,len(T_end_positions_template)):
+        plt.axvline(x=T_end_positions_template[0], color="green", label="T ends")
+        for position in range(1, len(T_end_positions_template)):
             plt.axvline(
                 x=T_end_positions_template[position],
                 color="green",
             )
         plt.legend()
         plt.show()
-        
+
         T_positions = np.array(T_positions)
         T_start_positions = np.array(T_start_positions)
         T_end_positions = np.array(T_end_positions)
-        
-    return utils.ReturnTuple((T_positions, T_start_positions, T_end_positions,), ("T_positions","T_start_positions","T_end_positions",))
 
+    return utils.ReturnTuple((T_positions, T_start_positions, T_end_positions,),
+                             ("T_positions", "T_start_positions", "T_end_positions",))
 
 
 def bSQI(detector_1, detector_2, fs=1000.0, mode="simple", search_window=150):
@@ -1871,12 +1915,12 @@ def pSQI(signal, f_thr=0.01):
 
 
 def fSQI(
-    ecg_signal,
-    fs=1000.0,
-    nseg=1024,
-    num_spectrum=[5, 20],
-    dem_spectrum=None,
-    mode="simple",
+        ecg_signal,
+        fs=1000.0,
+        nseg=1024,
+        num_spectrum=[5, 20],
+        dem_spectrum=None,
+        mode="simple",
 ):
     """Returns the ration between two frequency power bands.
 
@@ -1924,7 +1968,7 @@ def fSQI(
 
 
 def ZZ2018(
-    signal, detector_1, detector_2, fs=1000, search_window=100, nseg=1024, mode="simple"
+        signal, detector_1, detector_2, fs=1000, search_window=100, nseg=1024, mode="simple"
 ):
     import numpy as np
 
@@ -2023,9 +2067,9 @@ def ZZ2018(
         n_suspics = len(np.where(class_matrix == 1)[0])
         n_unqualy = len(np.where(class_matrix == 0)[0])
         if (
-            n_unqualy >= 3
-            or (n_unqualy == 2 and n_suspics >= 1)
-            or (n_unqualy == 1 and n_suspics == 3)
+                n_unqualy >= 3
+                or (n_unqualy == 2 and n_suspics >= 1)
+                or (n_unqualy == 1 and n_suspics == 3)
         ):
             return "Unacceptable"
         elif n_optimal >= 3 and n_unqualy == 0:

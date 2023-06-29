@@ -6,7 +6,7 @@ biosppy.signals.tools
 This module provides various signal analysis methods in the time and
 frequency domains.
 
-:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -263,7 +263,6 @@ def get_filter(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
-            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -281,8 +280,6 @@ def get_filter(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
-        - Q : float
-            Quality factor (only for 'notch' filter). Default: 30.
 
     Returns
     -------
@@ -297,13 +294,13 @@ def get_filter(
     """
 
     # check inputs
-    if order is None and ftype != "notch":
+    if order is None:
         raise TypeError("Please specify the filter order.")
     if frequency is None:
         raise TypeError("Please specify the cutoff frequency.")
-    if band not in ["lowpass", "highpass", "bandpass", "bandstop"] and ftype != "notch":
+    if band not in ["lowpass", "highpass", "bandpass", "bandstop"]:
         raise ValueError(
-            "Unknown filter band type '%r'; choose 'lowpass', 'highpass', \
+            "Unknown filter type '%r'; choose 'lowpass', 'highpass', \
             'bandpass', or 'bandstop'."
             % band
         )
@@ -347,11 +344,6 @@ def get_filter(
         b, a = ss.bessel(
             N=order, Wn=frequency, btype=band, analog=False, output="ba", **kwargs
         )
-    elif ftype == "notch":
-        # Notch filter
-        b, a = ss.iirnotch(
-            w0=frequency, Q=kwargs.get("Q", 30)
-        )
 
     return utils.ReturnTuple((b, a), ("b", "a"))
 
@@ -378,7 +370,6 @@ def filter_signal(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
-            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -396,9 +387,7 @@ def filter_signal(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
-        - Q : float
-            Quality factor (only for 'notch' filter). Default: 30.
-            
+
     Returns
     -------
     signal : array
@@ -432,18 +421,12 @@ def filter_signal(
     # filter
     filtered, _ = _filter_signal(b, a, signal, check_phase=True)
 
-    # parameters for notch filter
-    if ftype == "notch":
-        order = 2
-        band = "bandstop"
-
     # output
     params = {
         "ftype": ftype,
         "order": order,
         "frequency": frequency,
         "band": band,
-        **kwargs,
     }
     params.update(kwargs)
 
@@ -1377,8 +1360,8 @@ def pearson_correlation(x=None, y=None):
     my = np.mean(y)
 
     Sxy = np.sum(x * y) - n * mx * my
-    Sxx = np.sum(np.power(x, 2)) - n * mx**2
-    Syy = np.sum(np.power(y, 2)) - n * my**2
+    Sxx = np.sum(np.power(x, 2)) - n * mx ** 2
+    Syy = np.sum(np.power(y, 2)) - n * my ** 2
 
     rxy = Sxy / (np.sqrt(Sxx) * np.sqrt(Syy))
 
@@ -1471,6 +1454,7 @@ def get_heart_rate(beats=None, sampling_rate=1000.0, smooth=False, size=3):
     if beats is None:
         raise TypeError("Please specify the input beat indices.")
 
+    print(len(beats))
     if len(beats) < 2:
         raise ValueError("Not enough beats to compute heart rate.")
 

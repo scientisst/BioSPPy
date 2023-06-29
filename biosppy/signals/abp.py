@@ -104,6 +104,45 @@ def abp(signal=None, sampling_rate=1000.0, show=True):
     return utils.ReturnTuple(args, names)
 
 
+def preprocess_abp(signal=None, sampling_rate=1000.0):
+    """Pre-processes a raw ABP signal.
+
+    Parameters
+    ----------
+    signal : array
+        Raw ABP signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    filtered : array
+        Filtered ABP signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # filter signal
+    filtered, _, _ = st.filter_signal(
+        signal=signal,
+        ftype="butter",
+        band="bandpass",
+        order=4,
+        frequency=[1, 8],
+        sampling_rate=sampling_rate,
+    )
+
+    # output
+    return utils.ReturnTuple((filtered,), ("filtered",))
+
+
 def find_onsets_zong2003(
     signal=None,
     sampling_rate=1000.0,

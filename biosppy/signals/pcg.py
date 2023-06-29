@@ -26,7 +26,8 @@ from .. import plotting, utils
 
 
 def pcg(signal=None, sampling_rate=1000., path=None, show=True):
-    """
+    """Process a raw PCG signal and extract relevant signal features using
+    default parameters.
 
     Parameters
     ----------
@@ -114,6 +115,41 @@ def pcg(signal=None, sampling_rate=1000., path=None, show=True):
              'heart_rate', 'systolic_time_interval','heart_rate_ts','inst_heart_rate')
 
     return utils.ReturnTuple(args, names)
+
+
+def preprocess_pcg(signal=None, sampling_rate=1000.):
+    """Pre-processes a raw PCG signal.
+
+    Parameters
+    ----------
+    signal : array
+        Raw PCG signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    filtered : array
+        Filtered PCG signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # Filter Design
+    order = 2
+    passBand = np.array([25, 400])
+
+    # Band-Pass filtering of the PCG:
+    filtered, fs, params = st.filter_signal(signal, 'butter', 'bandpass', order, passBand, sampling_rate)
+
+    return utils.ReturnTuple((filtered,), ("filtered",))
 
 def find_peaks(signal=None,sampling_rate=1000.):
     

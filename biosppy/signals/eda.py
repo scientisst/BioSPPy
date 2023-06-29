@@ -108,6 +108,64 @@ def eda(signal=None, sampling_rate=1000.0, path=None, show=True, min_amplitude=0
     return utils.ReturnTuple(args, names)
 
 
+def preprocess_eda(signal=None, sampling_rate=1000.0):
+    """Pre-processes a raw EDA signal (the stage before feature extraction).
+
+    Parameters
+    ----------
+    signal : array
+        Raw EDA signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+    path : str, optional
+        If provided, the plot will be saved to the specified file.
+    show : bool, optional
+        If True, show a summary plot.
+    min_amplitude : float, optional
+        Minimum treshold by which to exclude SCRs.
+
+    Returns
+    -------
+    ts : array
+        Signal time axis reference (seconds).
+    filtered : array
+        Filtered EDA signal.
+    onsets : array
+        Indices of SCR pulse onsets.
+    peaks : array
+        Indices of the SCR peaks.
+    amplitudes : array
+        SCR pulse amplitudes.
+
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # filter signal
+    aux, _, _ = st.filter_signal(
+        signal=signal,
+        ftype="butter",
+        band="lowpass",
+        order=4,
+        frequency=5,
+        sampling_rate=sampling_rate,
+    )
+
+    # smooth
+    sm_size = int(0.75 * sampling_rate)
+    filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
+
+    # output
+    return utils.ReturnTuple((filtered,), ("filtered",))
+
+
 def basic_scr(signal=None, sampling_rate=1000.0):
     """Basic method to extract Skin Conductivity Responses (SCR) from an
     EDA signal.
@@ -223,15 +281,15 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     (zeros,) = st.zero_cross(signal=df, detrend=False)
     if np.all(df[: zeros[0]] > 0):
         zeros = zeros[1:]
-    if np.all(df[zeros[-1] :] > 0):
+    if np.all(df[zeros[-1]:] > 0):
         zeros = zeros[:-1]
 
     scrs, amps, ZC, pks = [], [], [], []
     for i in range(0, len(zeros) - 1, 2):
-        scrs += [df[zeros[i] : zeros[i + 1]]]
+        scrs += [df[zeros[i]: zeros[i + 1]]]
         ZC += [zeros[i]]
         ZC += [zeros[i + 1]]
-        pks += [zeros[i] + np.argmax(df[zeros[i] : zeros[i + 1]])]
+        pks += [zeros[i] + np.argmax(df[zeros[i]: zeros[i + 1]])]
         amps += [signal[pks[-1]] - signal[ZC[-2]]]
 
     # exclude SCRs with small amplitude

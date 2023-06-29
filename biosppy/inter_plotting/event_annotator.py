@@ -12,7 +12,6 @@ This module provides an interactive UI for manual annotation of time stamps on b
 
 # Imports
 import os
-
 import numpy as np
 from tkinter import *
 import matplotlib.pyplot as plt
@@ -23,7 +22,7 @@ from tkinter import messagebox, filedialog
 from matplotlib.backend_bases import MouseButton
 from biosppy import tools as st, storage
 from biosppy.storage import store_txt
-import tkinter
+from .config import list_functions
 
 
 def rescale_signals(input_signal: np.ndarray, new_min, new_max):
@@ -40,13 +39,14 @@ plot_colors = list(mcolors.TABLEAU_COLORS.values())
 
 
 def milliseconds_to_samples(time_milliseconds: int, sampling_rate: float):
-    return (time_milliseconds // 1000) * int(sampling_rate)
+    return int(time_milliseconds * (int(sampling_rate) / 1000))
 
 
 class event_annotator:
     """Opens an editor of event annotations of the input biosignal modality."""
+    global list_functions
 
-    def __init__(self, input_raw_signal, mdata, window_size=6.0, window_stride=1.5, moving_avg_wind_sz=2000,
+    def __init__(self, input_raw_signal, mdata, window_size=6.0, window_stride=1.5, moving_avg_wind_sz=700,
                  templates_dir=None):
         """Initializes the event annotator.
 
@@ -69,7 +69,6 @@ class event_annotator:
 
         # Extracting metadata
         self.sampling_rate = mdata['sampling_rate']
-        self.resolution = mdata['resolution']
         self.labels = mdata['labels']
 
         # Sub-signals or channels of the same signal modality
@@ -80,7 +79,7 @@ class event_annotator:
         self.moving_window_size = window_size
         self.window_shift = window_stride
 
-        self.time_arr = np.arange(0, self.raw_signal.shape[0] // self.sampling_rate, 1 / self.sampling_rate)
+        self.time_arr = np.arange(0, self.raw_signal.shape[0] / self.sampling_rate, 1 / self.sampling_rate)
 
         self.nr_samples = self.raw_signal.shape[0]
 
@@ -96,13 +95,20 @@ class event_annotator:
 
         self.canvas_plot = FigureCanvasTkAgg(self.figure, self.root)
         self.canvas_plot.get_tk_widget().grid(row=0, column=0, columnspan=1, sticky='w', padx=10)
-        self.canvas_plot.callbacks.connect('button_press_event', self.on_click_ax1)
+        self.canvas_plot.callbacks.connect('button_press_event', self.on_click_ax)
 
         self.toolbarFrame = Frame(master=self.root)
         self.toolbarFrame.grid(row=1, column=0)
         self.toolbar = NavigationToolbar2Tk(self.canvas_plot, self.toolbarFrame)
 
         self.main_plots = {}
+
+        # it's easier to expand one dim when single-channel than to check the dimensions for every loop in which signals are plotted.
+        if self.raw_signal.ndim == 1:
+            self.raw_signal = np.expand_dims(self.raw_signal, axis=-1)
+
+        print(self.raw_signal.shape)
+        print(self.time_arr.shape)
 
         for label, i in zip(self.labels, range(self.nr_sub_signals)):
             # in next version we need to have this structure different, for example to have 1 raw and 1 filt per channel
@@ -117,7 +123,8 @@ class event_annotator:
 
             self.main_plots['{}_filt'.format(label)] = [None, tmp_filt_signal]
             self.main_plots['{}_raw'.format(label)] = [
-                self.ax.plot(self.time_arr, self.raw_signal[:, i], linewidth=0.8, color=plot_colors[i]), self.raw_signal[:, i]]
+                self.ax.plot(self.time_arr, self.raw_signal[:, i], linewidth=0.8, color=plot_colors[i]),
+                self.raw_signal[:, i]]
 
         # Saving x- and y-lims of original signals
         self.original_xlims = self.ax.get_xlim()
@@ -171,10 +178,20 @@ class event_annotator:
         self.template_opt_menu["menu"] = self.template_opt_menu.menu
         self.template_opt_menu.update()
 
-        self.template_options = {'load templates': False}
-        for k, v in self.template_options.items():
-            self.template_opt_menu.menu.add_command(label=k,
-                                                    command=lambda option=k: self.update_templates_options(option))
+        for k, v in list_functions.items():
+
+            if k != 'Load Templates':
+                sub_menu = Menu(self.template_opt_menu.menu)
+
+                self.template_opt_menu.menu.add_cascade(label=k, menu=sub_menu)
+
+                for sub_k, sub_v in v.items():
+                    sub_menu.add_command(label=sub_k,
+                                         command=lambda option="{},{}".format(k, sub_k): self.update_templates_options(option))
+
+            else:
+                self.template_opt_menu.menu.add_command(label=k,
+                                                        command=lambda option='Load Templates': self.update_templates_options(option))
 
         self.last_save = True
         self.moving_onset = None
@@ -188,6 +205,7 @@ class event_annotator:
     def view_filtered_signals(self):
         """Enables or disables the display of the filtered signal(s)."""
 
+        # if user toggled "view filtered signals"
         if self.var_view_filtered_signal.get() == 1:
 
             for label, i in zip(self.labels, range(self.nr_sub_signals)):
@@ -197,26 +215,26 @@ class event_annotator:
                 self.main_plots['{}_filt'.format(label)].insert(0, tmp_ax)
 
         else:
-
             for label, i in zip(self.labels, range(self.nr_sub_signals)):
                 # Note: this .remove() function is from matplotlib!
                 self.main_plots['{}_filt'.format(label)][0].remove()
                 del self.main_plots['{}_filt'.format(label)][0]
-
 
         self.canvas_plot.draw()
 
     def update_templates_options(self, option):
         """Dropdown menu for template options (load or compute templates). Currently only supporting loading."""
 
-        for onset in list(self.template_pack.keys()):
+        # start by removing all existing templates
+        for template in list(self.template_pack.keys()):
             try:
-                self.template_pack[onset].remove()
-                del self.template_pack[onset]
+                self.template_pack[template].remove()
+                del self.template_pack[template]
 
             except:
                 pass
 
+        # then apply signal processing as requested by user
         if option == "load templates":
             files = [('Text Document', '*.txt'),
                      ('Comma-Separated Values file', '*.csv')]
@@ -229,14 +247,47 @@ class event_annotator:
                                                     initialdir=self.templates_dir,
                                                     initialfile=init_filename_guess)
 
-            loaded_templates, _ = storage.load_txt(templates_path.name)
+            try:
+                loaded_templates, _ = storage.load_txt(templates_path.name)
+
+                # adding loaded templates
+                for template in loaded_templates:
+                    template_temp = self.ax.vlines(template, self.original_ylims[0], self.original_ylims[1],
+                                                   colors='#FF6B66')
+                    self.template_pack[template] = template_temp
+            except:
+                pass
+
+        else:
+            chosen_modality = option.split(",")[0]
+            chosen_algorithm = option.split(",")[1]
+
+            preprocess = list_functions[chosen_modality][chosen_algorithm]["preprocess"]
+            function = list_functions[chosen_modality][chosen_algorithm]["function"]
+            template_key = list_functions[chosen_modality][chosen_algorithm]["template_key"]
+
+            # only computing for one of the sub-signals (the first one)
+            if function is None:
+                input_extraction_signal = self.raw_signal[:, 0]
+            else:
+                input_extraction_signal = preprocess(self.raw_signal[:, 0], sampling_rate=self.sampling_rate)
+                input_extraction_signal = input_extraction_signal['filtered']
+
+            templates = function(input_extraction_signal, sampling_rate=self.sampling_rate)[template_key]
+
+            # print(templates)
 
             # adding loaded templates
-            for onset in loaded_templates:
-                template_temp = self.ax.vlines(onset, self.original_ylims[0], self.original_ylims[1],
-                                               colors='#FF6B66')
-                self.template_pack[onset] = template_temp
+            for template in templates:
+                print(template / self.sampling_rate)
 
+                template_temp = self.ax.vlines(template / self.sampling_rate, self.original_ylims[0],
+                                               self.original_ylims[1],
+                                               colors='#FF6B66')
+
+                self.template_pack[template] = template_temp
+
+        # finally re-draw everything back
         self.canvas_plot.draw()
 
     def save_templates_file(self):
@@ -344,20 +395,32 @@ class event_annotator:
 
             if self.var_toggle_Ctrl.get() == 0:
 
-                min_max_within_window = np.zeros((2 * self.nr_sub_signals, 2))
+                # Setting baseline min/max values is needed because if there are no filtered signals, these values
+                # won't interfer with the min/max computation on the raw signals
+                # values for min set at unreasonably high number (1000)
+                min_max_within_window = 1000 * np.ones((2 * self.nr_sub_signals, 2))
+
+                # values for max set at unreasonably high number (-1000)
+                min_max_within_window[:, 1] = -1 * min_max_within_window[:, 1]
 
                 for label, i in zip(self.labels, range(self.nr_sub_signals)):
                     # let's find the maximum and minimum values within the current window
 
-                    # mins are in 2nd index = 0
-                    min_max_within_window[i, 0] = np.min(self.main_plots['{}_filt'.format(label)][1][
-                                                         int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
+                    # if the "view filtered signal" is toggled, means that filtered signals are currently displayed,
+                    # therefore the axes exist
+                    if self.var_view_filtered_signal.get() == 1:
+                        # mins are in 2nd index = 0
+                        min_max_within_window[i, 0] = np.min(self.main_plots['{}_filt'.format(label)][1][
+                                                             int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
+
+                        min_max_within_window[i, 1] = np.max(self.main_plots['{}_filt'.format(label)][1][
+                                                             int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
+
+                    # anyways, we always compute for raw signals
                     min_max_within_window[self.nr_sub_signals + i, 0] = np.min(
                         self.main_plots['{}_raw'.format(label)][1][
                         int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
 
-                    min_max_within_window[i, 1] = np.max(self.main_plots['{}_filt'.format(label)][1][
-                                                         int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
                     min_max_within_window[self.nr_sub_signals + i, 1] = np.max(
                         self.main_plots['{}_raw'.format(label)][1][
                         int(self.ax.get_xlim()[0]):int(self.ax.get_xlim()[1])])
@@ -379,11 +442,10 @@ class event_annotator:
         elif event.keysym == 'Escape':
             self.on_closing()
 
-
     def template_checkbox_on_click(self):
         """Logs the template editing checkbox."""
 
-    def on_click_ax1(self, event):
+    def on_click_ax(self, event):
         """Adds a template at the clicked location within the plotting area (Left mouse click) or deletes templates that are close to
         the clicked coordinates (Right mouse click). """
 
@@ -391,19 +453,23 @@ class event_annotator:
 
             if event.button == MouseButton.RIGHT:
 
-                onsets_temp = list(self.template_pack.keys())
-                closest_onset = onsets_temp[np.argmin(np.abs(np.asarray(onsets_temp) - event.xdata))]
+                templates_in_samples_temp = np.asarray(list(self.template_pack.keys())) / self.sampling_rate
+
+                closest_template = templates_in_samples_temp[np.argmin(np.abs(templates_in_samples_temp - event.xdata))]
+
+                print(closest_template)
 
                 # using a "detection" window of 0.2s (=200 ms)
-                if closest_onset - 0.2 < event.xdata < closest_onset + 0.2:
-                    self.template_pack[closest_onset].remove()
-                    del self.template_pack[closest_onset]
+                if closest_template - 0.2 < event.xdata < closest_template + 0.2:
+                    self.template_pack[round(closest_template * self.sampling_rate, 3)].remove()
+                    del self.template_pack[round(closest_template * self.sampling_rate, 3)]
 
                     self.last_save = False
 
             elif event.button == MouseButton.LEFT:
-                self.template_pack[event.xdata] = self.ax.vlines(event.xdata, self.original_ylims[0],
-                                                                 self.original_ylims[1], colors='#FF6B66')
+
+                self.template_pack[int(event.xdata * 1000)] = self.ax.vlines(event.xdata, self.original_ylims[0],
+                                                                             self.original_ylims[1], colors='#FF6B66')
 
                 self.last_save = False
 
