@@ -120,7 +120,6 @@ class event_annotator:
                 tmp_filt_signal = preprocessing_function(self.raw_signal[:, i], sampling_rate=self.sampling_rate)
 
                 tmp_filt_signal = np.squeeze(tmp_filt_signal)
-                print("Yessss")
 
             except:
                 # filter signal with a standard moving average with window=1s
@@ -603,9 +602,6 @@ class event_annotator:
 
                 # values for max set at unreasonably high number (-1000)
                 min_max_within_window[:, 1] = -1 * min_max_within_window[:, 1]
-
-                print("this")
-                print(self.var_view_filtered_signal.get())
 
                 for label, i in zip(self.labels, range(self.nr_sub_signals)):
                     # let's find the maximum and minimum values within the current window
