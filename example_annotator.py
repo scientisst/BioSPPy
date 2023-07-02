@@ -1,30 +1,22 @@
 import os
 import sys
-
 from biosppy import storage
-
 import warnings
-
 from biosppy.inter_plotting.event_annotator import event_annotator
-from biosppy.signals import ecg
-from biosppy.signals.acc import acc
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# load raw ECG and ACC signals
-acc_signal, mdata = storage.load_txt('./examples/acc.txt')
-ecg_signal, ecg_mdata = storage.load_txt('./examples/ecg.txt')
-
-
 # Setting current path
 current_dir = os.path.dirname(sys.argv[0])
-acc_plot_path = os.path.join(current_dir, 'acc.png')
 
-# Process it and plot. Set interactive=True to display an interactive window
-out_acc = acc(signal=acc_signal, sampling_rate=1000., show=False, interactive=False)
+filenames = os.listdir(os.path.join('./examples'))
 
-print(mdata)
-print(ecg_mdata)
-print(acc_signal.shape)
+# Test platform for all signals except ACC
+for fname in filenames:
 
-event_annotator(acc_signal, mdata, 6, 1.5, path_to_signal=None)
+    if fname != 'acc.txt':
+        print(fname)
+        signal, mdata = storage.load_txt(os.path.join('examples', fname))
+
+        event_annotator(signal, mdata, window_size=6, window_stride=1.5,
+                        annotations_dir=os.path.join(current_dir, 'examples'))
