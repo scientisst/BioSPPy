@@ -5,7 +5,7 @@ biosppy.signals.emg
 
 This module provides methods to process Electromyographic (EMG) signals.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -88,6 +88,43 @@ def emg(signal=None, sampling_rate=1000., path=None, show=True):
     names = ('ts', 'filtered', 'onsets')
 
     return utils.ReturnTuple(args, names)
+
+
+def preprocess_emg(signal=None, sampling_rate=1000.):
+    """Pre-processes a raw EMG signal.
+
+    Parameters
+    ----------
+    signal : array
+        Raw EMG signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    filtered : array
+        Filtered EMG signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
+    # ensure numpy
+    signal = np.array(signal)
+
+    sampling_rate = float(sampling_rate)
+
+    # filter signal
+    filtered, _, _ = st.filter_signal(signal=signal,
+                                      ftype='butter',
+                                      band='highpass',
+                                      order=4,
+                                      frequency=100,
+                                      sampling_rate=sampling_rate)
+
+    # output
+    return utils.ReturnTuple((filtered,), ("filtered",))
 
 
 def find_onsets(signal=None, sampling_rate=1000., size=0.05, threshold=None):
@@ -232,7 +269,7 @@ def hodges_bui_onset_detector(signal=None, rest=None, sampling_rate=1000.,
     fwlo = np.abs(signal_zero_mean)
 
     # moving average
-    mvgav = np.convolve(fwlo, np.ones((size,))/size, mode='valid')
+    mvgav = np.convolve(fwlo, np.ones((size,)) / size, mode='valid')
 
     # calculate the test function
     tf = (1 / std_dev_rest) * (mvgav - mean_rest)
@@ -359,7 +396,7 @@ def bonato_onset_detector(signal=None, rest=None, sampling_rate=1000.,
     alarm = False
     for k in range(1, len(signal_zero_mean), 2):  # odd values only
         # calculate the test function
-        tf = (1 / var_rest) * (signal_zero_mean[k-1]**2 + signal_zero_mean[k]**2)
+        tf = (1 / var_rest) * (signal_zero_mean[k - 1] ** 2 + signal_zero_mean[k] ** 2)
         tf_list.append(tf)
         if onset is True:
             if alarm is False:
@@ -728,9 +765,9 @@ def abbink_onset_detector(signal=None, rest=None, sampling_rate=1000.,
                 if alarm_time > alarm_size and k == (alarm_time + alarm_size + 1):
                     transition_indices = []
                     for j in range(alarm_size, alarm_time):
-                        low_list = [filtered_tf[j-alarm_size+a] for a in range(1, alarm_size+1)]
+                        low_list = [filtered_tf[j - alarm_size + a] for a in range(1, alarm_size + 1)]
                         low = sum(i < transition_threshold for i in low_list)
-                        high_list = [filtered_tf[j+b] for b in range(1, alarm_size+1)]
+                        high_list = [filtered_tf[j + b] for b in range(1, alarm_size + 1)]
                         high = sum(i > transition_threshold for i in high_list)
                         transition_indices.append(low + high)
                     offset_time_list = np.where(transition_indices == np.amin(transition_indices))[0].tolist()
@@ -747,9 +784,9 @@ def abbink_onset_detector(signal=None, rest=None, sampling_rate=1000.,
                 if alarm_time > alarm_size and k == (alarm_time + alarm_size + 1):
                     transition_indices = []
                     for j in range(alarm_size, alarm_time):
-                        low_list = [filtered_tf[j-alarm_size+a] for a in range(1, alarm_size+1)]
+                        low_list = [filtered_tf[j - alarm_size + a] for a in range(1, alarm_size + 1)]
                         low = sum(i < transition_threshold for i in low_list)
-                        high_list = [filtered_tf[j+b] for b in range(1, alarm_size+1)]
+                        high_list = [filtered_tf[j + b] for b in range(1, alarm_size + 1)]
                         high = sum(i > transition_threshold for i in high_list)
                         transition_indices.append(low + high)
                     onset_time_list = np.where(transition_indices == np.amax(transition_indices))[0].tolist()
@@ -858,10 +895,10 @@ def solnik_onset_detector(signal=None, rest=None, sampling_rate=1000.,
     state_duration = 0
     onset = False
     alarm = False
-    for k in range(1, len(signal_zero_mean)-1):
+    for k in range(1, len(signal_zero_mean) - 1):
         # calculate the test function
         # Teager-Kaiser energy operator
-        tf = signal_zero_mean[k]**2 - signal_zero_mean[k+1] * signal_zero_mean[k-1]
+        tf = signal_zero_mean[k] ** 2 - signal_zero_mean[k + 1] * signal_zero_mean[k - 1]
         # full-wave rectification
         tf = np.abs(tf)
         tf_list.append(tf)
