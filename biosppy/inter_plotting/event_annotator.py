@@ -22,20 +22,53 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import messagebox, filedialog
 from biosppy import tools as st, storage
 from biosppy.storage import store_txt
-from .config import list_functions, UI_intention, UI_intention_list, plot_colors
+from .config import list_functions, UI_intention, UI_intentions_actions, plot_colors
 
 
 def rescale_signals(input_signal: np.ndarray, new_min, new_max):
+    """Normalizes the signal to new minimum and maximum values.
+
+    Parameters
+    ----------
+    input_signal : np.ndarray
+        Input signal.
+    new_min : float
+        New minimum of the output signal.
+    new_max : float
+        New minimum of the output signal.
+
+    Returns
+    -------
+    output_signal : np.ndarray
+        The output signal.
+
+    """
+
     # first normalize from 0 to 1
     input_signal = (input_signal - np.min(input_signal)) / (np.max(input_signal) - np.min(input_signal))
 
     # then normalize to the [new_min, new_max] range
-    input_signal = input_signal * (new_max - new_min) + new_min
+    output_signal = input_signal * (new_max - new_min) + new_min
 
-    return input_signal
+    return output_signal
 
 
 def milliseconds_to_samples(time_milliseconds: int, sampling_rate: float):
+    """Converts a duration value in milliseconds to samples.
+
+    Parameters
+    ----------
+    time_milliseconds : int
+        Time in milliseconds to be converted.
+    sampling_rate : float
+        Sampling rate in Hertz.
+
+    Returns
+    -------
+    samples : int
+        The converted number of samples.
+
+    """
     return int(time_milliseconds * (int(sampling_rate) / 1000))
 
 
@@ -258,11 +291,12 @@ class event_annotator:
         self.root.mainloop()
 
     def hide_text(self):
+        """Hides existing displayed log message."""
         self.pressed_key_display.config(text=" ")
         self.pressed_key_display.update()
 
     def on_key_press(self, event):
-
+        """Displays a log message to help the user."""
         triggered_result = UI_intention(event, var_edit_plots=self.var_edit_plots, var_toggle_Ctrl=self.var_toggle_Ctrl,
                                         var_zoomed_in=self.var_zoomed_in,
                                         window_in_border=self.moving_window_is_in_border(),
@@ -272,7 +306,7 @@ class event_annotator:
         triggered_action = triggered_result['triggered_action']
 
         if triggered_intention is not None:
-            display_text = UI_intention_list[triggered_intention][triggered_action]
+            display_text = UI_intentions_actions[triggered_intention][triggered_action]
 
             self.pressed_key_display.config(text=display_text)
 
@@ -308,7 +342,7 @@ class event_annotator:
         self.canvas_plot.draw()
 
     def reset_annotations(self):
-
+        """Deletes all existing annotations and refreshes the plot."""
         # Remove all existing annotations
         for annotation in list(self.annotation_pack.keys()):
             try:
@@ -323,29 +357,6 @@ class event_annotator:
 
     def edit_options(self, option):
         """Dropdown menu for Edit options. Currently only supporting loading."""
-
-        # if option == "Edit Annotations":
-        #
-        #     # If currently Un-locked (label=lock), lock and put label to "Unlock"
-        #     if self.var_edit_plots.get() == 1:
-        #
-        #         self.var_edit_plots.set(0)
-        #
-        #         # delete contents first
-        #         self.edit_menu.menu.delete(0, 'end')
-        #
-        #         self.edit_menu.menu.add_command(label="Unlock Annotations", command=lambda option="Edit Annotations": self.edit_options(option))
-        #         self.edit_menu.menu.add_command(label="Reset Annotations", command=lambda option="Reset Annotations": self.edit_options(option))
-        #
-        #     # If currently locked (label=Unlock), unlock and put label to "lock"
-        #     else:
-        #         # delete contents first
-        #         self.edit_menu.menu.delete(0, 'end')
-        #
-        #         self.var_edit_plots.set(1)
-        #
-        #         self.edit_menu.menu.add_command(label="Lock Annotations", command=lambda option="Edit Annotations": self.edit_options(option))
-        #         self.edit_menu.menu.add_command(label="Reset Annotations", command=lambda option="Reset Annotations": self.edit_options(option))
 
         if option == "Reset Annotations":
             self.reset_annotations()
@@ -673,7 +684,7 @@ class event_annotator:
         self.canvas_plot.draw()
 
     def closest_nearby_event(self, event):
-
+        """Checks whether a clicked location is close enough to a nearby annotation."""
         closest_annotation = None
 
         try:

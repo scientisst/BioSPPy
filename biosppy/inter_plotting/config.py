@@ -22,6 +22,28 @@ from ..signals import ppg
 
 def UI_intention(event, var_edit_plots=None, var_toggle_Ctrl=None, var_zoomed_in=None, window_in_border=None,
                  closest_event=False):
+    """Returns the user intention and action given an event.
+
+    Parameters
+    ----------
+    var_edit_plots : None
+        Enables (if set to 1) or disables (if set to 0) annotation editing.
+    var_toggle_Ctrl : None
+        Stores whether currently zoomed-in (if set to 1) or zoomed-out (if set to 0) in amplitude.
+    var_zoomed_in : None
+        Stores whether currently zoomed-in (if true) or zoomed-out (if false) in time.
+    window_in_border: None
+        Stores whether the current zoomed-in window is in the borders of the time range (x-scale).
+    closest_event : None
+        Stores whether closest event is within defined range (if true) or not (false).
+
+    Returns
+    -------
+    return_dict : dict
+        The returned dictionary with keys 'triggered_intention' and 'triggered_action'.
+
+    """
+
     triggered_intention = None
     triggered_action = None
 
@@ -105,8 +127,8 @@ def UI_intention(event, var_edit_plots=None, var_toggle_Ctrl=None, var_zoomed_in
     return_dict = {'triggered_intention': triggered_intention, 'triggered_action': triggered_action}
     return return_dict
 
-
-UI_intention_list = {
+# possible intentions and actions
+UI_intentions_actions = {
 
     "adjust_in_amplitude": {None: "Error", "zooming_in": "Amplitude Zoom-in", "zooming_out": "Amplitude Zoom-out"},
 
@@ -121,6 +143,7 @@ UI_intention_list = {
 
 }
 
+# listed BioSPPy default filtering methods and main feature extraction methods.
 list_functions = {'EDA': {
     'Basic SCR Extractor - Onsets': {'preprocess': eda.preprocess_eda, 'function': eda.basic_scr,
                                      'template_key': 'onsets'},
