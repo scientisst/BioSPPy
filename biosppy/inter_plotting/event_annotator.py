@@ -165,7 +165,7 @@ class event_annotator:
         # Add keyword image
         # Create an object of tkinter ImageTk
         img = ImageTk.PhotoImage(Image.open(os.path.join(os.path.dirname(sys.argv[0]), "biosppy", "inter_plotting",
-                                                         "biosppy_layout_labeller_small.png")))
+                                                         "biosppy_annotator_instructions.png")))
 
         # Create a Label Widget to display the text or Image
         self.image_label = Label(self.root, image=img)
