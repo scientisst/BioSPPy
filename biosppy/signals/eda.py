@@ -259,19 +259,28 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
     return utils.ReturnTuple(args, names)
 
 
-def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., alpha=8e-4, gamma=1e-2,
-           solver=None, options={'reltol':1e-9}):
-    """CVXEDA Convex optimization approach to electrodermal activity processing
-    This function  implements the cvxEDA algorithm described in "cvxEDA: a
-    Convex Optimization Approach to Electrodermal Activity Processing"
-    (http://dx.doi.org/10.1109/TBME.2015.2474131, also available from the
-    authors' homepages).
+def cvx_decomposition(signal=None, sampling_rate=1000.0, tau0=2., tau1=0.7,
+                      delta_knot=10., alpha=8e-4, gamma=1e-2, solver=None,
+                      options={'reltol':1e-9}):
+    """Performs EDA decomposition using the cvxEDA algorithm.
+
+    This function was originally developed by Luca Citi and Alberto Greco. You
+    can find the original code and repository at:
+    https://github.com/lciti/cvxEDA
+
+    If you use this function in your work, please cite the original authors
+    as follows: A Greco, G Valenza, A Lanata, EP Scilingo, and L Citi
+    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity
+    Processing" IEEE Transactions on Biomedical Engineering, 2015.
+
+    This function is used under the terms of the GNU General Public License
+    v3.0 (GPLv3). You should comply with the GPLv3 if you use this code (see
+    'License' section below).
 
     Copyright (C) 2014-2015 Luca Citi, Alberto Greco
 
     Parameters
     ----------
-
     signal : array
         Observed EDA signal (we recommend normalizing it: y = zscore(y))
     sampling_rate : int, float
@@ -293,7 +302,6 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
     
     Returns
     -------
-        
     edr : array
         Phasic component
     smna : array
@@ -310,17 +318,39 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
         Value of objective function being minimized (eq 15 of paper)
     
     References
-    -------
+    ----------
     .. [cvxEDA] A Greco, G Valenza, A Lanata, EP Scilingo, and L Citi
-    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity Processing"
-    IEEE Transactions on Biomedical Engineering, 2015
-    DOI: 10.1109/TBME.2015.2474131
+    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity
+    Processing" IEEE Transactions on Biomedical Engineering, 2015. DOI:
+    10.1109/TBME.2015.2474131
     
-    .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin conductance in judgment and decision making research. A Handbook of Process Tracing Methods for Decision Research. 
+    .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin
+    conductance in judgment and decision making research. A Handbook of
+    Process Tracing Methods for Decision Research.
+
+    License
+    -------
+    The cvxEDA function is distributed under the GNU General Public License
+    v3.0 (GPLv3). For details, please see the full license text at:
+    https://www.gnu.org/licenses/gpl-3.0.en.html
+
+    This code is provided as-is, without any warranty or support from the
+    original authors.
+
+    Notes
+    -----
+    Changes from original code:
+    - 'y' -> 'signal'
+    - 'delta' -> 1. / 'sampling_rate'
     """
 
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
+
     n = len(signal)
-    y = cv.matrix(y)
+    y = cv.matrix(signal)
+    delta = 1. / sampling_rate  # sampling interval in seconds
 
     # bateman ARMA model
     a1 = 1./min(tau1, tau0) # a1 > a0
@@ -389,7 +419,7 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
     e = y - r - t
 
     # output
-    args = (np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
+    args = list(np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
     names = ("edr", "smna", "edl", "tonic_coeff", "linear_drift", "res", "obj")
     
     return utils.ReturnTuple(args, names)
