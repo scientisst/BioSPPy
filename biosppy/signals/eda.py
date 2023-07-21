@@ -77,10 +77,15 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
 
     # smooth
     sm_size = int(0.75 * sampling_rate)
-    filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
+    filtered, _ = st.smoother(signal=aux,
+                              kernel="boxzen",
+                              size=sm_size,
+                              mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered, sampling_rate=sampling_rate, min_amplitude=0.1, size=0.9)
+    onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered,
+                                                                                       sampling_rate=sampling_rate,
+                                                                                       min_amplitude=0.1, size=0.9)
 
     # get time vectors
     length = len(signal)
@@ -88,7 +93,10 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
     ts = np.linspace(0, t, length, endpoint=True)
 
     # get EDR and EDL
-    edl_signal, edr_signal = biosppy_decomposition(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)
+    edl_signal, edr_signal = biosppy_decomposition(signal=filtered,
+                                                   sampling_rate=sampling_rate,
+                                                   method="onsets",
+                                                   onsets=onsets)
 
     # plot
     if show:
@@ -106,8 +114,10 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
         )
 
     # output
-    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec)
-    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
+    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes,
+            phasic_rate, rise_times, half_rec, six_rec)
+    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes",
+             "phasic_rate", "rise_times", "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
@@ -154,10 +164,14 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
 
     # compute onsets, peaks and amplitudes
     if method == "emotiphai":
-        onsets, peaks, amps = emotiphai_eda(signal=signal, sampling_rate=sampling_rate, **kwargs)
+        onsets, peaks, amps = emotiphai_eda(signal=signal,
+                                            sampling_rate=sampling_rate,
+                                            **kwargs)
 
     elif method == "kbk":
-        onsets, peaks, amps = kbk_scr(signal=signal, sampling_rate=sampling_rate, **kwargs)
+        onsets, peaks, amps = kbk_scr(signal=signal,
+                                      sampling_rate=sampling_rate,
+                                      **kwargs)
 
     elif method == "basic":
         onsets, peaks, amps = basic_scr(signal=signal)
@@ -176,16 +190,23 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     rise_times = (peaks - onsets) / sampling_rate  # to seconds
 
     # compute half and 63% recovery times
-    half_rec, six_rec = rec_times(signal=signal, sampling_rate=sampling_rate, onsets=onsets, peaks=peaks)
+    half_rec, six_rec = rec_times(signal=signal,
+                                  sampling_rate=sampling_rate,
+                                  onsets=onsets,
+                                  peaks=peaks)
 
-    args = (onsets, peaks, amps, phasic_rate, rise_times, half_rec, six_rec)
-    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
+    args = (onsets, peaks, amps, phasic_rate, rise_times,
+            half_rec, six_rec)
+    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times",
+             "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
 
-def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", onsets=None, **kwargs):
-    """Extracts EDL and EDR signals.
+def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother",
+                          onsets=None, **kwargs):
+    """Extracts EDL and EDR signals using either a smoothing filter or onsets'
+    interpolation.
 
     Parameters
     ----------
@@ -194,8 +215,8 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
     method: str, optional
-        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets'
-        interpolation.
+        Method to compute the edl signal: "smoother" to compute a smoothing
+        filter; "onsets" to obtain edl by onsets' interpolation.
     onsets : array, optional
         List of onsets for the interpolation method.
     kwargs : dict, optional
@@ -210,9 +231,9 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
 
     References
     ----------
-    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition
-       system using short-term monitoring of physiological signals",
-       Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
+    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition system
+    using short-term monitoring of physiological signals", Med. Biol. Eng.
+    Comput., vol. 42, pp. 419-427, 2004
 
     """
 
@@ -221,13 +242,17 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
         raise TypeError("Please specify an input signal.")
 
     if method == "onsets" and onsets is None:
-        raise TypeError("Please specify 'onsets' to use the onset interpolation method.")
+        raise TypeError("Please specify 'onsets' to use the onset "
+                        "interpolation method.")
 
     # smooth method
     if method == "smoother":
         window_size = kwargs['window_size'] if 'window_size' in kwargs else 10.0
         size = int(window_size * sampling_rate)
-        edl_signal, _ = st.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
+        edl_signal, _ = st.smoother(signal=signal,
+                                    kernel="bartlett",
+                                    size=size,
+                                    mirror=True)
 
     # interpolation method
     elif method == "onsets":
@@ -250,7 +275,10 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
 
     # smooth
     size = int(1.0 * sampling_rate)
-    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+    edr_signal, _ = st.smoother(signal=df,
+                                kernel="bartlett",
+                                size=size,
+                                mirror=True)
 
     # output
     args = (edl_signal, edr_signal)
@@ -565,7 +593,8 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
-def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True, size=1.):
+def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1,
+                  filt=True, size=1.):
     """Returns characteristic EDA events.
 
     Parameters
@@ -613,9 +642,9 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
         try:
             sm_size = int(size * sampling_rate)
             signal, _ = st.smoother(signal=signal,
-                                      kernel='boxzen',
-                                      size=sm_size,
-                                      mirror=True)
+                                    kernel='boxzen',
+                                    size=sm_size,
+                                    mirror=True)
         except Exception as e:
             print(e)
 
