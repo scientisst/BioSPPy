@@ -598,7 +598,7 @@ def plot_eda(ts=None,
              amplitudes=None,
              path=None,
              show=False):
-    """Create a summary plot from the output of signals.ecg.eda.
+    """Create a summary plot from the output of signals.eda.eda.
 
     Parameters
     ----------
