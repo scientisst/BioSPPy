@@ -18,8 +18,6 @@ from six.moves import range
 # 3rd party
 import numpy as np
 from scipy import interpolate
-import cvxopt as cv
-import cvxopt.solvers
 
 # local
 from . import tools as st
@@ -371,6 +369,13 @@ def cvx_decomposition(signal=None, sampling_rate=1000.0, tau0=2., tau1=0.7,
     - 'y' -> 'signal'
     - 'delta' -> 1. / 'sampling_rate'
     """
+    # try to import cvxopt
+    try:
+        import cvxopt as cv
+    except ImportError:
+        raise ImportError("The 'cvxopt' module is required for this function "
+                          "to run. Please install it first (`pip install "
+                          "cvxopt`).")
 
     # check inputs
     if signal is None:
