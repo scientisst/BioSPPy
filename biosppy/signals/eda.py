@@ -688,12 +688,12 @@ def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
         if len(half_rec_idx) > 0:
-            half_rec += [(half_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
+            half_rec += [half_rec_idx[0][0] / sampling_rate]
         else:
             half_rec += [None]
 
         if len(six_rec_idx) > 0:
-            six_rec += [(six_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
+            six_rec += [six_rec_idx[0][0] / sampling_rate]
         else:
             six_rec += [None]
 
