@@ -681,9 +681,8 @@ def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
         six_rec_amp = 0.37 * amps[i] + signal[onsets][i]
         try:
             wind = np.array(signal[peaks[i]:onsets[i + 1]])
-        except Exception as e:
-            print(e)
-            wind = np.array(signal[peaks[i]:])
+        except:
+            wind = np.array(signal[peaks[i]:])  # last peak to end of signal
         half_rec_idx = np.argwhere(wind <= half_rec_amp)
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
