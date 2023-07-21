@@ -672,21 +672,28 @@ def plot_eda(ts=None,
     ax3.legend()
     ax3.grid()
 
-    # templates
-    ax4 = fig.add_subplot(gs[1:5, 1])
+    # eda decomposition - edl
+    ax4 = fig.add_subplot(gs[1:4, 1])
 
-    ax4.plot(ts, filtered, 'm', linewidth=MINOR_LW, alpha=0.7, label="filtered")
+    ax4.plot(ts, filtered, linewidth=MINOR_LW, label="filtered")
     ax4.plot(ts, edl, 'm', linewidth=MINOR_LW, alpha=0.7, label="EDL")
 
-    ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('EDA Decomposition')
+    ax4.legend()
     ax4.grid()
 
-    ax5 = ax4.twinx()
+    # eda decomposition - edr
+    ax5 = fig.add_subplot(gs[4:, 1])
+    ax5.get_shared_x_axes().join(ax4, ax5)
+
     ax5.plot(ts[1:], edr, 'm', linewidth=MINOR_LW, alpha=0.7, label="EDR")
-    ax4.legend() 
-    ax5.legend() 
+
+    ax5.set_ylabel('Amplitude')
+    ax5.set_xlabel('Time (s)')
+    ax5.legend()
+    ax5.grid()
+
     # make layout tight
     gs.tight_layout(fig)
 
