@@ -1,5 +1,10 @@
 ```
-🎊 New feature: We just added new functions for EDA feature extraction and decomposition! (Check PR #15)
+🎉 New feature: You can now compute the activity index for ACC signals!
+(Check PR #14)
+```
+```
+🎊 New feature: We just added new functions for EDA feature extraction and
+decomposition! (Check PR #15)
 ```
 
 
