@@ -164,20 +164,24 @@ def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
 
     # acc magnitude
     acc_magnitude = np.sum(signal**2, axis=1)**0.5
-    # activity index is the sum of 12 standard deviations computed for 5s periods 
-    # TODO how to deal with leftover data
+    # activity index is the sum of 12 standard deviations computed for 5s
+    # periods
     if window_2 > len(acc_magnitude):
         warnings.warn("'window_2' must be smaller than the signal length. The"
                       "activity index will be computed for the whole signal.")
         window_2 = len(acc_magnitude)
     # last activity index is in (len(acc_magnitude) - len(acc_magnitude) % window_2)
     acc_magnitude = acc_magnitude[:len(acc_magnitude) - len(acc_magnitude) % window_2]
+
     # segment magnitude in segments with size window_1
     segments = acc_magnitude.reshape(-1, window_1)
+
     # compute standard deviation for each segment
     activity_index_ = np.std(segments, axis=1)
+
     # compute activity index (average standard deviation) for each window_2
     activity_index = np.mean(activity_index_.reshape(-1, int(window_2/window_1)), axis=1)
+
     # timestamps are the end of each window_2 (remove the first one)
     activity_index_ts = np.arange(0, len(acc_magnitude)+1, int(window_2))[1:] 
 
