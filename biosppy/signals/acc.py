@@ -183,9 +183,13 @@ def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
     activity_index = np.mean(activity_index_.reshape(-1, int(window_2/window_1)), axis=1)
 
     # timestamps are the end of each window_2 (remove the first one)
-    activity_index_ts = np.arange(0, len(acc_magnitude)+1, int(window_2))[1:] 
+    ts = np.arange(0, len(acc_magnitude)+1, int(window_2))[1:]
 
-    return utils.ReturnTuple((activity_index_ts, activity_index), ("ts", "activity_index"))
+    # output
+    args = (ts, activity_index)
+    names = ("ts", "activity_index")
+
+    return utils.ReturnTuple(args, names)
 
 
 def time_domain_feature_extractor(signal=None):
