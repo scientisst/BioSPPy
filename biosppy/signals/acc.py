@@ -18,6 +18,7 @@ Diogo Vieira
 # Imports
 from __future__ import absolute_import, division, print_function
 from six.moves import range
+import warnings
 
 # 3rd party
 import numpy as np
@@ -166,7 +167,8 @@ def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
     # activity index is the sum of 12 standard deviations computed for 5s periods 
     # TODO how to deal with leftover data
     if window_2 > len(acc_magnitude):
-        Warning("Window 2 must be smaller than the signal length. The activity index will be computed for the whole signal.")
+        warnings.warn("'window_2' must be smaller than the signal length. The"
+                      "activity index will be computed for the whole signal.")
         window_2 = len(acc_magnitude)
     # last activity index is in (len(acc_magnitude) - len(acc_magnitude) % window_2)
     acc_magnitude = acc_magnitude[:len(acc_magnitude) - len(acc_magnitude) % window_2]
