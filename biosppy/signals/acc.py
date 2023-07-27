@@ -111,13 +111,16 @@ def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=True
 
 def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
     """
-    Compute the activity index of an ACC signal. 
-    Following the method described in:
-    W.-Y. Lin, V. Verma, M.-Y. Lee, C.-S. Lai, Activity Monitoring with a Wrist- Worn, Accelerometer-Based Device, Micromachines 9 (2018) 450
+    Compute the activity index of an ACC signal.
+
+    Follows the method described in [Lin18]_, the activity index is computed as
+    follows:
     
     1) Calculate the ACC magnitude if the signal is triaxial
-    2) Calculate the standard deviation of the ACC magnitude for each window_1 seconds
-    3) The activity index will be the mean standard deviation for each window_2 seconds
+    2) Calculate the standard deviation of the ACC magnitude for each
+    'window_1' seconds
+    3) The activity index will be the mean standard deviation for each
+    'window_2' seconds
     
     Parameters
     ----------
@@ -126,16 +129,23 @@ def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
     window_1 : int, float, optional
-        Window length (seconds) for the first moving average filter.
+        Window length (seconds) for the first moving average filter. Default: 5
     window_2 : int, float, optional
-        Window length (seconds) for the second moving average filter.
+        Window length (seconds) for the second moving average filter. Default: 60
 
     Returns
     -------
-    activity_index_ts : array
+    ts : array
         Time axis reference (seconds).
     activity_index : array
         Activity index of the signal.
+
+    References
+    ----------
+    .. [Lin18] W.-Y. Lin, V. Verma, M.-Y. Lee, C.-S. Lai, Activity
+    Monitoring with a Wrist-Worn, Accelerometer-Based Device, Micromachines 9
+    (2018) 450
+
     """
 
     # check inputs
