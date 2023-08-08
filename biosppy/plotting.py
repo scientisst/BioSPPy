@@ -332,58 +332,75 @@ def plot_acc(ts=None,
     acc_x, acc_y, acc_z = raw_t[0], raw_t[1], raw_t[2]
 
     fig = plt.figure(figsize=(10, 5))
-    fig.suptitle('ACC Summary')
+    fig.suptitle('ACC Summary', fontsize=12, fontweight='bold')
     gs = gridspec.GridSpec(6, 2)
+    fig.subplots_adjust(top=0.85, hspace=0.7, wspace=0.34, left=0.13,
+                        right=0.96, bottom=0.18)
 
     # raw signal (acc_x)
     ax1 = fig.add_subplot(gs[:2, 0])
+    ax1.set_title("Signal")
 
-    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X', color=color_palette('light-blue'))
+    ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X',
+             color=color_palette('dark-blue'))
 
-    ax1.set_ylabel('Amplitude ($m/s^2$)')
+    ax1.set_ylabel('Amplitude \n ($m/s^2$)')
     ax1.legend(loc='upper right')
-    ax1.grid()
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
 
     # raw signal (acc_y)
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
 
-    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Y', color=color_palette('blue'))
+    ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Y',
+             color=color_palette('blue'))
 
-    ax2.set_ylabel('Amplitude ($m/s^2$)')
+    ax2.set_ylabel('Amplitude \n ($m/s^2$)')
     ax2.legend(loc='upper right')
-    ax2.grid()
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
 
     # raw signal (acc_z)
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
-    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z', color=color_palette('dark-blue'))
+    ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z',
+             color=color_palette('light-blue'))
 
-    ax3.set_ylabel('Amplitude ($m/s^2$)')
+    ax3.set_ylabel('Amplitude \n ($m/s^2$)')
     ax3.set_xlabel('Time (s)')
     ax3.legend(loc='upper right')
-    ax3.grid()
 
     # vector magnitude
     ax4 = fig.add_subplot(gs[:3, 1], sharex=ax1)
+    ax4.set_title('Features')
 
-    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude feature', color=color_palette('green'))
+    ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude',
+             color=color_palette('orange'))
 
     ax4.set_ylabel('Amplitude ($m/s^2$)')
     ax4.legend(loc='upper right')
-    ax4.grid()
+    ax4.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax4.spines['bottom'].set_visible(False)
 
     # signal magnitude
     ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
 
-    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude feature', color=color_palette('dark-green'))
+    ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude',
+             color=color_palette('light-orange'))
 
     ax5.set_ylabel('Amplitude ($m/s^2$)')
     ax5.set_xlabel('Time (s)')
     ax5.legend(loc='upper right')
-    ax5.grid()
 
-    # make layout tight
-    gs.tight_layout(fig)
+    # align y-axis labels
+    fig.align_ylabels([ax1, ax2, ax3])
+    fig.align_ylabels([ax4, ax5])
+
+    # add logo
+    add_logo(fig)
 
     # save to file
     if path is not None:
