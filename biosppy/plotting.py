@@ -458,20 +458,29 @@ def plot_ppg(ts=None,
     """
 
     fig = plt.figure(figsize=(10, 5))
-    fig.suptitle('PPG Summary')
+    fig.suptitle('PPG Summary', fontsize=12, fontweight='bold')
     gs = gridspec.GridSpec(6, 2)
+    fig.subplots_adjust(top=0.88, bottom=0.12, hspace=0.9, wspace=0.3,
+                        left=0.1, right=0.96)
 
     # raw signal
     ax1 = fig.add_subplot(gs[:2, 0])
+    ax1.set_title('Signal')
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw',
+             color=color_palette('light-blue'), alpha=0.6)
+    ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
+             color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.legend()
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
 
-    # filtered signal with onsets
+    #  signal with onsets
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
+    ax2.set_title('Systolic Peak Detection')
 
     ymin = np.min(filtered)
     ymax = np.max(filtered)
@@ -479,40 +488,41 @@ def plot_ppg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
-    ax2.vlines(ts[peaks], ymin, ymax,
-               color=color_palette('dark-red'),
-               linewidth=MINOR_LW,
-               alpha=0.5,
-               linestyle='--')
-    ax2.plot(ts[peaks], filtered[peaks]*1.1, ls='None', marker=7, color=color_palette('dark-red'), label='Peaks')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
+    ax2.plot(ts[peaks], filtered[peaks], ls='None', marker='x',
+             color=color_palette('dark-red'), label='Peaks')
 
     ax2.set_ylabel('Amplitude')
-    ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.legend()
+
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
+    ax3.set_title('Heart Rate')
 
-    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate', color=color_palette('blue'))
+    ax3.plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label='Heart Rate',
+             color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
+
+    # align y-axis labels
+    fig.align_ylabels([ax1, ax2, ax3])
 
     # templates
     ax4 = fig.add_subplot(gs[1:5, 1])
 
-    ax4.plot(templates_ts, templates, linewidth=MINOR_LW, alpha=0.5, color='#6DA7C0')
+    ax4.plot(templates_ts, templates, linewidth=MINOR_LW, alpha=0.5,
+             color=color_palette('blue'))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Templates')
-    ax4.grid(ls='--', color=color_palette('light-grey'))
 
-    # make layout tight
-    fig.tight_layout()
+    add_logo(fig)
 
     # save to file
     if path is not None:
