@@ -899,8 +899,10 @@ def plot_emg(ts=None,
 
     """
 
-    fig = plt.figure()
-    fig.suptitle('EMG Summary')
+    fig = plt.figure(figsize=(10, 5))
+    fig.suptitle('EMG Summary', fontsize=12, fontweight='bold')
+    fig.subplots_adjust(top=0.85, hspace=0.25, wspace=0.34, left=0.1,
+                        right=0.96, bottom=0.18)
 
     if processed is not None:
         ax1 = fig.add_subplot(311)
@@ -914,21 +916,26 @@ def plot_emg(ts=None,
         ax3.plot(ts_processed, processed,
                  linewidth=MINOR_LW,
                  label='Processed',
-                 color=color_palette('light-blue'))
+                 color=color_palette('blue'))
         ax3.set_xlabel('Time (s)')
         ax3.set_ylabel('Amplitude')
         ax3.legend(loc='upper right')
-        ax3.grid(ls='--', color=color_palette('light-grey'))
     else:
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212, sharex=ax1)
 
-    # raw signal
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('light-blue'))
+    # signal
+    ax1.set_title('Signal')
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw', alpha=0.6,
+             color=color_palette('light-blue'))
+    ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
+             color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
     ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
 
     # filtered signal with onsets
     ymin = np.min(filtered)
@@ -937,20 +944,22 @@ def plot_emg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('light-blue'))
+    ax2.set_title('Event Detection')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
     ax2.vlines(ts[onsets], ymin, ymax,
-               color=color_palette('green'),
-               alpha=0.6,
+               color=color_palette('orange'),
                linewidth=MINOR_LW,
                label='Onsets')
 
     ax2.set_xlabel('Time (s)')
     ax2.set_ylabel('Amplitude')
     ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
 
-    # make layout tight
-    fig.tight_layout()
+    # align y axis labels
+    fig.align_ylabels()
+
+    # add logo
+    add_logo(fig)
 
     # save to file
     if path is not None:
