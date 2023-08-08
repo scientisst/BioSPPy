@@ -6,7 +6,7 @@ biosppy.signals.acc
 This module provides methods to process Acceleration (ACC) signals.
 Implemented code assumes ACC acquisition from a 3 orthogonal axis reference system.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 
 Authors:
