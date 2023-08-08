@@ -1629,20 +1629,29 @@ def plot_pcg(ts=None,
     """
 
     fig = plt.figure(figsize=(12, 5))
-    fig.suptitle('PCG Summary')
+    fig.suptitle('PCG Summary', fontsize=12, fontweight='bold')
     gs = gridspec.GridSpec(6, 2)
+    fig.subplots_adjust(top=0.88, bottom=0.12, hspace=0.9, wspace=0.3,
+                        left=0.1, right=0.96)
 
-    # raw signal
+    # signal
     ax1 = fig.add_subplot(gs[:2, 0])
+    ax1.set_title('Signal')
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw',
+             color=color_palette('light-blue'))
+    ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
+                color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
     ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
 
-    # filtered signal with rpeaks
+    # filtered signal with sounds
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1)
+    ax2.set_title('Heart Sound Detection')
 
     ymin = np.min(filtered)
     ymax = np.max(filtered)
@@ -1650,43 +1659,46 @@ def plot_pcg(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered', color=color_palette('blue'))
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
     ax2.vlines(ts[peaks], ymin, ymax,
                color=color_palette('dark-red'),
-               alpha=0.6,
-               linewidth=MAJOR_LW,
-               label='Peaks')
+               linewidth=MED_LW,
+               label='Sounds')
 
     ax2.set_ylabel('Amplitude')
     ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
 
     # heart rate
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
+    ax3.set_title('Heart Rate')
 
-    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate', color=color_palette('blue'))
+    ax3.plot(heart_rate_ts, inst_heart_rate, linewidth=MAJOR_LW,
+             color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
+
+    # align y axis labels
+    fig.align_ylabels([ax1, ax2, ax3])
 
     # heart sounds
     ax4 = fig.add_subplot(gs[1:5, 1], sharex=ax1)
 
-    ax4.plot(ts, filtered, linewidth=MINOR_LW, label='PCG heart sounds', color=color_palette('blue'))
+    ax4.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
     for i in range(0, len(peaks)):
         text = "S" + str(int(heart_sounds[i]))
-        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=12,
+        plt.annotate(text, (ts[peaks[i]], ymax - alpha), ha='center', va='center', size=9,
                      color=color_palette('dark-grey'))
 
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
-    ax4.set_title('Heart sounds')
-    ax4.grid(ls='--', color=color_palette('light-grey'))
+    ax4.set_title('Heart Sounds Classification')
 
-    # make layout tight
-    gs.tight_layout(fig)
+    # add logo
+    add_logo(fig)
 
     # save to file
     if path is not None:
