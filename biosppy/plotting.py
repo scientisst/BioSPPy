@@ -59,13 +59,13 @@ def color_palette(idx):
     """
 
     color_dict = {
-        'blue': '#668998',
-        'dark-blue': '#032A72',
-        'light-blue': '#85B3D1FF',
+        'blue': '#71a7cc',
+        'dark-blue': '#184169',
+        'light-blue': '#a5c8e0',
 
-        'green': '#49997c',
-        'dark-green': '#1A430B',
-        'light-green': '#95D5B2',
+        'green': '#329352',
+        'dark-green': '#154d28',
+        'light-green': '#7ac77d',
 
         'red': '#D62839',
         'dark-red': '#B14343',
@@ -79,9 +79,9 @@ def color_palette(idx):
         'dark-violet': '#3C096C',
         'light-violet': '#E0AAFF',
 
-        'orange': '#FF9F1C',
-        'dark-orange': '#DD8452',
-        'light-orange': '#FFBF69',
+        'orange': '#f3883e',
+        'dark-orange': '#b2400a',
+        'light-orange': '#f7d1ab',
 
         'grey': '#ADB5BD',
         'dark-grey': '#495057',
@@ -94,7 +94,8 @@ def color_palette(idx):
         if idx in color_dict.keys():
             color_id = color_dict[idx]
         else:
-            raise ValueError(f'Please choose one color from {color_dict.keys()} or give and index')
+            raise ValueError(f'Please choose one color from {color_dict.keys()}'
+                             f' or give an index')
 
     return color_id
 
