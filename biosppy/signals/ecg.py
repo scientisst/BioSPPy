@@ -30,7 +30,7 @@ from biosppy.inter_plotting import ecg as inter_plotting
 from scipy.signal import argrelextrema
 
 
-def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=True):
+def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=False):
     """Process a raw ECG signal and extract relevant signal features using
     default parameters.
 

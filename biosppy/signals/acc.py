@@ -28,7 +28,7 @@ from .. import plotting, utils
 from biosppy.inter_plotting import acc as inter_plotting
 
 
-def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=True):
+def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=False):
     """Process a raw ACC signal and extract relevant signal features using
     default parameters.
 
