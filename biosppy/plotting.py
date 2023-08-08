@@ -738,7 +738,7 @@ def plot_eda(ts=None,
              amplitudes=None,
              path=None,
              show=False):
-    """Create a summary plot from the output of signals.ecg.ecg.
+    """Create a summary plot from the output of signals.eda.eda.
 
     Parameters
     ----------
@@ -766,20 +766,28 @@ def plot_eda(ts=None,
     """
 
     fig = plt.figure(figsize=(10, 5))
-    fig.suptitle('EDA Summary')
+    fig.suptitle('EDA Summary', fontsize=14, fontweight='bold')
     gs = gridspec.GridSpec(6, 2)
+    fig.subplots_adjust(top=0.85, hspace=0.7, wspace=0.34, left=0.13,
+                        right=0.96, bottom=0.18)
 
-    # raw signal
+    # signal
     ax1 = fig.add_subplot(gs[:2, 0])
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw',
+             color=color_palette('light-blue'), alpha=0.6)
+    ax1.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered',
+             color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
-    ax1.set_title('Raw Signal')
+    ax1.set_title('Signal')
     ax1.legend()
-    ax1.grid()
 
-    # filtered signal with rpeaks
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
+
+    # event detection
     ax2 = fig.add_subplot(gs[2:4, 0], sharex=ax1, sharey=ax1)
 
     ymin = np.min(filtered)
@@ -788,14 +796,19 @@ def plot_eda(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'), label='Filtered')
-    ax2.scatter(ts[onsets], filtered[onsets], marker='|', lw=1, s=100, color=color_palette('dark-red'), label='Onsets')
-    ax2.scatter(ts[peaks], filtered[peaks], marker=7, color=color_palette('dark-red'), label='Peaks')
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
+    ax2.scatter(ts[onsets], filtered[onsets], marker='|', lw=1, s=100,
+                color=color_palette('dark-red'), label='Onsets', zorder=3)
+    ax2.scatter(ts[peaks], filtered[peaks], marker='x',
+                color=color_palette('dark-red'), label='Peaks', zorder=3)
 
     ax2.set_ylabel('Amplitude')
     ax2.set_title('Event Detection')
     ax2.legend()
-    ax2.grid()
+
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
 
     # amplitudes
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
@@ -805,8 +818,6 @@ def plot_eda(ts=None,
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Amplitude')
     ax3.set_title('Event Amplitudes')
-    ax3.legend()
-    ax3.grid()
 
     # align y axis labels
     fig.align_ylabels()
@@ -814,26 +825,30 @@ def plot_eda(ts=None,
     # decomposition EDL
     ax4 = fig.add_subplot(gs[0:3, 1], sharex=ax1, sharey=ax1)
 
-    ax4.plot(ts, filtered, linewidth=MAJOR_LW, color=color_palette('blue'), alpha=0.6, label="Filtered")
-    ax4.plot(ts, edl, linewidth=MINOR_LW, color=color_palette('dark-orange'), label="EDL")
+    ax4.plot(ts, filtered, linewidth=MAJOR_LW, color=color_palette('light-blue'))
+    ax4.plot(ts, edl, linewidth=MINOR_LW, color=color_palette('dark-orange'),
+             label="EDL")
 
     ax4.set_ylabel('Amplitude')
     ax4.set_title('EDA Decomposition')
     ax4.legend()
-    ax4.grid()
+
+    ax4.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax4.spines['bottom'].set_visible(False)
 
     # decomposition EDR
     ax5 = fig.add_subplot(gs[3:, 1], sharex=ax1)
 
-    ax5.plot(ts[1:], edr, linewidth=MINOR_LW, color=color_palette('dark-orange'), label="EDR")
+    ax5.plot(ts[1:], edr, linewidth=MINOR_LW,
+             color=color_palette('dark-orange'), label="EDR")
 
     ax5.set_ylabel('Amplitude')
     ax5.set_xlabel('Time (s)')
     ax5.legend()
-    ax5.grid()
 
-    # make layout tight
-    gs.tight_layout(fig)
+    # logo
+    add_logo(fig)
 
     # save to file
     if path is not None:
