@@ -1010,17 +1010,25 @@ def plot_resp(ts=None,
 
     """
 
-    fig = plt.figure()
-    fig.suptitle('Respiration Summary')
+    fig = plt.figure(figsize=(10, 5))
+    fig.suptitle('Respiration Summary', fontsize=12, fontweight='bold')
+    fig.subplots_adjust(top=0.85, hspace=0.35, wspace=0.34, left=0.13,
+                        right=0.96, bottom=0.18)
 
     # raw signal
     ax1 = fig.add_subplot(311)
+    ax1.set_title('Signal')
 
-    ax1.plot(ts, raw, linewidth=MINOR_LW, label='Raw', color=color_palette('blue'))
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw', alpha=0.6,
+             color=color_palette('light-blue'))
+    ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
+                color=color_palette('blue'))
 
     ax1.set_ylabel('Amplitude')
     ax1.legend(loc='upper right')
-    ax1.grid(ls='--', color=color_palette('light-grey'))
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
 
     # filtered signal with zeros
     ax2 = fig.add_subplot(312, sharex=ax1)
@@ -1031,33 +1039,33 @@ def plot_resp(ts=None,
     ymax += alpha
     ymin -= alpha
 
-    ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered', color=color_palette('blue'))
+    ax2.plot(ts, filtered, linewidth=MINOR_LW, color=color_palette('blue'))
     ax2.vlines(ts[zeros], ymin, ymax,
                color=color_palette('dark-red'),
                linewidth=MINOR_LW,
-               label='Zero crossings',
-               alpha=0.7)
+               label='Zero crossings')
 
     ax2.set_ylabel('Amplitude')
     ax2.legend(loc='upper right')
-    ax2.grid(ls='--', color=color_palette('light-grey'))
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
 
-    # heart rate
+    # respiration rate
     ax3 = fig.add_subplot(313, sharex=ax1)
+    ax3.set_title('Respiration Rate')
 
-    ax3.plot(resp_rate_ts, resp_rate,
-             linewidth=MAJOR_LW,
-             label='Respiration Rate',
-             color=color_palette('blue')
-             )
+    ax3.plot(resp_rate_ts, resp_rate, linewidth=MAJOR_LW,
+             color=color_palette('blue'))
 
     ax3.set_xlabel('Time (s)')
-    ax3.set_ylabel('Respiration Rate (Hz)')
-    ax3.legend(loc='upper right')
-    ax3.grid(ls='--', color=color_palette('light-grey'))
+    ax3.set_ylabel('Respiration Rate \n(Hz)')
 
-    # make layout tight
-    fig.tight_layout()
+    # align y axes labels
+    fig.align_ylabels()
+
+    # add logo
+    add_logo(fig)
 
     # save to file
     if path is not None:
