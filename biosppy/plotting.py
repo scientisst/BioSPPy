@@ -29,6 +29,7 @@ from biosppy.signals import tools as st
 
 # Globals
 MAJOR_LW = 1.5
+MED_LW = 1.25
 MINOR_LW = 1.0
 MAX_ROWS = 10
 
