@@ -32,11 +32,8 @@ MAJOR_LW = 1.5
 MED_LW = 1.25
 MINOR_LW = 1.0
 MAX_ROWS = 10
-
-# grid style
-plt.rcParams["axes.axisbelow"] = True  # grid in the back
-plt.rcParams["grid.color"] = '#E6E6E6'
-plt.rcParams["grid.linestyle"] = '--'
+BIOSPPY_LOGO = '../docs/logo/logo_400.png'
+SCIENTISST_LOGO = '../docs/logo/ScientISST-Hor-Break-Dark.png'
 
 # title style
 plt.rcParams['axes.titlesize'] = 10
