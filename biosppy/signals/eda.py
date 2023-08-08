@@ -6,7 +6,7 @@ biosppy.signals.eda
 This module provides methods to process Electrodermal Activity (EDA)
 signals, also known as Galvanic Skin Response (GSR).
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -18,8 +18,6 @@ from six.moves import range
 # 3rd party
 import numpy as np
 from scipy import interpolate
-import cvxopt as cv
-import cvxopt.solvers
 
 # local
 from . import tools as st
@@ -47,6 +45,10 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
         Signal time axis reference (seconds).
     filtered : array
         Filtered EDA signal.
+    edr : array
+        Electrodermal response (EDR) signal.
+    edl : array
+        Electrodermal level (EDL) signal.
     onsets : array
         Indices of SCR pulse onsets.
     peaks : array
@@ -77,10 +79,15 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
 
     # smooth
     sm_size = int(0.75 * sampling_rate)
-    filtered, _ = st.smoother(signal=aux, kernel="boxzen", size=sm_size, mirror=True)
+    filtered, _ = st.smoother(signal=aux,
+                              kernel="boxzen",
+                              size=sm_size,
+                              mirror=True)
 
     # get SCR info
-    onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered, sampling_rate=sampling_rate, min_amplitude=0.1, size=0.9)
+    onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered,
+                                                                                       sampling_rate=sampling_rate,
+                                                                                       min_amplitude=0.1, size=0.9)
 
     # get time vectors
     length = len(signal)
@@ -88,7 +95,10 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
     ts = np.linspace(0, t, length, endpoint=True)
 
     # get EDR and EDL
-    edl_signal, edr_signal = biosppy_decomposition(signal=filtered, sampling_rate=sampling_rate, method="onsets", onsets=onsets)
+    edl_signal, edr_signal = biosppy_decomposition(signal=filtered,
+                                                   sampling_rate=sampling_rate,
+                                                   method="onsets",
+                                                   onsets=onsets)
 
     # plot
     if show:
@@ -106,8 +116,10 @@ def eda(signal=None, sampling_rate=1000., path=None, show=True):
         )
 
     # output
-    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec)
-    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
+    args = (ts, filtered, edr_signal, edl_signal, onsets, peaks, amplitudes,
+            phasic_rate, rise_times, half_rec, six_rec)
+    names = ("ts", "filtered", "edr", "edl", "onsets", "peaks", "amplitudes",
+             "phasic_rate", "rise_times", "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
@@ -154,10 +166,14 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
 
     # compute onsets, peaks and amplitudes
     if method == "emotiphai":
-        onsets, peaks, amps = emotiphai_eda(signal=signal, sampling_rate=sampling_rate, **kwargs)
+        onsets, peaks, amps = emotiphai_eda(signal=signal,
+                                            sampling_rate=sampling_rate,
+                                            **kwargs)
 
     elif method == "kbk":
-        onsets, peaks, amps = kbk_scr(signal=signal, sampling_rate=sampling_rate, **kwargs)
+        onsets, peaks, amps = kbk_scr(signal=signal,
+                                      sampling_rate=sampling_rate,
+                                      **kwargs)
 
     elif method == "basic":
         onsets, peaks, amps = basic_scr(signal=signal)
@@ -176,16 +192,23 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
     rise_times = (peaks - onsets) / sampling_rate  # to seconds
 
     # compute half and 63% recovery times
-    half_rec, six_rec = rec_times(signal=signal, sampling_rate=sampling_rate, onsets=onsets, peaks=peaks)
+    half_rec, six_rec = rec_times(signal=signal,
+                                  sampling_rate=sampling_rate,
+                                  onsets=onsets,
+                                  peaks=peaks)
 
-    args = (onsets, peaks, amps, phasic_rate, rise_times, half_rec, six_rec)
-    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times", "half_rec", "six_rec")
+    args = (onsets, peaks, amps, phasic_rate, rise_times,
+            half_rec, six_rec)
+    names = ("onsets", "peaks", "amplitudes", "phasic_rate", "rise_times",
+             "half_rec", "six_rec")
 
     return utils.ReturnTuple(args, names)
 
 
-def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", onsets=None, **kwargs):
-    """Extracts EDL and EDR signals.
+def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother",
+                          onsets=None, **kwargs):
+    """Extracts EDL and EDR signals using either a smoothing filter or onsets'
+    interpolation.
 
     Parameters
     ----------
@@ -194,8 +217,8 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
     method: str, optional
-        Method to compute the edl signal: "smoother" to compute a smoothing filter; "onsets" to obtain edl by onsets'
-        interpolation.
+        Method to compute the edl signal: "smoother" to compute a smoothing
+        filter; "onsets" to obtain edl by onsets' interpolation.
     onsets : array, optional
         List of onsets for the interpolation method.
     kwargs : dict, optional
@@ -210,9 +233,9 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
 
     References
     ----------
-    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition
-       system using short-term monitoring of physiological signals",
-       Med. Biol. Eng. Comput., vol. 42, pp. 419-427, 2004
+    .. [KiBK04] K.H. Kim, S.W. Bang, and S.R. Kim, "Emotion recognition system
+    using short-term monitoring of physiological signals", Med. Biol. Eng.
+    Comput., vol. 42, pp. 419-427, 2004
 
     """
 
@@ -221,13 +244,17 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
         raise TypeError("Please specify an input signal.")
 
     if method == "onsets" and onsets is None:
-        raise TypeError("Please specify 'onsets' to use the onset interpolation method.")
+        raise TypeError("Please specify 'onsets' to use the onset "
+                        "interpolation method.")
 
     # smooth method
     if method == "smoother":
         window_size = kwargs['window_size'] if 'window_size' in kwargs else 10.0
         size = int(window_size * sampling_rate)
-        edl_signal, _ = st.smoother(signal=signal, kernel="bartlett", size=size, mirror=True)
+        edl_signal, _ = st.smoother(signal=signal,
+                                    kernel="bartlett",
+                                    size=size,
+                                    mirror=True)
 
     # interpolation method
     elif method == "onsets":
@@ -250,7 +277,10 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
 
     # smooth
     size = int(1.0 * sampling_rate)
-    edr_signal, _ = st.smoother(signal=df, kernel="bartlett", size=size, mirror=True)
+    edr_signal, _ = st.smoother(signal=df,
+                                kernel="bartlett",
+                                size=size,
+                                mirror=True)
 
     # output
     args = (edl_signal, edr_signal)
@@ -259,19 +289,28 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother", 
     return utils.ReturnTuple(args, names)
 
 
-def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., alpha=8e-4, gamma=1e-2,
-           solver=None, options={'reltol':1e-9}):
-    """CVXEDA Convex optimization approach to electrodermal activity processing
-    This function  implements the cvxEDA algorithm described in "cvxEDA: a
-    Convex Optimization Approach to Electrodermal Activity Processing"
-    (http://dx.doi.org/10.1109/TBME.2015.2474131, also available from the
-    authors' homepages).
+def cvx_decomposition(signal=None, sampling_rate=1000.0, tau0=2., tau1=0.7,
+                      delta_knot=10., alpha=8e-4, gamma=1e-2, solver=None,
+                      options={'reltol': 1e-9}):
+    """Performs EDA decomposition using the cvxEDA algorithm.
+
+    This function was originally developed by Luca Citi and Alberto Greco. You
+    can find the original code and repository at:
+    https://github.com/lciti/cvxEDA
+
+    If you use this function in your work, please cite the original authors
+    as follows: A Greco, G Valenza, A Lanata, EP Scilingo, and L Citi
+    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity
+    Processing" IEEE Transactions on Biomedical Engineering, 2015.
+
+    This function is used under the terms of the GNU General Public License
+    v3.0 (GPLv3). You should comply with the GPLv3 if you use this code (see
+    'License' section below).
 
     Copyright (C) 2014-2015 Luca Citi, Alberto Greco
 
     Parameters
     ----------
-
     signal : array
         Observed EDA signal (we recommend normalizing it: y = zscore(y))
     sampling_rate : int, float
@@ -293,7 +332,6 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
     
     Returns
     -------
-        
     edr : array
         Phasic component
     smna : array
@@ -310,45 +348,74 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
         Value of objective function being minimized (eq 15 of paper)
     
     References
-    -------
+    ----------
     .. [cvxEDA] A Greco, G Valenza, A Lanata, EP Scilingo, and L Citi
-    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity Processing"
-    IEEE Transactions on Biomedical Engineering, 2015
-    DOI: 10.1109/TBME.2015.2474131
+    "cvxEDA: a Convex Optimization Approach to Electrodermal Activity
+    Processing" IEEE Transactions on Biomedical Engineering, 2015. DOI:
+    10.1109/TBME.2015.2474131
     
-    .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin conductance in judgment and decision making research. A Handbook of Process Tracing Methods for Decision Research. 
+    .. [Figner2011] Figner, Bernd & Murphy, Ryan. (2011). Using skin
+    conductance in judgment and decision making research. A Handbook of
+    Process Tracing Methods for Decision Research.
+
+    License
+    -------
+    The cvxEDA function is distributed under the GNU General Public License
+    v3.0 (GPLv3). For details, please see the full license text at:
+    https://www.gnu.org/licenses/gpl-3.0.en.html
+
+    This code is provided as-is, without any warranty or support from the
+    original authors.
+
+    Notes
+    -----
+    Changes from original code:
+    - 'y' -> 'signal'
+    - 'delta' -> 1. / 'sampling_rate'
     """
+    # try to import cvxopt
+    try:
+        import cvxopt as cv
+    except ImportError:
+        raise ImportError("The 'cvxopt' module is required for this function "
+                          "to run. Please install it first (`pip install "
+                          "cvxopt`).")
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify an input signal.")
 
     n = len(signal)
-    y = cv.matrix(y)
+    y = cv.matrix(signal)
+    delta = 1. / sampling_rate  # sampling interval in seconds
 
     # bateman ARMA model
-    a1 = 1./min(tau1, tau0) # a1 > a0
-    a0 = 1./max(tau1, tau0)
-    ar = np.array([(a1*delta + 2.) * (a0*delta + 2.), 2.*a1*a0*delta**2 - 8.,
-        (a1*delta - 2.) * (a0*delta - 2.)]) / ((a1 - a0) * delta**2)
+    a1 = 1. / min(tau1, tau0)  # a1 > a0
+    a0 = 1. / max(tau1, tau0)
+    ar = np.array([(a1 * delta + 2.) * (a0 * delta + 2.), 2. * a1 * a0 * delta ** 2 - 8.,
+                   (a1 * delta - 2.) * (a0 * delta - 2.)]) / ((a1 - a0) * delta ** 2)
     ma = np.array([1., 2., 1.])
 
     # matrices for ARMA model
     i = np.arange(2, n)
-    A = cv.spmatrix(np.tile(ar, (n-2,1)), np.c_[i,i,i], np.c_[i,i-1,i-2], (n,n))
-    M = cv.spmatrix(np.tile(ma, (n-2,1)), np.c_[i,i,i], np.c_[i,i-1,i-2], (n,n))
+    A = cv.spmatrix(np.tile(ar, (n - 2, 1)), np.c_[i, i, i], np.c_[i, i - 1, i - 2], (n, n))
+    M = cv.spmatrix(np.tile(ma, (n - 2, 1)), np.c_[i, i, i], np.c_[i, i - 1, i - 2], (n, n))
 
     # spline
     delta_knot_s = int(round(delta_knot / delta))
-    spl = np.r_[np.arange(1.,delta_knot_s), np.arange(delta_knot_s, 0., -1.)] # order 1
+    spl = np.r_[np.arange(1., delta_knot_s), np.arange(delta_knot_s, 0., -1.)]  # order 1
     spl = np.convolve(spl, spl, 'full')
     spl /= max(spl)
     # matrix of spline regressors
-    i = np.c_[np.arange(-(len(spl)//2), (len(spl)+1)//2)] + np.r_[np.arange(0, n, delta_knot_s)]
+    i = np.c_[np.arange(-(len(spl) // 2), (len(spl) + 1) // 2)] + np.r_[np.arange(0, n, delta_knot_s)]
     nB = i.shape[1]
-    j = np.tile(np.arange(nB), (len(spl),1))
-    p = np.tile(spl, (nB,1)).T
+    j = np.tile(np.arange(nB), (len(spl), 1))
+    p = np.tile(spl, (nB, 1)).T
     valid = (i >= 0) & (i < n)
     B = cv.spmatrix(p[valid], i[valid], j[valid])
 
     # trend
-    C = cv.matrix(np.c_[np.ones(n), np.arange(1., n+1.)/n])
+    C = cv.matrix(np.c_[np.ones(n), np.arange(1., n + 1.) / n])
     nC = C.size[1]
 
     # Solve the problem:
@@ -360,36 +427,36 @@ def cvx_decomposition(signal, delta=1000.0, tau0=2., tau1=0.7, delta_knot=10., a
     cv.solvers.options.update(options)
     if solver == 'conelp':
         # Use conelp
-        z = lambda m,n: cv.spmatrix([],[],[],(m,n))
-        G = cv.sparse([[-A,z(2,n),M,z(nB+2,n)],[z(n+2,nC),C,z(nB+2,nC)],
-                    [z(n,1),-1,1,z(n+nB+2,1)],[z(2*n+2,1),-1,1,z(nB,1)],
-                    [z(n+2,nB),B,z(2,nB),cv.spmatrix(1.0, range(nB), range(nB))]])
-        h = cv.matrix([z(n,1),.5,.5,y,.5,.5,z(nB,1)])
-        c = cv.matrix([(cv.matrix(alpha, (1,n)) * A).T,z(nC,1),1,gamma,z(nB,1)])
-        res = cv.solvers.conelp(c, G, h, dims={'l':n,'q':[n+2,nB+2],'s':[]})
+        z = lambda m, n: cv.spmatrix([], [], [], (m, n))
+        G = cv.sparse([[-A, z(2, n), M, z(nB + 2, n)], [z(n + 2, nC), C, z(nB + 2, nC)],
+                       [z(n, 1), -1, 1, z(n + nB + 2, 1)], [z(2 * n + 2, 1), -1, 1, z(nB, 1)],
+                       [z(n + 2, nB), B, z(2, nB), cv.spmatrix(1.0, range(nB), range(nB))]])
+        h = cv.matrix([z(n, 1), .5, .5, y, .5, .5, z(nB, 1)])
+        c = cv.matrix([(cv.matrix(alpha, (1, n)) * A).T, z(nC, 1), 1, gamma, z(nB, 1)])
+        res = cv.solvers.conelp(c, G, h, dims={'l': n, 'q': [n + 2, nB + 2], 's': []})
         obj = res['primal objective']
     else:
         # Use qp
         Mt, Ct, Bt = M.T, C.T, B.T
-        H = cv.sparse([[Mt*M, Ct*M, Bt*M], [Mt*C, Ct*C, Bt*C],
-                    [Mt*B, Ct*B, Bt*B+gamma*cv.spmatrix(1.0, range(nB), range(nB))]])
-        f = cv.matrix([(cv.matrix(alpha, (1,n)) * A).T - Mt*y,  -(Ct*y), -(Bt*y)])
-        res = cv.solvers.qp(H, f, cv.spmatrix(-A.V, A.I, A.J, (n,len(f))),
-                            cv.matrix(0., (n,1)), solver=solver)
+        H = cv.sparse([[Mt * M, Ct * M, Bt * M], [Mt * C, Ct * C, Bt * C],
+                       [Mt * B, Ct * B, Bt * B + gamma * cv.spmatrix(1.0, range(nB), range(nB))]])
+        f = cv.matrix([(cv.matrix(alpha, (1, n)) * A).T - Mt * y, -(Ct * y), -(Bt * y)])
+        res = cv.solvers.qp(H, f, cv.spmatrix(-A.V, A.I, A.J, (n, len(f))),
+                            cv.matrix(0., (n, 1)), solver=solver)
         obj = res['primal objective'] + .5 * (y.T * y)
     cv.solvers.options.clear()
     cv.solvers.options.update(old_options)
 
     l = res['x'][-nB:]
-    d = res['x'][n:n+nC]
-    t = B*l + C*d
+    d = res['x'][n:n + nC]
+    t = B * l + C * d
     q = res['x'][:n]
     p = A * q
     r = M * q
     e = y - r - t
 
     # output
-    args = (np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
+    args = list(np.array(a).ravel() for a in (r, p, t, l, d, e, obj))
     names = ("edr", "smna", "edl", "tonic_coeff", "linear_drift", "res", "obj")
     
     return utils.ReturnTuple(args, names)
@@ -405,8 +472,6 @@ def basic_scr(signal=None):
     ----------
     signal : array
         Input filtered EDA signal.
-    sampling_rate : int, float, optional
-        Sampling frequency (Hz).
 
     Returns
     -------
@@ -506,15 +571,15 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     (zeros,) = st.zero_cross(signal=df, detrend=False)
     if np.all(df[: zeros[0]] > 0):
         zeros = zeros[1:]
-    if np.all(df[zeros[-1] :] > 0):
+    if np.all(df[zeros[-1]:] > 0):
         zeros = zeros[:-1]
 
     scrs, amps, ZC, peaks = [], [], [], []
     for i in range(0, len(zeros) - 1, 2):
-        scrs += [df[zeros[i] : zeros[i + 1]]]
+        scrs += [df[zeros[i]: zeros[i + 1]]]
         ZC += [zeros[i]]
         ZC += [zeros[i + 1]]
-        peaks += [zeros[i] + np.argmax(df[zeros[i] : zeros[i + 1]])]
+        peaks += [zeros[i] + np.argmax(df[zeros[i]: zeros[i + 1]])]
         amps += [signal[peaks[-1]] - signal[ZC[-2]]]
 
     # exclude SCRs with small amplitude
@@ -535,7 +600,8 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
-def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True, size=1.):
+def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1,
+                  filt=True, size=1.):
     """Returns characteristic EDA events.
 
     Parameters
@@ -571,11 +637,11 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
         try:
             if sampling_rate > 1:
                 signal, _, _ = st.filter_signal(signal=signal,
-                                         ftype='butter',
-                                         band='lowpass',
-                                         order=4,
-                                         frequency=2,
-                                         sampling_rate=sampling_rate)
+                                                ftype='butter',
+                                                band='lowpass',
+                                                order=4,
+                                                frequency=2,
+                                                sampling_rate=sampling_rate)
         except Exception as e:
             print(e, "Error filtering EDA")
 
@@ -583,9 +649,9 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1, filt=True
         try:
             sm_size = int(size * sampling_rate)
             signal, _ = st.smoother(signal=signal,
-                                      kernel='boxzen',
-                                      size=sm_size,
-                                      mirror=True)
+                                    kernel='boxzen',
+                                    size=sm_size,
+                                    mirror=True)
         except Exception as e:
             print(e)
 
@@ -651,19 +717,18 @@ def rec_times(signal=None, sampling_rate=1000., onsets=None, peaks=None):
         six_rec_amp = 0.37 * amps[i] + signal[onsets][i]
         try:
             wind = np.array(signal[peaks[i]:onsets[i + 1]])
-        except Exception as e:
-            print(e)
-            wind = np.array(signal[peaks[i]:])
+        except:
+            wind = np.array(signal[peaks[i]:])  # last peak to end of signal
         half_rec_idx = np.argwhere(wind <= half_rec_amp)
         six_rec_idx = np.argwhere(wind <= six_rec_amp)
         
         if len(half_rec_idx) > 0:
-            half_rec += [(half_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
+            half_rec += [half_rec_idx[0][0] / sampling_rate]
         else:
             half_rec += [None]
 
         if len(six_rec_idx) > 0:
-            six_rec += [(six_rec_idx[0][0] + peaks[i] - onsets[i]) / sampling_rate]
+            six_rec += [six_rec_idx[0][0] / sampling_rate]
         else:
             six_rec += [None]
 

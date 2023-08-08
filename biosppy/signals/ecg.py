@@ -76,15 +76,17 @@ def ecg(signal=None, sampling_rate=1000.0, path=None, show=True, interactive=Tru
     sampling_rate = float(sampling_rate)
 
     # filter signal
-    order = int(0.3 * sampling_rate)
+    order = int(1.5 * sampling_rate)
     filtered, _, _ = st.filter_signal(
         signal=signal,
         ftype="FIR",
         band="bandpass",
         order=order,
-        frequency=[3, 45],
+        frequency=[0.67, 45],
         sampling_rate=sampling_rate,
     )
+
+    filtered = filtered - np.mean(filtered)  # remove DC offset
 
     # segment
     (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=sampling_rate)
