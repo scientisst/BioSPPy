@@ -112,6 +112,21 @@ def color_palette(idx):
     return color_id
 
 
+def add_logo(fig):
+    try:
+        # add biosppy logo
+        logo = fig.add_axes([0.80, 0.02, 0.08, 0.08], anchor='SE')
+        logo.imshow(plt.imread(BIOSPPY_LOGO), alpha=0.5)
+        logo.axis('off')
+
+        # add scientisst logo
+        logo = fig.add_axes([0.90, 0.02, 0.08, 0.08], anchor='SE')
+        logo.imshow(plt.imread(SCIENTISST_LOGO), alpha=0.5)
+        logo.axis('off')
+    except:
+        pass
+
+
 def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
     """Compute and plot the frequency response of a digital filter.
 
