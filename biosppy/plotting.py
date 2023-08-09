@@ -1011,7 +1011,7 @@ def plot_resp(ts=None,
     """
 
     fig = plt.figure(figsize=(10, 5))
-    fig.suptitle('Respiration Summary', fontsize=12, fontweight='bold')
+    fig.suptitle('RESP Summary', fontsize=12, fontweight='bold')
     fig.subplots_adjust(top=0.85, hspace=0.35, wspace=0.34, left=0.13,
                         right=0.96, bottom=0.18)
 
