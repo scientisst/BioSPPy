@@ -38,8 +38,10 @@ SCIENTISST_LOGO = '../docs/logo/ScientISST-Hor-Break-Dark.png'
 # matplotlib settings
 plt.rcParams['text.color'] = '#495057'
 plt.rcParams['axes.labelcolor'] = '#495057'
+plt.rcParams['axes.labelsize'] = 10
 plt.rcParams['axes.edgecolor'] = '#495057'
 plt.rcParams['axes.facecolor'] = '#f8f9fa'
+plt.rcParams['axes.titlesize'] = 11
 plt.rcParams['xtick.color'] = '#495057'
 plt.rcParams['ytick.color'] = '#495057'
 plt.rcParams['grid.color'] = '#ebeef0'
@@ -51,9 +53,7 @@ plt.rcParams['grid.color'] = '#ebeef0'
 plt.rcParams['legend.facecolor'] = 'white'
 plt.rcParams['legend.framealpha'] = 0.75
 plt.rcParams['legend.loc'] = 'upper right'
-plt.rcParams['axes.titlesize'] = 10
-
-
+plt.rcParams['legend.fontsize'] = 18
 
 
 def color_palette(idx):
