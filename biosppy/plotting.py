@@ -53,7 +53,7 @@ plt.rcParams['grid.color'] = '#ebeef0'
 plt.rcParams['legend.facecolor'] = 'white'
 plt.rcParams['legend.framealpha'] = 0.75
 plt.rcParams['legend.loc'] = 'upper right'
-plt.rcParams['legend.fontsize'] = 18
+plt.rcParams['legend.fontsize'] = 8
 
 
 def color_palette(idx):
