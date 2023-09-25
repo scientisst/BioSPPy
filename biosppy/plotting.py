@@ -307,6 +307,7 @@ def plot_acc(ts=None,
              raw=None,
              vm=None,
              sm=None,
+             units=None,
              path=None,
              show=False):
     """Create a summary plot from the output of signals.acc.acc.
@@ -321,6 +322,9 @@ def plot_acc(ts=None,
         Vector Magnitude feature of the signal.
     sm : array
         Signal Magnitude feature of the signal
+    units : str, optional
+        Units of the vertical axis. If provided, the plot title will include
+        the units information. Default is None.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -344,7 +348,6 @@ def plot_acc(ts=None,
     ax1.plot(ts, acc_x, linewidth=MINOR_LW, label='X',
              color=color_palette('dark-blue'))
 
-    ax1.set_ylabel('Amplitude \n ($m/s^2$)')
     ax1.legend(loc='upper right')
     ax1.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -356,7 +359,7 @@ def plot_acc(ts=None,
     ax2.plot(ts, acc_y, linewidth=MINOR_LW, label='Y',
              color=color_palette('blue'))
 
-    ax2.set_ylabel('Amplitude \n ($m/s^2$)')
+    ax2.set_ylabel('Amplitude' if units is None else 'Amplitude ($%s$)' % units)
     ax2.legend(loc='upper right')
     ax2.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -368,7 +371,6 @@ def plot_acc(ts=None,
     ax3.plot(ts, acc_z, linewidth=MINOR_LW, label='Z',
              color=color_palette('light-blue'))
 
-    ax3.set_ylabel('Amplitude \n ($m/s^2$)')
     ax3.set_xlabel('Time (s)')
     ax3.legend(loc='upper right')
 
@@ -379,7 +381,7 @@ def plot_acc(ts=None,
     ax4.plot(ts, vm, linewidth=MINOR_LW, label='Vector Magnitude',
              color=color_palette('orange'))
 
-    ax4.set_ylabel('Amplitude ($m/s^2$)')
+    ax4.set_ylabel('Amplitude' if units is None else 'Amplitude ($%s$)' % units)
     ax4.legend(loc='upper right')
     ax4.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -391,7 +393,7 @@ def plot_acc(ts=None,
     ax5.plot(ts, sm, linewidth=MINOR_LW, label='Signal Magnitude',
              color=color_palette('light-orange'))
 
-    ax5.set_ylabel('Amplitude ($m/s^2$)')
+    ax5.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax5.set_xlabel('Time (s)')
     ax5.legend(loc='upper right')
 

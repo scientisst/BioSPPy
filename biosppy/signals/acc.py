@@ -28,7 +28,7 @@ from .. import plotting, utils
 from biosppy.inter_plotting import acc as inter_plotting
 
 
-def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=False):
+def acc(signal=None, sampling_rate=100.0, units=None, path=None, show=True, interactive=False):
     """Process a raw ACC signal and extract relevant signal features using
     default parameters.
 
@@ -38,6 +38,9 @@ def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=Fals
         Raw ACC signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    units : str, optional
+        The units of the input signal. If specified, the plot will have the
+        y-axis labeled with the corresponding units.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -99,6 +102,7 @@ def acc(signal=None, sampling_rate=100.0, path=None, show=True, interactive=Fals
                 raw=signal,
                 vm=vm_features,
                 sm=sm_features,
+                units=units,
                 path=path,
                 show=True,
             )
