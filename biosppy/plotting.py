@@ -1624,6 +1624,7 @@ def plot_pcg(ts=None,
              heart_sounds=None,
              heart_rate_ts=None,
              inst_heart_rate=None,
+             units=None,
              path=None,
              show=False):
     """Create a summary plot from the output of signals.pcg.pcg.
@@ -1643,6 +1644,9 @@ def plot_pcg(ts=None,
         Heart rate time axis reference (seconds).
     inst_heart_rate : array
         Instantaneous heart rate (bpm).
+    units : str, optional
+        Units of the vertical axis. If provided, the plot title will include
+        the units information. Default is None.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -1665,7 +1669,7 @@ def plot_pcg(ts=None,
     ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
                 color=color_palette('blue'))
 
-    ax1.set_ylabel('Amplitude')
+    ax1.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax1.legend(loc='upper right')
     ax1.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -1687,7 +1691,7 @@ def plot_pcg(ts=None,
                linewidth=MED_LW,
                label='S1 Sounds')
 
-    ax2.set_ylabel('Amplitude')
+    ax2.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax2.legend(loc='upper right')
     ax2.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -1716,7 +1720,7 @@ def plot_pcg(ts=None,
                      color=color_palette('dark-grey'))
 
     ax4.set_xlabel('Time (s)')
-    ax4.set_ylabel('Amplitude')
+    ax4.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax4.set_title('Heart Sounds Classification')
 
     # add logo

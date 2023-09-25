@@ -25,7 +25,7 @@ from . import ecg
 from .. import plotting, utils
 
 
-def pcg(signal=None, sampling_rate=1000., path=None, show=True):
+def pcg(signal=None, sampling_rate=1000., units=None, path=None, show=True):
     """
 
     Parameters
@@ -34,6 +34,9 @@ def pcg(signal=None, sampling_rate=1000., path=None, show=True):
         Raw PCG signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    units : str, optional
+        The units of the input signal. If specified, the plot will have the
+        y-axis labeled with the corresponding units.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -104,6 +107,7 @@ def pcg(signal=None, sampling_rate=1000., path=None, show=True):
                 heart_sounds=hs,
                 heart_rate_ts=ts_hr,
                 inst_heart_rate=hr,
+                units=units,
                 path=path,
                 show=True)
         
