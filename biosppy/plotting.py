@@ -884,6 +884,7 @@ def plot_emg(ts=None,
              filtered=None,
              onsets=None,
              processed=None,
+             units=None,
              path=None,
              show=False):
     """Create a summary plot from the output of signals.emg.emg.
@@ -902,6 +903,9 @@ def plot_emg(ts=None,
         Indices of EMG pulse onsets.
     processed : array, optional
         Processed EMG signal according to the chosen onset detector.
+    units : str, optional
+        Units of the vertical axis. If provided, the plot title will include
+        the units information. Default is None.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -941,7 +945,7 @@ def plot_emg(ts=None,
     ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
              color=color_palette('blue'))
 
-    ax1.set_ylabel('Amplitude')
+    ax1.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax1.legend(loc='upper right')
     ax1.tick_params(axis='x', which='both', bottom=False, top=False,
                     labelbottom=False)
@@ -962,7 +966,7 @@ def plot_emg(ts=None,
                label='Onsets')
 
     ax2.set_xlabel('Time (s)')
-    ax2.set_ylabel('Amplitude')
+    ax2.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax2.legend(loc='upper right')
 
     # align y axis labels
