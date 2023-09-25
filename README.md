@@ -58,7 +58,7 @@ out = ecg.ecg(signal=signal, sampling_rate=1000., show=True)
 
 This should produce a plot similar to the one below.
 
-[![Image](https://github.com/PIA-Group/BioSPPy/raw/master/docs/images/ECG_summary.png "ECG Summary Plot")]()
+![ECG summary example](docs/images/ECG_summary.png)
 
 ## Dependencies
 
