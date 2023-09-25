@@ -25,7 +25,7 @@ from . import tools as st
 from .. import plotting, utils
 
 
-def ppg(signal=None, sampling_rate=1000., show=True):
+def ppg(signal=None, sampling_rate=1000., units=None, show=True):
     """Process a raw PPG signal and extract relevant signal features using
     default parameters.
 
@@ -35,6 +35,9 @@ def ppg(signal=None, sampling_rate=1000., show=True):
         Raw PPG signal.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    units : str, optional
+        The units of the input signal. If specified, the plot will have the
+        y-axis labeled with the corresponding units.
     show : bool, optional
         If True, show a summary plot.
 
@@ -103,6 +106,7 @@ def ppg(signal=None, sampling_rate=1000., show=True):
                           templates=templates,
                           heart_rate_ts=ts_hr,
                           heart_rate=hr,
+                          units=units,
                           path=None,
                           show=True)
 
