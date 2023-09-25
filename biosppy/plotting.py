@@ -742,6 +742,7 @@ def plot_eda(ts=None,
              onsets=None,
              peaks=None,
              amplitudes=None,
+             units=None,
              path=None,
              show=False):
     """Create a summary plot from the output of signals.eda.eda.
@@ -764,6 +765,9 @@ def plot_eda(ts=None,
         Events peaks indices.
     amplitudes : array
         Amplitudes location indices.
+    units : str, optional
+        Units of the vertical axis. If provided, the plot title will include
+        the units information. Default is None.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -785,7 +789,7 @@ def plot_eda(ts=None,
     ax1.plot(ts, filtered, linewidth=MINOR_LW, label='Filtered',
              color=color_palette('blue'))
 
-    ax1.set_ylabel('Amplitude')
+    ax1.set_ylabel('Amplitude' if units is None else 'Amplitude \n (%s)' % units)
     ax1.set_title('Signal')
     ax1.legend()
 
@@ -808,7 +812,7 @@ def plot_eda(ts=None,
     ax2.scatter(ts[peaks], filtered[peaks], marker='x',
                 color=color_palette('dark-red'), label='Peaks', zorder=3)
 
-    ax2.set_ylabel('Amplitude')
+    ax2.set_ylabel('Amplitude' if units is None else 'Amplitude \n (%s)' % units)
     ax2.set_title('Event Detection')
     ax2.legend()
 
@@ -822,7 +826,7 @@ def plot_eda(ts=None,
     ax3.plot(ts[peaks], amplitudes, linewidth=MAJOR_LW, color=color_palette('blue'), label='Amplitude')
 
     ax3.set_xlabel('Time (s)')
-    ax3.set_ylabel('Amplitude')
+    ax3.set_ylabel('Amplitude' if units is None else 'Amplitude \n (%s)' % units)
     ax3.set_title('Event Amplitudes')
 
     # align y axis labels
@@ -835,7 +839,7 @@ def plot_eda(ts=None,
     ax4.plot(ts, edl, linewidth=MINOR_LW, color=color_palette('dark-orange'),
              label="EDL")
 
-    ax4.set_ylabel('Amplitude')
+    ax4.set_ylabel('Amplitude' if units is None else 'Amplitude \n (%s)' % units)
     ax4.set_title('EDA Decomposition')
     ax4.legend()
 
@@ -849,7 +853,7 @@ def plot_eda(ts=None,
     ax5.plot(ts[1:], edr, linewidth=MINOR_LW,
              color=color_palette('dark-orange'), label="EDR")
 
-    ax5.set_ylabel('Amplitude')
+    ax5.set_ylabel('Amplitude' if units is None else 'Amplitude \n (%s)' % units)
     ax5.set_xlabel('Time (s)')
     ax5.legend()
 
