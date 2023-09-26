@@ -187,7 +187,7 @@ def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, log_xscale=True,
     ax.spines['bottom'].set_visible(False)
 
     # phase
-    angles = np.unwrap(np.angle(resp))
+    angles = np.unwrap(np.angle(resp)) * 180. / np.pi  # radians to degrees
     if log_xscale:
         ax2.semilogx(freqs, angles, color=color_palette('dark-blue'),
                      linewidth=MAJOR_LW)
