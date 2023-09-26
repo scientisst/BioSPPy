@@ -127,7 +127,8 @@ def add_logo(fig):
         pass
 
 
-def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
+def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, log_xscale=True,
+                 ax=None):
     """Compute and plot the frequency response of a digital filter.
 
     Parameters
@@ -140,6 +141,8 @@ def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
         Sampling frequency (Hz).
     nfreqs : int, optional
         Number of frequency points to compute.
+    log_xscale : bool, optional
+        Whether to use log scale for x-axis.
     ax : axis, optional
         Plot Axis to use.
 
@@ -157,24 +160,49 @@ def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, ax=None):
 
     # plot
     if ax is None:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig = plt.figure(figsize=(8, 4))
+        ax = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
     else:
-        fig = ax.figure
+        ax2 = ax.twinx()
+
+    # set layout
+    fig.subplots_adjust(top=0.88, bottom=0.17, hspace=0.2, left=0.16,
+                        right=0.94)
+
+    # title
+    fig.suptitle('Filter Frequency Response', fontsize=12, fontweight='bold')
 
     # amplitude
     pwr = 20. * np.log10(np.abs(resp))
-    ax.semilogx(freqs, pwr, 'b', linewidth=MAJOR_LW)
-    ax.set_ylabel('Amplitude (dB)', color='b')
-    ax.set_xlabel('Frequency (Hz)')
+    if log_xscale:
+        ax.semilogx(freqs, pwr, color=color_palette('blue'),
+                    linewidth=MAJOR_LW)
+    else:
+        ax.plot(freqs, pwr, color=color_palette('blue'), linewidth=MAJOR_LW)
+    ax.set_ylabel('Amplitude (dB)')
+    ax.grid(True)
+    ax.tick_params(axis='x', which='both', bottom=False, top=False,
+                   labelbottom=False)
+    ax.spines['bottom'].set_visible(False)
 
     # phase
     angles = np.unwrap(np.angle(resp))
-    ax2 = ax.twinx()
-    ax2.semilogx(freqs, angles, 'g', linewidth=MAJOR_LW)
-    ax2.set_ylabel('Angle (radians)', color='g')
+    if log_xscale:
+        ax2.semilogx(freqs, angles, color=color_palette('dark-blue'),
+                     linewidth=MAJOR_LW)
+    else:
+        ax2.plot(freqs, angles, color=color_palette('dark-blue'),
+                 linewidth=MAJOR_LW)
+    ax2.set_ylabel('Angle (degrees)')
+    ax2.set_xlabel('Frequency (Hz)')
+    ax2.grid(True)
 
-    ax.grid()
+    # align y-axis labels
+    fig.align_ylabels()
+
+    # add logo
+    add_logo(fig)
 
     return fig
 
@@ -184,6 +212,7 @@ def plot_filter(ftype='FIR',
                 order=None,
                 frequency=None,
                 sampling_rate=1000.,
+                log_xscale=True,
                 path=None,
                 show=True, **kwargs):
     """Plot the frequency response of the filter specified with the given
@@ -212,6 +241,8 @@ def plot_filter(ftype='FIR',
             * 'bandpass' or 'bandstop': pair of frequencies.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    log_xscale : bool, optional
+        Whether to use log scale for x-axis.
     path : str, optional
         If provided, the plot will be saved to the specified file.
     show : bool, optional
@@ -230,10 +261,7 @@ def plot_filter(ftype='FIR',
                          sampling_rate=sampling_rate, **kwargs)
 
     # plot
-    fig = _plot_filter(b, a, sampling_rate)
-
-    # make layout tight
-    fig.tight_layout()
+    fig = _plot_filter(b, a, sampling_rate, log_xscale=log_xscale)
 
     # save to file
     if path is not None:
