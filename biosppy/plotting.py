@@ -32,8 +32,9 @@ MAJOR_LW = 1.5
 MED_LW = 1.25
 MINOR_LW = 1.0
 MAX_ROWS = 10
-BIOSPPY_LOGO = '../docs/logo/logo_400.png'
-SCIENTISST_LOGO = '../docs/logo/ScientISST-Hor-Break-Dark.png'
+LOGOS_FOLDER = '.logos'
+BIOSPPY_LOGO = 'biosppy.png'
+SCIENTISST_LOGO = 'scientisst.png'
 
 # matplotlib settings
 plt.rcParams['text.color'] = '#495057'
@@ -113,15 +114,18 @@ def color_palette(idx):
 
 
 def add_logo(fig):
+    logos_folder = os.path.join(os.path.dirname(__file__), LOGOS_FOLDER)
     try:
         # add biosppy logo
+        biosppy_logo = plt.imread(os.path.join(logos_folder, BIOSPPY_LOGO))
         logo = fig.add_axes([0.80, 0.02, 0.08, 0.08], anchor='SE')
-        logo.imshow(plt.imread(BIOSPPY_LOGO), alpha=0.5)
+        logo.imshow(biosppy_logo, alpha=0.5)
         logo.axis('off')
 
         # add scientisst logo
+        scientisst_logo = plt.imread(os.path.join(logos_folder, SCIENTISST_LOGO))
         logo = fig.add_axes([0.90, 0.02, 0.08, 0.08], anchor='SE')
-        logo.imshow(plt.imread(SCIENTISST_LOGO), alpha=0.5)
+        logo.imshow(scientisst_logo, alpha=0.5)
         logo.axis('off')
     except:
         pass
