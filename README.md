@@ -1,10 +1,11 @@
 ```
+✨ New plotting design ✨
+We improved the plotting layout of several functions with new colors, new style and new features, check it out!
+```
+
+```
 🎉 New feature: You can now compute the activity index for ACC signals!
 (Check PR #14)
-```
-```
-🎊 New feature: We just added new functions for EDA feature extraction and
-decomposition! (Check PR #15)
 ```
 
 
