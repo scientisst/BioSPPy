@@ -1,5 +1,5 @@
 ```
-🎊 New module for feature extraction 🎊
+🎊 NEW MODULE ARRIVAL: FEATURE EXTRACTION 🎊
 With the 'features' module you can easily extract features from your biosignals!
 (Check PR #4)
 ```
