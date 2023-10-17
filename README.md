@@ -1,6 +1,6 @@
 ```
 ✨ New plotting design ✨
-We improved the plotting layout of several functions with new colors, new style and new features, check it out!
+New colors, new style and new features, check it out!
 ```
 
 ```
