@@ -598,16 +598,16 @@ def plot_eda(ts=None,
              amplitudes=None,
              path=None,
              show=False):
-    """Create a summary plot from the output of signals.ecg.ecg.
+    """Create a summary plot from the output of signals.eda.eda.
 
     Parameters
     ----------
     ts : array
         Signal time axis reference (seconds).
     raw : array
-        Raw ECG signal.
+        Raw EDA signal.
     filtered : array
-        Filtered ECG signal.
+        Filtered EDA signal.
     edr : array
         Electrodermal response signal.
     edl : array
@@ -649,14 +649,10 @@ def plot_eda(ts=None,
     ymin -= alpha
 
     ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
-    ax2.plot(ts[onsets], filtered[onsets], ".",
-               color='m',
-               linewidth=MINOR_LW,
-               label='Onsets')
-    ax2.plot(ts[peaks], filtered[peaks], "x",
-               color='g',
-               linewidth=MINOR_LW,
-               label='peaks')
+    ax2.plot(ts[onsets], filtered[onsets], ".", color='m', linewidth=MINOR_LW,
+             label='Onsets')
+    ax2.plot(ts[peaks], filtered[peaks], "x", color='g', linewidth=MINOR_LW,
+             label='peaks')
 
     ax2.set_ylabel('Amplitude')
     ax2.legend()
@@ -1448,7 +1444,7 @@ def plot_pcg(ts=None,
     ax1 = fig.add_subplot(gs[:2, 0])
 
     ax1.plot(ts, raw, linewidth=MAJOR_LW,label='raw')
-    
+
     ax1.set_ylabel('Amplitude')
     ax1.legend()
     ax1.grid()
@@ -1461,7 +1457,7 @@ def plot_pcg(ts=None,
     alpha = 0.1 * (ymax - ymin)
     ymax += alpha
     ymin -= alpha
-    
+
     ax2.plot(ts, filtered, linewidth=MAJOR_LW, label='Filtered')
     ax2.vlines(ts[peaks], ymin, ymax,
                 color='m',
@@ -1476,12 +1472,12 @@ def plot_pcg(ts=None,
     ax3 = fig.add_subplot(gs[4:, 0], sharex=ax1)
 
     ax3.plot(heart_rate_ts,inst_heart_rate, linewidth=MAJOR_LW, label='Heart rate')
-    
+
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Heart Rate (bpm)')
     ax3.legend()
     ax3.grid()
-    
+
     # heart sounds
     ax4 = fig.add_subplot(gs[1:5, 1])
 
@@ -1489,8 +1485,8 @@ def plot_pcg(ts=None,
     for i in range(0, len(peaks)):
 
         text = "S" + str(int(heart_sounds[i]))
-        plt.annotate(text,(ts[peaks[i]], ymax-alpha),ha='center', va='center',size = 13) 
-            
+        plt.annotate(text,(ts[peaks[i]], ymax-alpha),ha='center', va='center',size = 13)
+
     ax4.set_xlabel('Time (s)')
     ax4.set_ylabel('Amplitude')
     ax4.set_title('Heart sounds')
