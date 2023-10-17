@@ -8,6 +8,7 @@ With the 'features' module you can easily extract features from your biosignals!
 (Check PR #14)
 ```
 
+
 # BioSPPy - Biosignal Processing in Python
 
 *A toolbox for biosignal processing written in Python.*
