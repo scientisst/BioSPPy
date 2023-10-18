@@ -975,6 +975,8 @@ def signal_stats(signal=None):
         Standard signal deviation (unbiased).
     abs_dev : float
         Mean absolute signal deviation around the median.
+    rms : float
+        Root-mean-square of the signal.
     kurtosis : float
         Signal kurtosis (unbiased).
     skew : float
