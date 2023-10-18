@@ -47,6 +47,7 @@ REQUIRED = [
 
 # What packages are optional?
 EXTRAS = {
+    'eda': ['cvxopt'],
     # 'fancy feature': ['django'],
 }
 
