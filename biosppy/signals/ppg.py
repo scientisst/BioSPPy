@@ -78,11 +78,14 @@ def ppg(signal=None, sampling_rate=1000., units=None, show=True):
                                       sampling_rate=sampling_rate)
 
     # find peaks
-    peaks, _ = find_onsets_elgendi2013(signal=filtered, sampling_rate=sampling_rate)
+    peaks, _ = find_onsets_elgendi2013(signal=filtered,
+                                       sampling_rate=sampling_rate)
 
     # extract templates
-    onsets, peaks, segments_loc = ppg_segmentation(filtered, sampling_rate, peaks)
-    templates_ts, templates = extract_templates(filtered, sampling_rate, onsets, peaks, segments_loc)
+    onsets, peaks, segments_loc = ppg_segmentation(filtered, sampling_rate,
+                                                   peaks)
+    templates_ts, templates = _extract_templates(filtered, sampling_rate,
+                                                 onsets, peaks, segments_loc)
 
     # compute heart rate
     hr_idx, hr = st.get_heart_rate(beats=onsets,
@@ -111,8 +114,10 @@ def ppg(signal=None, sampling_rate=1000., units=None, show=True):
                           show=True)
 
     # output
-    args = (ts, filtered, peaks, templates_ts, templates, ts_hr, hr)
-    names = ('ts', 'filtered', 'peaks', 'templates_ts', 'templates', 'heart_rate_ts', 'heart_rate')
+    args = (ts, filtered, peaks, templates_ts, templates,
+            ts_hr, hr)
+    names = ('ts', 'filtered', 'peaks', 'templates_ts', 'templates',
+             'heart_rate_ts', 'heart_rate')
 
     return utils.ReturnTuple(args, names)
 
@@ -413,7 +418,7 @@ def ppg_segmentation(signal=None,
                      peaks=None,
                      selection=False,
                      peak_threshold=None):
-    """Segments a signal PPG signal. Segmentation filtering is achieved by
+    """Segments a filtered PPG signal. Segmentation filtering is achieved by
     taking into account segments selected by peak height and pulse morphology.
 
     Parameters
@@ -433,7 +438,8 @@ def ppg_segmentation(signal=None,
     Returns
     -------
     onsets : array
-        Indices of PPG pulse onsets (i.e., start of beats) of the selected segments.
+        Indices of PPG pulse onsets (i.e., start of beats) of the selected
+        segments.
     peaks : array
         List of PPG systolic peaks of the selected segments.
     segments_loc : array
@@ -496,13 +502,14 @@ def ppg_segmentation(signal=None,
     return utils.ReturnTuple(args, names)
 
 
-def extract_templates(signal=None,
+def _extract_templates(signal=None,
                       sampling_rate=1000.,
                       onsets=None,
                       peaks=None,
                       segments_loc=None):
-    """Extracts the templates from the PPG signal, which are aligned with their systolic peaks. To achieve this, the
-    segments are padded with NaNs. Should be used in combination with signals.ppg.ppg_segmentation.
+    """Extracts the templates from the PPG signal, which are aligned with their
+    systolic peaks. To achieve this, the segments are padded with NaNs. Should
+    be used in combination with signals.ppg.ppg_segmentation.
 
     Parameters
     ----------
@@ -536,7 +543,8 @@ def extract_templates(signal=None,
     max_len = 0
     for i in range(len(segments_loc)):
         segment = signal[segments_loc[i, 0]: segments_loc[i, 1]]
-        segment = np.pad(segment, max_shift - shifts[i], mode='constant', constant_values=(np.nan,))
+        segment = np.pad(segment, max_shift - shifts[i], mode='constant',
+                         constant_values=(np.nan,))
         templates.append(segment)
 
         # find the largest segment
@@ -545,7 +553,8 @@ def extract_templates(signal=None,
 
     # right padding
     for index, segment in enumerate(templates):
-        templates[index] = np.pad(segment, (0, max_len - len(segment)), mode='constant', constant_values=(np.nan,))
+        templates[index] = np.pad(segment, (0, max_len - len(segment)),
+                                  mode='constant', constant_values=(np.nan,))
 
     templates = np.asarray(templates).T
 
