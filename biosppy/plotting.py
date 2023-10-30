@@ -784,9 +784,9 @@ def plot_eda(ts=None,
     ts : array
         Signal time axis reference (seconds).
     raw : array
-        Raw ECG signal.
+        Raw EDA signal.
     filtered : array
-        Filtered ECG signal.
+        Filtered EDA signal.
     edr : array
         Electrodermal response signal.
     edl : array
