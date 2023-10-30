@@ -2,10 +2,10 @@
 ✨ New plotting design ✨
 New colors, new style and new features, check it out!
 ```
-
 ```
-🎉 New feature: You can now compute the activity index for ACC signals!
-(Check PR #14)
+🎊 New module for feature extraction 🎊
+With the 'features' module you can easily extract features from your biosignals!
+(Check PR #4)
 ```
 
 
