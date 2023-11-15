@@ -144,7 +144,7 @@ def find_peaks(signal=None,sampling_rate=1000.):
     envelope, = st.normalize(envelope)
     
     # Find the prominent peaks of the envelope
-    peaksIndices, _ = ss.find_peaks(envelope, height = 0.2 * np.amax(envelope), distance = 0.10*sampling_rate, prominence = 0.25)
+    peaksIndices, _ = ss.find_peaks(envelope, distance = 0.10*sampling_rate, prominence = 0.25)
     
     peaks = np.array(peaksIndices, dtype='int')
 

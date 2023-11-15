@@ -1721,7 +1721,7 @@ def plot_pcg(ts=None,
     ax2.vlines(ts[peaks], ymin, ymax,
                color=color_palette('dark-red'),
                linewidth=MED_LW,
-               label='S1 Sounds')
+               label='Heart Sounds')
 
     ax2.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
     ax2.legend(loc='upper right')
