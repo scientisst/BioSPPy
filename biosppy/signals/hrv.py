@@ -115,19 +115,13 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         rri = rri_filter(rri)
 
     # add rri to output
-    if not features_only:
-        out = out.append(rri, 'rri')
-
-    # show rri
-    if show:
-        plotting.plot_rri(rri)
+    out = out.append([rri, str(outliers)], ['rri', 'outliers_method'])
 
     # detrend rri sequence
     if detrend_rri:
         rri_det = detrend_window(rri)
         # add detrended rri to output
-        if not features_only:
-            out = out.append(rri_det, 'rri_det')
+        out = out.append(rri_det, 'rri_det')
     else:
         rri_det = None
 
@@ -144,9 +138,6 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
                                     show=show,
                                     rri_detrended=rri_det)
             out = out.join(hrv_td)
-
-            if features_only:
-                out = out.delete('hr')
 
         except ValueError:
             print('Time-domain features not computed. Check input.')
