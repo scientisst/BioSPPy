@@ -35,6 +35,9 @@ FBANDS = {'ulf': [0, 0.003],
           'vhf': [0.4, 0.5]
           }
 
+NOT_FEATURES = ['rri', 'outliers_method', 'rri_det', 'hr', 'bins', 'q_hist',
+               'fbands', 'frequencies', 'powers', 'freq_method']
+
 
 def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         outliers='interpolate', detrend_rri=True, features_only=False,
@@ -166,6 +169,14 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         except ValueError:
             print('Non-linear features not computed. Check input.')
             pass
+
+    # clean output if features_only
+    if features_only:
+        for key in NOT_FEATURES:
+            try:
+                out = out.delete(key)
+            except ValueError:
+                pass
 
     return out
 
