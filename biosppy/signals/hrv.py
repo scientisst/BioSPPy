@@ -521,7 +521,12 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
         # plot
         if show:
             legends = {'LF/HF': lf_hf}
-            plotting.plot_hrv_fbands(frequencies, powers, fbands, freq_method, legends)
+            for key in out.keys():
+                if key.endswith('_rpwr'):
+                    legends[key] = out[key]
+
+            plotting.plot_hrv_fbands(frequencies, powers, fbands, freq_method,
+                                     legends)
 
     return out
 
