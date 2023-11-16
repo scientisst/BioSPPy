@@ -587,7 +587,8 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
     return out
 
 
-def compute_fbands(frequencies, powers, fbands=None, method_name=None, show=False, legends=None):
+def compute_fbands(frequencies, powers, fbands=None, method_name=None,
+                   show=False, legends=None):
     """ Computes frequency domain features for the specified frequency bands.
 
     Parameters
