@@ -2178,7 +2178,8 @@ def plot_hrv_hist(rri=None,
                   q_hist=None,
                   hti=None,
                   tinn=None):
-    """ Plots the RRI histogram with the corresponding geometrical HRV features.
+    """Plots the RRI histogram with the corresponding geometrical HRV features
+    from the output of signals.hrv.compute_geometrical.
 
     Parameters
     ----------
@@ -2198,13 +2199,22 @@ def plot_hrv_hist(rri=None,
 
     # plot histogram and triangle
     fig, ax = plt.subplots()
-    ax.hist(rri, bins, facecolor='#85B3D1FF', edgecolor='0.2', label='HTI: %.1f' % hti)
-    ax.plot(bins, q_hist, color='#A13941FF', linewidth=1.5, label='TINN: %.1f ms' % tinn)
-    ax.set_title('RRI Distribution')
+    fig.suptitle('HRV - RRI Distribution', fontsize=12, fontweight='bold')
+
+    ax.hist(rri, bins, facecolor=color_palette('light-blue'),
+            edgecolor=color_palette('dark-grey'), label='HTI: %.1f' % hti)
+    ax.plot(bins, q_hist, color=color_palette('dark-red'), linewidth=1.5,
+            label='TINN: %.1f ms' % tinn)
     ax.set_xlabel('RR Interval (ms)')
     ax.set_ylabel('Count')
     ax.locator_params(axis='y', integer=True)
     ax.legend(loc='upper right')
+
+    # adjust grid to be in the background
+    ax.set_axisbelow(True)
+
+    # add logo
+    add_logo(fig)
 
     # show
     plt.show()
