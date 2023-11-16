@@ -2224,7 +2224,8 @@ def plot_hrv_fbands(frequencies=None,
                     powers=None,
                     fbands=None,
                     method_name=None,
-                    legends=None):
+                    legends=None,
+                    ax=None):
     """Plots the power spectrum and highlights the defined frequency bands
     from the output of signals.hrv.compute_fbands.
 
@@ -2240,6 +2241,8 @@ def plot_hrv_fbands(frequencies=None,
         Method that was used to compute the power spectrum.
     legends : dict, optional
         Additional legend elements.
+    ax : axis, optional
+        Plot Axis to use.
     """
 
     spectrum_colors = {'ulf': '#e6eff6',
@@ -2253,8 +2256,11 @@ def plot_hrv_fbands(frequencies=None,
     powers = powers / (10 ** 6)  # to s^2/Hz
 
     # initialize plot
-    fig, ax = plt.subplots()
-    fig.suptitle('HRV - Power Spectral Density', fontsize=12, fontweight='bold')
+    if ax is None:
+        fig, ax = plt.subplots()
+        fig.suptitle('HRV - Power Spectral Density', fontsize=12, fontweight='bold')
+        # add logo
+        add_logo(fig)
 
     # figure attributes
     if method_name is not None:
@@ -2272,22 +2278,21 @@ def plot_hrv_fbands(frequencies=None,
         band = np.argwhere((frequencies >= fbands[fband][0]) & (frequencies <= fbands[fband][-1])).reshape(-1)
         color = spectrum_colors[fband]
         if len(band) > 0:
-            ax.fill_between(frequencies[band], powers[band], color=color, label=fband.upper())
+            ax.fill_between(frequencies[band], powers[band], color=color,
+                            label=f'{fband.upper()}: {legends[fband+"_rpwr"]*100:.1f}%')
 
     # update figure legend
-    handles, labels = fig.gca().get_legend_handles_labels()
+    handles, labels = ax.get_legend_handles_labels()
     if legends.__len__() != 0:
         for key, value in legends.items():
-            new_patch = patches.Patch(color='white', alpha=0)
-            handles.extend([new_patch])
-            labels.extend(['%s = %.2f' % (key, value)])
-    ax.legend(handles=handles, labels=labels, loc='upper right')
+            if not key.endswith('_rpwr'):
+                new_patch = patches.Patch(color='white', alpha=0)
+                handles.extend([new_patch])
+                labels.extend(['%s = %.2f' % (key, value)])
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
+    ax.legend(handles=handles, labels=labels, loc='upper left',
+              bbox_to_anchor=(1.01, 1.02), frameon=False)
 
     # adjust grid
     ax.set_axisbelow(True)
-
-    # add logo
-    add_logo(fig)
-
-    # show
-    plt.show()
