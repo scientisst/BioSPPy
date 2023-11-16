@@ -2315,3 +2315,85 @@ def plot_hrv_fbands(frequencies=None,
 
     # adjust grid
     ax.set_axisbelow(True)
+
+
+def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
+    """Create a summary plot of a HRV analysis.
+
+    Parameters
+    ----------
+    rri : array
+        RR-intervals (ms).
+    td_out : dict
+        Output of signals.hrv.timedomain.
+    nl_out : dict
+        Output of signals.hrv.nonlinear.
+    fd_out : dict
+        Output of signals.hrv.frequencyomain.
+    """
+
+    # convert ReturnTuple to dict
+    if td_out is not None:
+        td_out = td_out.as_dict()
+    if nl_out is not None:
+        nl_out = nl_out.as_dict()
+    if fd_out is not None:
+        fd_out = fd_out.as_dict()
+
+    fig = plt.figure(figsize=(12, 6))
+    fig.suptitle('HRV Summary', fontsize=12, fontweight='bold')
+
+    gs = gridspec.GridSpec(6, 2)
+
+    # plot rri
+    ax1 = fig.add_subplot(gs[:2, 0])
+    time_legends = {'Mean': (td_out['rr_mean'], 'ms'),
+                    'Median': (td_out['rr_median'], 'ms'),
+                    'MinMax': (td_out['rr_minmax'], 'ms'),
+                    'SDNN': (td_out['sdnn'], 'ms'),
+                    'RMSSD': (td_out['rmssd'], 'ms'),
+                    'pNN50': (td_out['pnn50'], '%'),
+                    }
+    plot_rri(rri=rri, legends=time_legends, ax=ax1)
+    ax1.set_title('Time Domain')
+
+    # plot hrv hist
+    ax2 = fig.add_subplot(gs[2:, 0])
+    bins = td_out['bins']
+    q_hist = td_out['q_hist']
+    hti = td_out['hti']
+    tinn = td_out['tinn']
+    plot_hrv_hist(rri=rri, bins=bins, q_hist=q_hist, hti=hti, tinn=tinn, ax=ax2)
+
+    # plot pointcare
+    ax3 = fig.add_subplot(gs[:3, 1])
+    ax3.set_title('Non-linear Domain')
+    s = nl_out['s']
+    sd1 = nl_out['sd1']
+    sd2 = nl_out['sd2']
+    sd12 = nl_out['sd12']
+    plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12, ax=ax3)
+
+    # plot hrv fbands
+    ax4 = fig.add_subplot(gs[3:, 1])
+    frequencies = fd_out['frequencies']
+    powers = fd_out['powers']
+    fbands = fd_out['fbands']
+    method_name = fd_out['freq_method']
+    freq_legends = {'LF/HF': fd_out['lf_hf']}
+    for key in fd_out.keys():
+        if key.endswith('_rpwr'):
+            freq_legends[key] = fd_out[key]
+
+    plot_hrv_fbands(frequencies=frequencies, powers=powers, fbands=fbands,
+                    method_name=method_name, legends=freq_legends, ax=ax4)
+    ax4.set_title('Frequency Domain')
+
+    # tight layout
+    gs.tight_layout(fig)
+
+    # adjust margins
+    gs.update(right=0.88, bottom=0.14)
+
+    # add logo
+    add_logo(fig)
