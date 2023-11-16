@@ -20,6 +20,7 @@ import numpy as np
 from tkinter import *
 import os
 from biosppy import utils
+import matplotlib.backends.backend_tkagg as tkagg
 
 MAJOR_LW = 2.5
 MINOR_LW = 1.5

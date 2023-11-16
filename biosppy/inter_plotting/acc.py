@@ -19,6 +19,7 @@ from tkinter import *
 import tkinter.font as tkFont
 import sys
 import os
+import matplotlib.backends.backend_tkagg as tkagg
 
 # Globals
 from biosppy import utils

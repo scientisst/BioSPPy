@@ -6,7 +6,7 @@ biosppy.signals.tools
 This module provides various signal analysis methods in the time and
 frequency domains.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2023 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -265,6 +265,7 @@ def get_filter(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
+            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -282,6 +283,8 @@ def get_filter(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
+        - Q : float
+            Quality factor (only for 'notch' filter). Default: 30.
 
     Returns
     -------
@@ -296,13 +299,13 @@ def get_filter(
     """
 
     # check inputs
-    if order is None:
+    if order is None and ftype != "notch":
         raise TypeError("Please specify the filter order.")
     if frequency is None:
         raise TypeError("Please specify the cutoff frequency.")
-    if band not in ["lowpass", "highpass", "bandpass", "bandstop"]:
+    if band not in ["lowpass", "highpass", "bandpass", "bandstop"] and ftype != "notch":
         raise ValueError(
-            "Unknown filter type '%r'; choose 'lowpass', 'highpass', \
+            "Unknown filter band type '%r'; choose 'lowpass', 'highpass', \
             'bandpass', or 'bandstop'."
             % band
         )
@@ -346,6 +349,11 @@ def get_filter(
         b, a = ss.bessel(
             N=order, Wn=frequency, btype=band, analog=False, output="ba", **kwargs
         )
+    elif ftype == "notch":
+        # Notch filter
+        b, a = ss.iirnotch(
+            w0=frequency, Q=kwargs.get("Q", 30)
+        )
 
     return utils.ReturnTuple((b, a), ("b", "a"))
 
@@ -372,6 +380,7 @@ def filter_signal(
             * Chebyshev filters ('cheby1', 'cheby2');
             * Elliptic filter ('ellip');
             * Bessel filter ('bessel').
+            * Notch filter ('notch').
     band : str
         Band type:
             * Low-pass filter ('lowpass');
@@ -389,7 +398,9 @@ def filter_signal(
     ``**kwargs`` : dict, optional
         Additional keyword arguments are passed to the underlying
         scipy.signal function.
-
+        - Q : float
+            Quality factor (only for 'notch' filter). Default: 30.
+            
     Returns
     -------
     signal : array
@@ -423,12 +434,18 @@ def filter_signal(
     # filter
     filtered, _ = _filter_signal(b, a, signal, check_phase=True)
 
+    # parameters for notch filter
+    if ftype == "notch":
+        order = 2
+        band = "bandstop"
+
     # output
     params = {
         "ftype": ftype,
         "order": order,
         "frequency": frequency,
         "band": band,
+        **kwargs,
     }
     params.update(kwargs)
 
@@ -948,12 +965,20 @@ def signal_stats(signal=None):
         Maximum signal value.
     max_amp : float
         Maximum absolute signal amplitude, in relation to the mean.
+    range : float
+        Signal range (max - min).
+    q1 : float
+        First quartile of the signal.
+    q3 : float
+        Third quartile of the signal.
     var : float
         Signal variance (unbiased).
     std_dev : float
         Standard signal deviation (unbiased).
     abs_dev : float
         Mean absolute signal deviation around the median.
+    rms : float
+        Root-mean-square of the signal.
     kurtosis : float
         Signal kurtosis (unbiased).
     skew : float
@@ -983,6 +1008,9 @@ def signal_stats(signal=None):
     # maximum amplitude
     maxAmp = np.abs(signal - mean).max()
 
+    # range
+    rng = maxVal - minVal
+
     # variance
     sigma2 = signal.var(ddof=1)
 
@@ -992,26 +1020,20 @@ def signal_stats(signal=None):
     # absolute deviation
     ad = np.mean(np.abs(signal - median))
 
+    # root-mean-square
+    rms = np.sqrt(np.mean(signal**2))
+
     # kurtosis
     kurt = stats.kurtosis(signal, bias=False)
 
-    # skweness
+    # skewness
     skew = stats.skew(signal, bias=False)
 
     # output
-    args = (mean, median, minVal, maxVal, maxAmp, sigma2, sigma, ad, kurt, skew)
-    names = (
-        "mean",
-        "median",
-        "min",
-        "max",
-        "max_amp",
-        "var",
-        "std_dev",
-        "abs_dev",
-        "kurtosis",
-        "skewness",
-    )
+    args = (mean, median, minVal, maxVal, maxAmp, rng, sigma2, sigma, ad, rms,
+            kurt, skew)
+    names = ("mean", "median", "min", "max", "max_amp", "range", "var", "std_dev",
+             "abs_dev", "rms", "kurtosis", "skew")
 
     return utils.ReturnTuple(args, names)
 
@@ -1099,7 +1121,7 @@ def find_extrema(signal=None, mode="both"):
     Returns
     -------
     extrema : array
-        Indices of the extrama points.
+        Indices of the extrema points.
     values : array
         Signal values at the extrema points.
 

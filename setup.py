@@ -41,11 +41,13 @@ REQUIRED = [
     'shortuuid',
     'six',
     'joblib',
-    'opencv-python'
+    'opencv-python',
+    'pywavelets',
 ]
 
 # What packages are optional?
 EXTRAS = {
+    'eda': ['cvxopt'],
     # 'fancy feature': ['django'],
 }
 

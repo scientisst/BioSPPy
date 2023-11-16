@@ -1,16 +1,25 @@
 ```
-🎉 New feature: RRI outlier interpolation is now available!
+✨ New plotting design ✨
+New colors, new style and new features, check it out!
+```
+```
+🎊 New module for feature extraction 🎊
+With the 'features' module you can easily extract features from your biosignals!
+(Check PR #4)
 ```
 
-```
-🚧 This branch is still under development and the HRV features are not yet validated.
-```
 
 # BioSPPy - Biosignal Processing in Python
 
 *A toolbox for biosignal processing written in Python.*
 
-[![Image](https://github.com/PIA-Group/BioSPPy/raw/master/docs/logo/logo_400.png "I know you're listening! - xkcd.com/525")](http://biosppy.readthedocs.org/)
+<a href="http://biosppy.readthedocs.org/">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
+  <img alt="Image" title="I know you're listening! - xkcd.com/525">
+</picture>
+</a>
 
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
@@ -50,7 +59,7 @@ out = ecg.ecg(signal=signal, sampling_rate=1000., show=True)
 
 This should produce a plot similar to the one below.
 
-[![Image](https://github.com/PIA-Group/BioSPPy/raw/master/docs/images/ECG_summary.png "ECG Summary Plot")]()
+![ECG summary example](docs/images/ECG_summary.png)
 
 ## Dependencies
 
