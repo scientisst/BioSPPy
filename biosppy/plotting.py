@@ -2066,7 +2066,8 @@ def plot_poincare(rri=None,
                   s=None,
                   sd1=None,
                   sd2=None,
-                  sd12=None):
+                  sd12=None,
+                  ax=None):
     """Plot a Poincaré plot of a series of RR intervals (RRI[i+1] vs. RRI[i])
     from the output of signals.hrv.compute_poincare.
 
@@ -2083,13 +2084,18 @@ def plot_poincare(rri=None,
         SD2 - Poincaré plot standard deviation along the identity line (ms).
     sd12 : float
         SD1/SD2 - SD1 to SD2 ratio.
+    ax : axis, optional
+        Plot Axis to use.
     """
 
     x, y = rri[:-1], rri[1:]
     rr_mean = rri.mean()
 
-    fig, ax = plt.subplots(figsize=(7, 5))
-    fig.suptitle('HRV - Poincaré Plot', fontsize=12, fontweight='bold')
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(7, 5))
+        fig.suptitle('HRV - Poincaré Plot', fontsize=12, fontweight='bold')
+        # add logo
+        add_logo(fig)
 
     ax.set_xlabel('$RR_i$ (ms)')
     ax.set_ylabel('$RR_{i+1}$ (ms)')
@@ -2135,9 +2141,11 @@ def plot_poincare(rri=None,
     ax.add_artist(lines.Line2D([rr_mean - f * sd2 * np.cos(np.pi / 4), rr_mean + f * sd2 * np.cos(np.pi / 4)],
                                [rr_mean - f * sd2 * np.cos(np.pi / 4), rr_mean + f * sd2 * np.cos(np.pi / 4)],
                                lw=1, color='0.2'))
+    # adjust grid
+    ax.set_axisbelow(True)
 
     # add SD1/SD2
-    handles, labels = fig.gca().get_legend_handles_labels()
+    handles, labels = ax.get_legend_handles_labels()
     sd12_patch = patches.Patch(color='white', alpha=0)
     handles.extend([sd12_patch])
     labels.extend(['SD1/SD2 = %.2f' % sd12])
@@ -2162,15 +2170,6 @@ def plot_poincare(rri=None,
     ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
     ax.legend(handles=handles, labels=labels, loc='upper left',
               bbox_to_anchor=(1.01, 1.02), frameon=False)
-
-    # adjust grid
-    ax.set_axisbelow(True)
-
-    # add logo
-    add_logo(fig)
-
-    # show
-    plt.show()
 
 
 def plot_hrv_hist(rri=None,
