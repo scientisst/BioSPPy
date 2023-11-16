@@ -2225,7 +2225,8 @@ def plot_hrv_fbands(frequencies=None,
                     fbands=None,
                     method_name=None,
                     legends=None):
-    """ Plots the power spectrum and highlights the defined frequency bands.
+    """Plots the power spectrum and highlights the defined frequency bands
+    from the output of signals.hrv.compute_fbands.
 
     Parameters
     ----------
@@ -2253,12 +2254,11 @@ def plot_hrv_fbands(frequencies=None,
 
     # initialize plot
     fig, ax = plt.subplots()
+    fig.suptitle('HRV - Power Spectral Density', fontsize=12, fontweight='bold')
 
     # figure attributes
-    if method_name is None:
-        ax.set_title(f'Power Spectral Density')
-    else:
-        ax.set_title(f'Power Spectral Density ({method_name})')
+    if method_name is not None:
+        ax.set_title(f'({method_name})')
     ax.set_xlabel('Frequency (Hz)')
     ax.set_ylabel('Power (s$^2$/Hz)')
     ax.set_xlim([0, 0.5])
@@ -2282,3 +2282,12 @@ def plot_hrv_fbands(frequencies=None,
             handles.extend([new_patch])
             labels.extend(['%s = %.2f' % (key, value)])
     ax.legend(handles=handles, labels=labels, loc='upper right')
+
+    # adjust grid
+    ax.set_axisbelow(True)
+
+    # add logo
+    add_logo(fig)
+
+    # show
+    plt.show()
