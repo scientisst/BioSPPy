@@ -423,9 +423,9 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
 
     if duration >= 90:
         # compute geometrical features (histogram)
-        hti, tinn = compute_geometrical(rri=rri, show=show)
+        out_geom = compute_geometrical(rri=rri, show=show)
 
-        out = out.append([hti, tinn], ['hti', 'tinn'])
+        out = out.join(out_geom)
 
     return out
 
