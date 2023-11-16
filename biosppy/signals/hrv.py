@@ -774,7 +774,8 @@ def compute_geometrical(rri, binsize=1/128, show=False):
                                tinn=tinn)
 
     # output
-    out = utils.ReturnTuple([hti, tinn], ['hti', 'tinn'])
+    out = utils.ReturnTuple([hti, tinn, bins, q_hist], ['hti', 'tinn',
+                                                        'bins', 'q_hist'])
 
     return out
 
