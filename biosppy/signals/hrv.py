@@ -655,7 +655,7 @@ def compute_poincare(rri, show=False):
      rri : array
         RR-intervals (ms).
     show : bool, optional
-        If True, show a the Poincaré plot.
+        If True, show the Poincaré plot.
 
     Returns
     -------
