@@ -2034,32 +2034,49 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
         plt.close(fig)
 
 
-def plot_rri(rri):
+def plot_rri(rri, legends=None, ax=None):
     """Plot a series of RR intervals.
 
     Parameters
     ----------
     rri : array
         RR-intervals (ms).
+    legends : dict, optional
+        Dictionary of features to add to the plot legend.
+    ax : axis, optional
+        Plot Axis to use.
     """
 
     # time axis
     t = np.cumsum(rri) / 1000.
 
     # plot
-    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-    fig.suptitle('HRV - RR Intervals', fontsize=12, fontweight='bold')
-    fig.subplots_adjust(bottom=0.17)
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+        fig.suptitle('HRV - RR Intervals', fontsize=12, fontweight='bold')
+        fig.subplots_adjust(bottom=0.17)
+        add_logo(fig)
 
     # plot signal
     ax.plot(t, rri, color=color_palette('blue'), linewidth=MAJOR_LW)
     ax.set_ylabel('RRI (ms)')
     ax.set_xlabel('Time (s)')
 
-    # add logo
-    add_logo(fig)
+    # plot legend
+    if legends is not None:
+        handles, labels = ax.get_legend_handles_labels()
+        for key, value in legends.items():
+            new_patch = patches.Patch(color='white', alpha=0)
+            handles.extend([new_patch])
+            labels.extend(['%s = %.2f %s' % (key, value[0], value[1])])
 
-    plt.show()
+        try:
+            pos = ax.get_position()
+            ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
+            ax.legend(handles=handles, labels=labels, loc='upper left',
+                      bbox_to_anchor=(0.95, 1.02), frameon=False)
+        except ValueError:
+            pass
 
 
 def plot_poincare(rri=None,
