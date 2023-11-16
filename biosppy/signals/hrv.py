@@ -190,6 +190,10 @@ def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
         R-peak index locations.
     sampling_rate : int, float, optional
         Sampling frequency (Hz).
+    filter_rri : bool, optional
+        Whether to filter the RR-interval sequence. Default: True.
+    show : bool, optional
+        Plots the RR-interval sequence. Default: False.
 
     Returns
     -------
