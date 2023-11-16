@@ -2035,7 +2035,7 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
 
 
 def plot_rri(rri):
-    """
+    """Plot a series of RR intervals.
 
     Parameters
     ----------
@@ -2044,17 +2044,21 @@ def plot_rri(rri):
     """
 
     # time axis
-    t = np.cumsum(rri)
+    t = np.cumsum(rri) / 1000.
 
     # plot
-    plt.figure(figsize=(8, 4))
-    plt.title('RR Intervals')
-    plt.ylabel('RRI (ms)')
-    plt.xlabel('Time (s)')
+    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+    fig.suptitle('HRV - RR Intervals', fontsize=12, fontweight='bold')
+    fig.subplots_adjust(bottom=0.17)
 
-    plt.plot(t, rri, color='#85B3D1FF')
+    # plot signal
+    ax.plot(t, rri, color=color_palette('blue'), linewidth=MAJOR_LW)
+    ax.set_ylabel('RRI (ms)')
+    ax.set_xlabel('Time (s)')
 
-    plt.grid()
+    # add logo
+    add_logo(fig)
+
     plt.show()
 
 
