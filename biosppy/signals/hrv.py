@@ -40,8 +40,8 @@ NOT_FEATURES = ['rri', 'outliers_method', 'rri_det', 'hr', 'bins', 'q_hist',
 
 
 def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
-        outliers='interpolate', detrend_rri=True, features_only=False,
-        show=False):
+        outliers='interpolate', detrend_rri=True, features_only=True,
+        show=True, show_individual=False):
     """ Extracts the RR-interval sequence from a list of R-peak indexes and
     extracts HRV features.
 
@@ -70,9 +70,11 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         Whether to detrend the RRI sequence with the default method smoothness
         priors. Default: True.
     features_only : bool, optional
-        Whether to return only the hrv features. Default: False
+        Whether to return only the hrv features. Default: True.
     show : bool, optional
-        Controls the plotting calls. Default: False.
+        Whether to show the HRV summary plot. Default: True.
+    show_individual : bool, optional
+        Whether to show the individual HRV plots. Default: False.
 
     Returns
     -------
@@ -99,6 +101,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
+    hrv_td, hrv_fd, hrv_nl = None, None, None
 
     # compute RRIs
     if rri is None:
@@ -138,7 +141,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
             hrv_td = hrv_timedomain(rri=rri,
                                     duration=duration,
                                     detrend_rri=detrend_rri,
-                                    show=show,
+                                    show=show_individual,
                                     rri_detrended=rri_det)
             out = out.join(hrv_td)
 
@@ -152,7 +155,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
             hrv_fd = hrv_frequencydomain(rri=rri,
                                          duration=duration,
                                          detrend_rri=detrend_rri,
-                                         show=show)
+                                         show=show_individual)
             out = out.join(hrv_fd)
         except ValueError:
             print('Frequency-domain features not computed. Check input.')
@@ -164,11 +167,25 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
             hrv_nl = hrv_nonlinear(rri=rri,
                                    duration=duration,
                                    detrend_rri=detrend_rri,
-                                   show=show)
+                                   show=show_individual)
             out = out.join(hrv_nl)
         except ValueError:
             print('Non-linear features not computed. Check input.')
             pass
+
+    # plot summary
+    if show:
+        if hrv_td is not None and hrv_fd is not None and hrv_nl is not None:
+            plotting.plot_hrv(rri=rri,
+                              td_out=hrv_td,
+                              nl_out=hrv_nl,
+                              fd_out=hrv_fd,
+                              )
+        else:
+            warning = "Not all features were computed. To show the summary " \
+                      "plot all features must be computed. Set " \
+                      "'show_individual' to True to show the individual plots."
+            warnings.warn(warning)
 
     # clean output if features_only
     if features_only:
