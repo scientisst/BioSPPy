@@ -474,6 +474,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
+    out = out.append(fbands, 'fbands')
 
     # resampling with cubic interpolation for equidistant samples
     frs = kwargs['frs'] if 'frs' in kwargs else 4
@@ -496,6 +497,10 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
 
             frequencies, powers = welch(rri_inter, fs=frs, scaling='density',
                                         nperseg=nperseg, nfft=nfft)
+
+            # add to output
+            out = out.append([frequencies, powers, freq_method],
+                             ['frequencies', 'powers', 'freq_method'])
 
         # compute frequency bands
         fb_out = compute_fbands(frequencies=frequencies, powers=powers, show=False)
