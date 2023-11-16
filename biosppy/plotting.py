@@ -2067,7 +2067,8 @@ def plot_poincare(rri=None,
                   sd1=None,
                   sd2=None,
                   sd12=None):
-    """ Plots a Poincaré plot of a series of RR intervals (RRI[i+1] vs. RRI[i]).
+    """Plot a Poincaré plot of a series of RR intervals (RRI[i+1] vs. RRI[i])
+    from the output of signals.hrv.compute_poincare.
 
     Parameters
     ----------
@@ -2088,13 +2089,14 @@ def plot_poincare(rri=None,
     rr_mean = rri.mean()
 
     fig, ax = plt.subplots(figsize=(7, 5))
+    fig.suptitle('HRV - Poincaré Plot', fontsize=12, fontweight='bold')
 
-    ax.set_title('Poincaré Plot')
     ax.set_xlabel('$RR_i$ (ms)')
     ax.set_ylabel('$RR_{i+1}$ (ms)')
 
     # plot Poincaré data points
-    ax.scatter(x, y, marker='.', color='#85B3D1FF', alpha=0.5, s=100, zorder=1)
+    ax.scatter(x, y, marker='.', color=color_palette('blue'), alpha=0.5, s=100,
+               zorder=1)
     ax.set_xlim([np.min(rri) - 50, np.max(rri) + 50])
     ax.set_ylim([np.min(rri) - 50, np.max(rri) + 50])
     ax.set_aspect(1. / ax.get_data_ratio())
@@ -2103,24 +2105,24 @@ def plot_poincare(rri=None,
     lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
             np.max([ax.get_xlim(), ax.get_ylim()])]  # max of both axes
 
-    ax.plot(lims, lims, linewidth=0.7, color='grey', linestyle='--',
-            zorder=2, label='Identity line')
+    ax.plot(lims, lims, linewidth=0.7, color=color_palette('grey'),
+            linestyle='--', zorder=2, label='Identity line')
 
     # draw ellipse
     ellipse = patches.Ellipse((rr_mean, rr_mean), sd1 * 2, sd2 * 2, angle=-45,
-                              linewidth=1, edgecolor='#2E5266FF', facecolor='None',
-                              label='S = %.1f' % s, zorder=3)
+                              linewidth=1, edgecolor=color_palette('dark-grey'),
+                              facecolor='None', label='S = %.1f ms$^2$' % s, zorder=3)
     ax.add_artist(ellipse)
 
     # draw SD1 and SD2
     ax.arrow(rr_mean, rr_mean, sd1 * np.cos(3 * np.pi / 4), sd1 * np.sin(3 * np.pi / 4),
-             facecolor='#A13941FF', edgecolor='#A13941FF', linewidth=2,
-             length_includes_head=True, head_width=4, head_length=4,
+             facecolor=color_palette('dark-red'), edgecolor=color_palette('dark-red'),
+             linewidth=2, length_includes_head=True, head_width=4, head_length=4,
              label='SD1 = %.1f ms' % sd1, zorder=3)
 
     ax.arrow(rr_mean, rr_mean, sd2 * np.cos(np.pi / 4), sd2 * np.sin(np.pi / 4),
-             facecolor='#DDB65DFF', edgecolor='#DDB65DFF', linewidth=2,
-             length_includes_head=True, head_width=4, head_length=4,
+             facecolor=color_palette('yellow'), edgecolor=color_palette('yellow'),
+             linewidth=2, length_includes_head=True, head_width=4, head_length=4,
              label='SD2 = %.1f ms' % sd2, zorder=3)
 
     # draw SD1 and SD2 axes
@@ -2147,19 +2149,25 @@ def plot_poincare(rri=None,
     labels.extend(['SD2/SD1 = %.2f' % sd21])
 
     # change handle for ellipse and arrows
-    handles[1] = plt.Line2D([], [], color='#2E5266FF', marker="o", markersize=10, linewidth=0,
-                            markerfacecolor='none')
-    handles[2] = plt.Line2D([], [], color='#A13941FF', linestyle="-", linewidth=1)
-    handles[3] = plt.Line2D([], [], color='#DDB65DFF', linestyle="-", linewidth=1)
+    handles[1] = plt.Line2D([], [], color=color_palette('dark-grey'),
+                            marker="o", markersize=10, linewidth=0,
+                            markerfacecolor='none')  # ellipse
+    handles[2] = plt.Line2D([], [], color=color_palette('dark-red'),
+                            linestyle="-", linewidth=1)  # SD1
+    handles[3] = plt.Line2D([], [], color=color_palette('yellow'),
+                            linestyle="-", linewidth=1)  # SD2
 
     # create legend
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
-    ax.legend(handles=handles, labels=labels, loc='upper left', bbox_to_anchor=(1.01, 1.02), frameon=False)
+    ax.legend(handles=handles, labels=labels, loc='upper left',
+              bbox_to_anchor=(1.01, 1.02), frameon=False)
 
-    # plot grid
-    ax.grid()
+    # adjust grid
     ax.set_axisbelow(True)
+
+    # add logo
+    add_logo(fig)
 
     # show
     plt.show()
