@@ -36,9 +36,11 @@ FBANDS = {'ulf': [0, 0.003],
           }
 
 
-def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers='interpolate', detrend_rri=True,
-        features_only=False, show=False):
-    """ Extracts the RR-interval sequence from a list of R-peak indexes and extracts HRV features.
+def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
+        outliers='interpolate', detrend_rri=True, features_only=False,
+        show=False):
+    """ Extracts the RR-interval sequence from a list of R-peak indexes and
+    extracts HRV features.
 
     Parameters
     ----------
@@ -55,11 +57,15 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
         frequency-domain features. If 'non-linear' computes only non-linear
         features. If 'all' computes all available HRV features. Default: 'auto'.
     outliers : str, optional
-        Determines the method to handle outliers. If 'interpolate', replaces the outlier RR-intervals
-        with cubic spline interpolation based on a local threshold. If 'filter', the RR-interval sequence
-        is cut at the outliers. If None, no correction is performed. Default: 'interpolate'.
+        Determines the method to handle outliers. If 'interpolate', replaces
+        the outlier RR-intervals
+        with cubic spline interpolation based on a local threshold. If 'filter',
+        the RR-interval sequence
+        is cut at the outliers. If None, no correction is performed. Default:
+        'interpolate'.
     detrend_rri : bool, optional
-        Whether to detrend the RRI sequence with the default method smoothness priors. Default: True.
+        Whether to detrend the RRI sequence with the default method smoothness
+        priors. Default: True.
     features_only : bool, optional
         Whether to return only the hrv features. Default: False
     show : bool, optional
@@ -72,7 +78,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
     rri_det : array
         Detrended RR-interval sequence (ms), if detrending was applied.
     hrv_features : dict
-        The set of HRV features extracted from the RRI data. The number of features depends on the chosen parameters.
+        The set of HRV features extracted from the RRI data. The number of
+        features depends on the chosen parameters.
     """
 
     # check inputs
@@ -81,7 +88,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
 
     parameters_list = ['auto', 'time', 'frequency', 'non-linear', 'all']
     if parameters not in parameters_list:
-        raise ValueError(f"'{parameters}' is not an available input. Enter one from: {parameters_list}.")
+        raise ValueError(f"'{parameters}' is not an available input. Enter one"
+                         f"from: {parameters_list}.")
 
     # ensure input format
     sampling_rate = float(sampling_rate)
@@ -92,7 +100,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
     # compute RRIs
     if rri is None:
         rpeaks = np.array(rpeaks, dtype=float)
-        rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate, filter_rri=False)
+        rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate,
+                          filter_rri=False)
 
     # compute duration
     duration = np.sum(rri) / 1000.  # seconds
@@ -129,7 +138,11 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
     # compute time-domain features
     if parameters in ['time', 'auto', 'all']:
         try:
-            hrv_td = hrv_timedomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show, rri_detrended=rri_det)
+            hrv_td = hrv_timedomain(rri=rri,
+                                    duration=duration,
+                                    detrend_rri=detrend_rri,
+                                    show=show,
+                                    rri_detrended=rri_det)
             out = out.join(hrv_td)
 
             if features_only:
@@ -142,7 +155,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
     # compute frequency-domain features
     if parameters in ['frequency', 'auto', 'all']:
         try:
-            hrv_fd = hrv_frequencydomain(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
+            hrv_fd = hrv_frequencydomain(rri=rri,
+                                         duration=duration,
+                                         detrend_rri=detrend_rri,
+                                         show=show)
             out = out.join(hrv_fd)
         except ValueError:
             print('Frequency-domain features not computed. Check input.')
@@ -151,7 +167,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto', outliers=
     # compute non-linear features
     if parameters in ['non-linear', 'auto', 'all']:
         try:
-            hrv_nl = hrv_nonlinear(rri=rri, duration=duration, detrend_rri=detrend_rri, show=show)
+            hrv_nl = hrv_nonlinear(rri=rri,
+                                   duration=duration,
+                                   detrend_rri=detrend_rri,
+                                   show=show)
             out = out.join(hrv_nl)
         except ValueError:
             print('Non-linear features not computed. Check input.')
@@ -188,7 +207,8 @@ def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
 
     # check if rri is within physiological parameters
     if rri.min() < 400 or rri.min() > 1400:
-        warnings.warn("RR-intervals appear to be out of normal parameters. Check input values.")
+        warnings.warn("RR-intervals appear to be out of normal parameters."
+                      "Check input values.")
 
     if show:
         plotting.plot_rri(rri)
@@ -217,7 +237,8 @@ def rri_filter(rri=None, threshold=1200):
 
 
 def rri_correction(rri=None, threshold=250):
-    """Corrects artifacts in an RRI sequence based on a local average threshold. Artifacts are replaced with cubic
+    """Corrects artifacts in an RRI sequence based on a local average threshold.
+    Artifacts are replaced with cubic
     spline interpolation.
 
     Parameters
@@ -247,13 +268,15 @@ def rri_correction(rri=None, threshold=250):
     artifacts = np.abs(rri - rri_filt) > threshold
 
     # replace artifacts with cubic spline interpolation
-    rri[artifacts] = interp1d(np.where(~artifacts)[0], rri[~artifacts], kind='cubic')(np.where(artifacts)[0])
+    rri[artifacts] = interp1d(np.where(~artifacts)[0], rri[~artifacts],
+                              kind='cubic')(np.where(artifacts)[0])
 
     return rri
 
 
 def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
-    """ Computes the time domain HRV features from a sequence of RR intervals in milliseconds.
+    """ Computes the time domain HRV features from a sequence of RR intervals
+    in milliseconds.
 
     Parameters
     ----------
@@ -326,7 +349,8 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 10:
-        raise ValueError("Signal duration must be greater than 10 seconds to compute time-domain features.")
+        raise ValueError("Signal duration must be greater than 10 seconds to"
+                         "compute time-domain features.")
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
@@ -344,7 +368,8 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         hr_median = np.median(hr)
 
         out = out.append([hr, hr_min, hr_max, hr_minmax, hr_mean, hr_median],
-                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_mean', 'hr_median'])
+                         ['hr', 'hr_min', 'hr_max', 'hr_minmax', 'hr_mean',
+                          'hr_median'])
 
         # compute RRI features
         rr_min = rri.min()
@@ -355,7 +380,8 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         rmssd = (rri_diff ** 2).mean() ** 0.5
 
         out = out.append([rr_min, rr_max, rr_minmax, rr_mean, rr_median, rmssd],
-                         ['rr_min', 'rr_max', 'rr_minmax', 'rr_mean', 'rr_median', 'rmssd'])
+                         ['rr_min', 'rr_max', 'rr_minmax', 'rr_mean',
+                          'rr_median', 'rmssd'])
 
     if duration >= 20:
         # compute NN50 and pNN50
@@ -381,8 +407,10 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
     return out
 
 
-def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None, detrend_rri=True, show=False, **kwargs):
-    """Computes the frequency domain HRV features from a sequence of RR intervals.
+def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
+                        fbands=None, detrend_rri=True, show=False, **kwargs):
+    """Computes the frequency domain HRV features from a sequence of RR
+    intervals.
 
     Parameters
     ----------
@@ -427,7 +455,8 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
 
     freq_methods = ['FFT']
     if freq_method not in freq_methods:
-        raise ValueError(f"'{freq_method}' is not an available input. Choose one from: {freq_methods}.")
+        raise ValueError(f"'{freq_method}' is not an available input. Choose"
+                         f"one from: {freq_methods}.")
 
     if fbands is None:
         fbands = FBANDS
@@ -440,7 +469,8 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT', fbands=None,
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 20:
-        raise ValueError("Signal duration must be greater than 20 seconds to compute frequency-domain features.")
+        raise ValueError("Signal duration must be greater than 20 seconds to"
+                         "compute frequency-domain features.")
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
@@ -530,7 +560,8 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 90:
-        raise ValueError("Signal duration must be greater than 90 seconds to compute non-linear features.")
+        raise ValueError("Signal duration must be greater than 90 seconds to"
+                         "compute non-linear features.")
 
     # detrend
     if detrend_rri:
@@ -542,18 +573,15 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
     if duration >= 90:
         # compute SD1, SD2, SD1/SD2 and S
         cp = compute_poincare(rri=rri, show=show)
-
         out = out.join(cp)
 
         # compute sample entropy
         sampen = sample_entropy(rri)
-
         out = out.append(sampen, 'sampen')
 
     if len(rri) >= 800 or duration == np.inf:
         # compute approximate entropy
         appen = approximate_entropy(rri)
-
         out = out.append(appen, 'appen')
 
     return out
@@ -608,11 +636,13 @@ def compute_fbands(frequencies, powers, fbands=None, method_name=None, show=Fals
         peak = frequencies[band][np.argmax(powers[band])]
         rpwr = pwr / total_pwr
 
-        out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak', fband + '_rpwr'])
+        out = out.append([pwr, peak, rpwr], [fband + '_pwr', fband + '_peak',
+                                             fband + '_rpwr'])
 
     # plot
     if show:
-        plotting.plot_hrv_fbands(frequencies, powers, fbands, method_name, legends)
+        plotting.plot_hrv_fbands(frequencies, powers, fbands, method_name,
+                                 legends)
 
     return out
 
@@ -660,7 +690,8 @@ def compute_poincare(rri, show=False):
     sd21 = sd2 / sd1
 
     # output
-    out = out.append([s, sd1, sd2, sd12, sd21], ['s', 'sd1', 'sd2', 'sd12', 'sd21'])
+    out = out.append([s, sd1, sd2, sd12, sd21], ['s', 'sd1', 'sd2', 'sd12',
+                                                 'sd21'])
 
     if show:
         plotting.plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
@@ -802,7 +833,8 @@ def sample_entropy(rri, m=2, r=0.2):
     m : int, optional
         Embedding dimension. Default: 2.
     r : int, float, optional
-        Tolerance. It is then multiplied by the sequence standard deviation. Default: 0.2.
+        Tolerance. It is then multiplied by the sequence standard deviation.
+        Default: 0.2.
 
     Returns
     -------
@@ -846,7 +878,8 @@ def approximate_entropy(rri, m=2, r=0.2):
     m : int, optional
         Embedding dimension. Default: 2.
     r : int, float, optional
-        Tolerance. It is then multiplied by the sequence standard deviation. Default: 0.2.
+        Tolerance. It is then multiplied by the sequence standard deviation.
+        Default: 0.2.
 
     Returns
     -------
