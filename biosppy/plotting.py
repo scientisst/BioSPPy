@@ -2193,7 +2193,8 @@ def plot_hrv_hist(rri=None,
                   bins=None,
                   q_hist=None,
                   hti=None,
-                  tinn=None):
+                  tinn=None,
+                  ax=None):
     """Plots the RRI histogram with the corresponding geometrical HRV features
     from the output of signals.hrv.compute_geometrical.
 
@@ -2210,12 +2211,17 @@ def plot_hrv_hist(rri=None,
         histogram divided by its height.
     tinn : float
         TINN - Baseline width of RR interval histogram (ms).
-
+    ax : axis, optional
+        Plot Axis to use.
     """
 
     # plot histogram and triangle
-    fig, ax = plt.subplots()
-    fig.suptitle('HRV - RRI Distribution', fontsize=12, fontweight='bold')
+    if ax is None:
+        fig, ax = plt.subplots()
+        fig.suptitle('HRV - RRI Distribution', fontsize=12, fontweight='bold')
+
+        # add logo
+        add_logo(fig)
 
     ax.hist(rri, bins, facecolor=color_palette('light-blue'),
             edgecolor=color_palette('dark-grey'), label='HTI: %.1f' % hti)
@@ -2224,16 +2230,13 @@ def plot_hrv_hist(rri=None,
     ax.set_xlabel('RR Interval (ms)')
     ax.set_ylabel('Count')
     ax.locator_params(axis='y', integer=True)
-    ax.legend(loc='upper right')
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
+    ax.legend(loc='upper left',
+              bbox_to_anchor=(1.01, 1.02), frameon=False)
 
     # adjust grid to be in the background
     ax.set_axisbelow(True)
-
-    # add logo
-    add_logo(fig)
-
-    # show
-    plt.show()
 
 
 def plot_hrv_fbands(frequencies=None,
