@@ -150,8 +150,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
                                     rri_detrended=rri_det)
             out = out.join(hrv_td)
 
-        except ValueError:
-            print('Time-domain features not computed. Check input.')
+        except ValueError as e:
+            print('WARNING: Time-domain features not computed. Check input.')
+            print(e)
+
             pass
 
     # compute frequency-domain features
@@ -162,8 +164,9 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
                                          detrend_rri=detrend_rri,
                                          show=show_individual)
             out = out.join(hrv_fd)
-        except ValueError:
-            print('Frequency-domain features not computed. Check input.')
+        except ValueError as e:
+            print('WARNING: Frequency-domain features not computed. Check input.')
+            print(e)
             pass
 
     # compute non-linear features
@@ -174,8 +177,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
                                    detrend_rri=detrend_rri,
                                    show=show_individual)
             out = out.join(hrv_nl)
-        except ValueError:
-            print('Non-linear features not computed. Check input.')
+                
+        except ValueError as e:
+            print('WARNING: Non-linear features not computed. Check input.')
+            print(e)
             pass
 
     # plot summary
@@ -189,7 +194,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         else:
             warning = "Not all features were computed. To show the summary " \
                       "plot all features must be computed. Set " \
-                      "'show_individual' to True to show the individual plots."
+                      "'show_individual' to True to show the individual " \
+                      "plots, or use parameters='all' to compute all features."
             warnings.warn(warning)
 
     # clean output if features_only
@@ -377,7 +383,7 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 10:
-        raise ValueError("Signal duration must be greater than 10 seconds to"
+        raise ValueError("Signal duration must be greater than 10 seconds to "
                          "compute time-domain features.")
 
     # initialize outputs
@@ -497,7 +503,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 20:
-        raise ValueError("Signal duration must be greater than 20 seconds to"
+        raise ValueError("Signal duration must be greater than 20 seconds to "
                          "compute frequency-domain features.")
 
     # initialize outputs
@@ -598,7 +604,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
         duration = np.sum(rri) / 1000.  # seconds
 
     if duration < 90:
-        raise ValueError("Signal duration must be greater than 90 seconds to"
+        raise ValueError("Signal duration must be greater than 90 seconds to "
                          "compute non-linear features.")
 
     # detrend
