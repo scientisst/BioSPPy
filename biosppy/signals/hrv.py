@@ -745,7 +745,13 @@ def compute_poincare(rri, show=False):
                                                  'sd21'])
 
     if show:
-        plotting.plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12)
+        legends = {'SD1/SD2': sd12, 'SD2/SD1': sd21}
+        plotting.plot_poincare(rri=rri,
+                               s=s,
+                               sd1=sd1,
+                               sd2=sd2,
+                               legends=legends,
+                               show=show)
 
     return out
 

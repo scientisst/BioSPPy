@@ -2097,8 +2097,9 @@ def plot_poincare(rri=None,
                   s=None,
                   sd1=None,
                   sd2=None,
-                  sd12=None,
-                  ax=None):
+                  legends=None,
+                  ax=None,
+                  show=False):
     """Plot a Poincaré plot of a series of RR intervals (RRI[i+1] vs. RRI[i])
     from the output of signals.hrv.compute_poincare.
 
@@ -2113,10 +2114,12 @@ def plot_poincare(rri=None,
         line (ms).
     sd2 : float
         SD2 - Poincaré plot standard deviation along the identity line (ms).
-    sd12 : float
-        SD1/SD2 - SD1 to SD2 ratio.
+    legends : dict, optional
+        Dictionary of features to add to the plot legend.
     ax : axis, optional
         Plot Axis to use.
+    show : bool, optional
+        If True, show the plot immediately.
     """
 
     x, y = rri[:-1], rri[1:]
@@ -2175,17 +2178,15 @@ def plot_poincare(rri=None,
     # adjust grid
     ax.set_axisbelow(True)
 
-    # add SD1/SD2
-    handles, labels = ax.get_legend_handles_labels()
-    sd12_patch = patches.Patch(color='white', alpha=0)
-    handles.extend([sd12_patch])
-    labels.extend(['SD1/SD2 = %.2f' % sd12])
-
     # add extra labels
-    sd21 = 1/sd12
-    sd21_patch = patches.Patch(color='white', alpha=0)
-    handles.extend([sd21_patch])
-    labels.extend(['SD2/SD1 = %.2f' % sd21])
+    # update figure legend
+    handles, labels = ax.get_legend_handles_labels()
+    if legends is not None:
+        for key, value in legends.items():
+            if value is not None:
+                new_patch = patches.Patch(color='white', alpha=0)
+                handles.extend([new_patch])
+                labels.extend(['%s = %.2f' % (key, value)])
 
     # change handle for ellipse and arrows
     handles[1] = plt.Line2D([], [], color=color_palette('dark-grey'),
@@ -2201,6 +2202,10 @@ def plot_poincare(rri=None,
     ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
     ax.legend(handles=handles, labels=labels, loc='upper left',
               bbox_to_anchor=(1.01, 1.02), frameon=False)
+
+    # show
+    if show:
+        plt.show()
 
 
 def plot_hrv_hist(rri=None,
