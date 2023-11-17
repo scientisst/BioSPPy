@@ -590,6 +590,12 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
         SD2 - Poincaré plot standard deviation along the identity line (ms).
     sd12 : float
         SD1/SD2 - SD1 to SD2 ratio.
+    sd21 : float
+        SD2/SD1 - SD2 to SD1 ratio.
+    sampen : float
+        Sample entropy.
+    appen : float
+        Approximate entropy.
     """
 
     # check inputs
