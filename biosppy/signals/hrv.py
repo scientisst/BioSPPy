@@ -35,8 +35,8 @@ FBANDS = {'ulf': [0, 0.003],
           'vhf': [0.4, 0.5]
           }
 
-NOT_FEATURES = ['rri', 'outliers_method', 'rri_det', 'hr', 'bins', 'q_hist',
-               'fbands', 'frequencies', 'powers', 'freq_method']
+NOT_FEATURES = ['rri', 'rri_trend', 'outliers_method', 'rri_det', 'hr', 'bins',
+                'q_hist', 'fbands', 'frequencies', 'powers', 'freq_method']
 
 
 def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
@@ -125,11 +125,16 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
 
     # detrend rri sequence
     if detrend_rri:
-        rri_det = detrend_window(rri)
-        # add detrended rri to output
-        out = out.append(rri_det, 'rri_det')
+        rri_det, rri_trend = detrend_window(rri)
+        # add to output
+        out = out.append([rri_det, rri_trend], ['rri_det', 'rri_trend'])
     else:
         rri_det = None
+        rri_trend = None
+
+    # plot
+    if show_individual:
+        plotting.plot_rri(rri, rri_trend, show=show_individual)
 
     # extract features
     if parameters == 'all':
@@ -851,11 +856,13 @@ def detrend_window(rri, win_len=2000, **kwargs):
 
         # concantenate detrended splits
         rri_det = np.concatenate(rri_det)
-
+        rri_trend = None
     else:
-        rri_det = st.detrend_smoothness_priors(rri, smoothing_factor)['detrended']
+        rri_det, rri_trend = st.detrend_smoothness_priors(rri, smoothing_factor)
 
-    return rri_det
+    # output
+    out = utils.ReturnTuple([rri_det, rri_trend], ['rri_det', 'rri_trend'])
+    return out
 
 
 def sample_entropy(rri, m=2, r=0.2):
