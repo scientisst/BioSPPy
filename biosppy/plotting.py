@@ -2034,17 +2034,21 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
         plt.close(fig)
 
 
-def plot_rri(rri, legends=None, ax=None):
+def plot_rri(rri, rri_trend=None, legends=None, ax=None, show=False):
     """Plot a series of RR intervals.
 
     Parameters
     ----------
     rri : array
         RR-intervals (ms).
+    rri_trend : array, optional
+        RR-intervals trend (ms).
     legends : dict, optional
         Dictionary of features to add to the plot legend.
     ax : axis, optional
         Plot Axis to use.
+    show : bool, optional
+        If True, show the plot immediately.
     """
 
     # time axis
@@ -2058,9 +2062,13 @@ def plot_rri(rri, legends=None, ax=None):
         add_logo(fig)
 
     # plot signal
-    ax.plot(t, rri, color=color_palette('blue'), linewidth=MAJOR_LW)
+    ax.plot(t, rri, color=color_palette('blue'), linewidth=MAJOR_LW,
+            label='RR Intervals')
     ax.set_ylabel('RRI (ms)')
     ax.set_xlabel('Time (s)')
+    if rri_trend is not None:
+        ax.plot(t, rri_trend, color=color_palette('dark-red'), alpha=0.5,
+                linewidth=MED_LW, label='Trend')
 
     # plot legend
     if legends is not None:
@@ -2074,9 +2082,15 @@ def plot_rri(rri, legends=None, ax=None):
             pos = ax.get_position()
             ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
             ax.legend(handles=handles, labels=labels, loc='upper left',
-                      bbox_to_anchor=(0.95, 1.02), frameon=False)
+                      bbox_to_anchor=(1.01, 1.02), frameon=False)
         except ValueError:
             pass
+    else:
+        ax.legend(loc='upper right')
+
+    # show
+    if show:
+        plt.show()
 
 
 def plot_poincare(rri=None,
