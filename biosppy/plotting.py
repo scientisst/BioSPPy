@@ -2213,7 +2213,8 @@ def plot_hrv_hist(rri=None,
                   q_hist=None,
                   hti=None,
                   tinn=None,
-                  ax=None):
+                  ax=None,
+                  show=False):
     """Plots the RRI histogram with the corresponding geometrical HRV features
     from the output of signals.hrv.compute_geometrical.
 
@@ -2232,6 +2233,8 @@ def plot_hrv_hist(rri=None,
         TINN - Baseline width of RR interval histogram (ms).
     ax : axis, optional
         Plot Axis to use.
+    show : bool, optional
+        If True, show the plot immediately.
     """
 
     # plot histogram and triangle
@@ -2256,6 +2259,10 @@ def plot_hrv_hist(rri=None,
 
     # adjust grid to be in the background
     ax.set_axisbelow(True)
+
+    # show
+    if show:
+        plt.show()
 
 
 def plot_hrv_fbands(frequencies=None,
