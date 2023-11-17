@@ -520,7 +520,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
 
     # detrend
     if detrend_rri:
-        rri_inter = detrend_window(rri_inter)
+        rri_inter = detrend_window(rri_inter)['rri_det']
 
     if duration >= 20:
 
@@ -609,7 +609,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
 
     # detrend
     if detrend_rri:
-        rri = detrend_window(rri)
+        rri = detrend_window(rri)['rri_det']
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
