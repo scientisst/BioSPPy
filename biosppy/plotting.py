@@ -2270,7 +2270,8 @@ def plot_hrv_fbands(frequencies=None,
                     fbands=None,
                     method_name=None,
                     legends=None,
-                    ax=None):
+                    ax=None,
+                    show=False):
     """Plots the power spectrum and highlights the defined frequency bands
     from the output of signals.hrv.compute_fbands.
 
@@ -2288,6 +2289,8 @@ def plot_hrv_fbands(frequencies=None,
         Additional legend elements.
     ax : axis, optional
         Plot Axis to use.
+    show : bool, optional
+        If True, show the plot immediately.
     """
 
     spectrum_colors = {'ulf': '#e6eff6',
@@ -2330,7 +2333,7 @@ def plot_hrv_fbands(frequencies=None,
     handles, labels = ax.get_legend_handles_labels()
     if legends.__len__() != 0:
         for key, value in legends.items():
-            if not key.endswith('_rpwr'):
+            if not key.endswith('_rpwr') and value is not None:
                 new_patch = patches.Patch(color='white', alpha=0)
                 handles.extend([new_patch])
                 labels.extend(['%s = %.2f' % (key, value)])
@@ -2342,6 +2345,9 @@ def plot_hrv_fbands(frequencies=None,
     # adjust grid
     ax.set_axisbelow(True)
 
+    # show
+    if show:
+        plt.show()
 
 def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
     """Create a summary plot of a HRV analysis.

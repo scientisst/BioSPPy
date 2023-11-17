@@ -560,7 +560,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
                     legends[key] = out[key]
 
             plotting.plot_hrv_fbands(frequencies, powers, fbands, freq_method,
-                                     legends)
+                                     legends, show=show)
 
     return out
 
@@ -692,8 +692,18 @@ def compute_fbands(frequencies, powers, fbands=None, method_name=None,
 
     # plot
     if show:
-        plotting.plot_hrv_fbands(frequencies, powers, fbands, method_name,
-                                 legends)
+        # legends
+        freq_legends = {}
+        for key in out.keys():
+            if key.endswith('_rpwr'):
+                freq_legends[key] = out[key]
+
+        plotting.plot_hrv_fbands(frequencies=frequencies,
+                                 powers=powers,
+                                 fbands=fbands,
+                                 method_name=method_name,
+                                 legends=freq_legends,
+                                 show=show)
 
     return out
 
