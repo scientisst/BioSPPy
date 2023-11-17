@@ -187,9 +187,11 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
     if show:
         if hrv_td is not None and hrv_fd is not None and hrv_nl is not None:
             plotting.plot_hrv(rri=rri,
+                              rri_trend=rri_trend,
                               td_out=hrv_td,
                               nl_out=hrv_nl,
                               fd_out=hrv_fd,
+                              show=True,
                               )
         else:
             warning = "Not all features were computed. To show the summary " \

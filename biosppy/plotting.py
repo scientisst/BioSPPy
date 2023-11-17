@@ -2349,19 +2349,29 @@ def plot_hrv_fbands(frequencies=None,
     if show:
         plt.show()
 
-def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
+
+def plot_hrv(rri,
+             rri_trend=None,
+             td_out=None,
+             nl_out=None,
+             fd_out=None,
+             show=False):
     """Create a summary plot of a HRV analysis.
 
     Parameters
     ----------
     rri : array
         RR-intervals (ms).
+    rri_trend : array, optional
+        RR-intervals trend (ms).
     td_out : dict
         Output of signals.hrv.timedomain.
     nl_out : dict
         Output of signals.hrv.nonlinear.
     fd_out : dict
         Output of signals.hrv.frequencyomain.
+    show : bool, optional
+        If True, show the plot immediately.
     """
 
     # convert ReturnTuple to dict
@@ -2372,12 +2382,12 @@ def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
     if fd_out is not None:
         fd_out = fd_out.as_dict()
 
+    # plot
     fig = plt.figure(figsize=(12, 6))
     fig.suptitle('HRV Summary', fontsize=12, fontweight='bold')
-
     gs = gridspec.GridSpec(6, 2)
 
-    # plot rri
+    # plot rri and display time domain features
     ax1 = fig.add_subplot(gs[:2, 0])
     time_legends = {'Mean': (td_out['rr_mean'], 'ms'),
                     'Median': (td_out['rr_median'], 'ms'),
@@ -2386,8 +2396,9 @@ def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
                     'RMSSD': (td_out['rmssd'], 'ms'),
                     'pNN50': (td_out['pnn50'], '%'),
                     }
-    plot_rri(rri=rri, legends=time_legends, ax=ax1)
-    ax1.set_title('Time Domain')
+    plot_rri(rri=rri, rri_trend=rri_trend, legends=time_legends, ax=ax1,
+             show=False)
+    ax1.set_title('Time Domain', fontweight='bold')
 
     # plot hrv hist
     ax2 = fig.add_subplot(gs[2:, 0])
@@ -2395,16 +2406,23 @@ def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
     q_hist = td_out['q_hist']
     hti = td_out['hti']
     tinn = td_out['tinn']
-    plot_hrv_hist(rri=rri, bins=bins, q_hist=q_hist, hti=hti, tinn=tinn, ax=ax2)
+    plot_hrv_hist(rri=rri, bins=bins, q_hist=q_hist, hti=hti, tinn=tinn,
+                  ax=ax2, show=False)
 
-    # plot pointcare
+    # plot pointcare and display non-linear features
     ax3 = fig.add_subplot(gs[:3, 1])
-    ax3.set_title('Non-linear Domain')
+    ax3.set_title('Non-linear Domain', fontweight='bold')
+    rri_pc = rri - rri_trend if rri_trend is not None else rri
     s = nl_out['s']
     sd1 = nl_out['sd1']
     sd2 = nl_out['sd2']
-    sd12 = nl_out['sd12']
-    plot_poincare(rri=rri, s=s, sd1=sd1, sd2=sd2, sd12=sd12, ax=ax3)
+    poincare_legend = {'SD1/SD2': nl_out['sd12'],
+                       'SD2/SD1': nl_out['sd21'],
+                       'SampEn': nl_out['sampen'] if 'sampen' in nl_out.keys() else None,
+                       'AppEn': nl_out['appen'] if 'appen' in nl_out.keys() else None,
+                       }
+    plot_poincare(rri=rri_pc, s=s, sd1=sd1, sd2=sd2, legends=poincare_legend,
+                  ax=ax3, show=False)
 
     # plot hrv fbands
     ax4 = fig.add_subplot(gs[3:, 1])
@@ -2416,10 +2434,10 @@ def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
     for key in fd_out.keys():
         if key.endswith('_rpwr'):
             freq_legends[key] = fd_out[key]
-
     plot_hrv_fbands(frequencies=frequencies, powers=powers, fbands=fbands,
-                    method_name=method_name, legends=freq_legends, ax=ax4)
-    ax4.set_title('Frequency Domain')
+                    method_name=method_name, legends=freq_legends, ax=ax4,
+                    show=False)
+    ax4.set_title('Frequency Domain', fontweight='bold')
 
     # tight layout
     gs.tight_layout(fig)
@@ -2429,3 +2447,7 @@ def plot_hrv(rri, td_out=None, nl_out=None, fd_out=None):
 
     # add logo
     add_logo(fig)
+
+    # show
+    if show:
+        plt.show()
