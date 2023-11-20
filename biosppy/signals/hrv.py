@@ -215,7 +215,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
 
 
 def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
-    """ Computes RR intervals in milliseconds from a list of R-peak indexes.
+    """Computes RR intervals in milliseconds from a list of R-peak indexes.
 
     Parameters
     ----------
@@ -264,6 +264,11 @@ def rri_filter(rri=None, threshold=1200):
         RR-intervals (ms).
     threshold : int, float, optional
         Maximum rri value to accept (ms).
+
+    Returns
+    -------
+    rri_filt : array
+        Filtered RR-intervals (ms).
     """
 
     # ensure input format
@@ -277,8 +282,7 @@ def rri_filter(rri=None, threshold=1200):
 
 def rri_correction(rri=None, threshold=250):
     """Corrects artifacts in an RRI sequence based on a local average threshold.
-    Artifacts are replaced with cubic
-    spline interpolation.
+    Artifacts are replaced with cubic spline interpolation.
 
     Parameters
     ----------
@@ -314,7 +318,7 @@ def rri_correction(rri=None, threshold=250):
 
 
 def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
-    """ Computes the time domain HRV features from a sequence of RR intervals
+    """Computes the time domain HRV features from a sequence of RR intervals
     in milliseconds.
 
     Parameters
@@ -571,7 +575,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
 
 
 def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
-    """ Computes the non-linear HRV features from a sequence of RR intervals.
+    """Computes the non-linear HRV features from a sequence of RR intervals.
 
     Parameters
     ----------
@@ -643,8 +647,8 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
 
 
 def compute_fbands(frequencies, powers, fbands=None, method_name=None,
-                   show=False, legends=None):
-    """ Computes frequency domain features for the specified frequency bands.
+                   show=False):
+    """Computes frequency domain features for the specified frequency bands.
 
     Parameters
     ----------
@@ -658,8 +662,6 @@ def compute_fbands(frequencies, powers, fbands=None, method_name=None,
         Method that was used to compute the power spectrum. Default: None.
     show : bool, optional
         Whether to show the power spectrum plot. Default: False.
-    legends : dict, optional
-        Additional legend elements when plotting.
 
     Returns
     -------
@@ -714,7 +716,7 @@ def compute_fbands(frequencies, powers, fbands=None, method_name=None,
 
 
 def compute_poincare(rri, show=False):
-    """ Compute the Poincaré features from a sequence of RR intervals.
+    """Compute the Poincaré features from a sequence of RR intervals.
 
     Parameters
     ----------
@@ -772,7 +774,7 @@ def compute_poincare(rri, show=False):
 
 
 def compute_geometrical(rri, binsize=1/128, show=False):
-    """ Computes the geometrical features from a sequence of RR intervals.
+    """Computes the geometrical features from a sequence of RR intervals.
 
     Parameters
     ----------
@@ -853,7 +855,7 @@ def compute_geometrical(rri, binsize=1/128, show=False):
 
 
 def detrend_window(rri, win_len=2000, **kwargs):
-    """ Facilitates RRI detrending method using a signal window.
+    """Facilitates RRI detrending method using a signal window.
 
     Parameters
     ----------
@@ -867,6 +869,8 @@ def detrend_window(rri, win_len=2000, **kwargs):
     -------
     rri_det : array
         Detrended RRI signal.
+    rri_trend : array
+        Trend of the RRI signal.
 
     """
 
