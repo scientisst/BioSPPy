@@ -1,4 +1,8 @@
 ```
+🫀 New module for heart rate variability 🫀
+With the signals.hrv module you can now extract HRV features. Check it out!
+```
+```
 ✨ New plotting design ✨
 New colors, new style and new features, check it out!
 ```
