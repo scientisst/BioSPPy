@@ -41,8 +41,8 @@ NOT_FEATURES = ['rri', 'rri_trend', 'outliers_method', 'rri_det', 'hr', 'bins',
 
 def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         outliers='interpolate', detrend_rri=True, features_only=True,
-        show=True, show_individual=False):
-    """ Extracts the RR-interval sequence from a list of R-peak indexes and
+        show=True, show_individual=False, **kwargs):
+    """Extracts the RR-interval sequence from a list of R-peak indexes and
     extracts HRV features.
 
     Parameters
@@ -75,6 +75,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
         Whether to show the HRV summary plot. Default: True.
     show_individual : bool, optional
         Whether to show the individual HRV plots. Default: False.
+    kwargs : dict, optional
+        fbands : dictionary of frequency bands (Hz) to use.
 
     Returns
     -------
@@ -162,7 +164,8 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
             hrv_fd = hrv_frequencydomain(rri=rri,
                                          duration=duration,
                                          detrend_rri=detrend_rri,
-                                         show=show_individual)
+                                         show=show_individual,
+                                         fbands=kwargs.get('fbands', None))
             out = out.join(hrv_fd)
         except ValueError as e:
             print('WARNING: Frequency-domain features not computed. Check input.')
