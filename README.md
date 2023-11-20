@@ -45,6 +45,12 @@ Installation can be easily done with `pip`:
 $ pip install biosppy
 ```
 
+Alternatively, you can install the latest version from the GitHub repository:
+
+```bash
+$ pip install git+https://github.com/scientisst/BioSPPy.git
+```
+
 ## Simple Example
 
 The code below loads an ECG signal from the `examples` folder, filters it,
