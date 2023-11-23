@@ -720,7 +720,7 @@ def compute_poincare(rri, show=False):
 
     Parameters
     ----------
-     rri : array
+    rri : array
         RR-intervals (ms).
     show : bool, optional
         If True, show the Poincaré plot.
@@ -865,6 +865,7 @@ def detrend_window(rri, win_len=2000, **kwargs):
         Length of the window to detrend the RRI signal. Default: 2000.
     kwargs : dict, optional
         Parameters of the detrending method.
+
     Returns
     -------
     rri_det : array
