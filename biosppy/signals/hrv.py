@@ -384,7 +384,7 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
         if 'rri_detrended' in kwargs:
             rri_det = kwargs['rri_detrended']
         else:
-            rri_det = detrend_window(rri)
+            rri_det = detrend_window(rri)['rri_det']
     else:
         rri_det = rri
 
