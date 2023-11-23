@@ -385,6 +385,7 @@ def hrv_timedomain(rri, duration=None, detrend_rri=True, show=False, **kwargs):
             rri_det = kwargs['rri_detrended']
         else:
             rri_det = detrend_window(rri)['rri_det']
+        print('Time domain: the rri sequence was detrended.')
     else:
         rri_det = rri
 
@@ -530,6 +531,7 @@ def hrv_frequencydomain(rri=None, duration=None, freq_method='FFT',
     # detrend
     if detrend_rri:
         rri_inter = detrend_window(rri_inter)['rri_det']
+        print('Frequency domain: the rri sequence was detrended.')
 
     if duration >= 20:
 
@@ -625,6 +627,7 @@ def hrv_nonlinear(rri=None, duration=None, detrend_rri=True, show=False):
     # detrend
     if detrend_rri:
         rri = detrend_window(rri)['rri_det']
+        print('Non-linear domain: the rri sequence was detrended.')
 
     # initialize outputs
     out = utils.ReturnTuple((), ())
