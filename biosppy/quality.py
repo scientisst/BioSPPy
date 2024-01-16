@@ -15,64 +15,61 @@ from __future__ import absolute_import, division, print_function
 
 # local
 from . import utils
-from .signals import ecg
+from .signals import ecg, tools
 
 # 3rd party
 import numpy as np
 
 
-def quality_eda(x=None, method='bottcher', sampling_rate=None):
+def quality_eda(x=None, methods=['bottcher'], sampling_rate=None):
     """Compute the quality index for one EDA segment.
-    
-    Parameters
-    ----------
-    x : array
-        First input signal.
-    method : string
-        Method to assess quality.
-    sampling_rate : int
-        Sampling frequency (Hz).
 
-    Returns
-    -------
-    r : float
-        Signal Quality Index ranging between -1 and +1.
-
-    Raises
-    ------
-    ValueError
-        If the input signals do not have the same length.
-
-    """
-    available_methods = ['bottcher']
+        Parameters
+        ----------
+        x : array
+            Input signal to test.
+        methods : list
+            Method to assess quality. One or more of the following: 'bottcher'.
+        sampling_rate : int
+            Sampling frequency (Hz).
+        Returns
+        -------
+        args : tuple
+            Tuple containing the quality index for each method.
+        names : tuple
+            Tuple containing the name of each method.
+        """
     # check inputs
     if x is None:
         raise TypeError("Please specify the input signal.")
-
-    if method not in available_methods:
-        raise TypeError("Method should be one of the following: ", available_methods)
     
     if sampling_rate is None:
         raise TypeError("Please specify the sampling rate.")
     
     assert len(x) > sampling_rate * 2, 'Segment must be 5s long'
+
+    args, names = (), ()
+    available_methods = ['bottcher']
+
+    for method in methods:
+
+        assert method in available_methods, "Method should be one of the following: " + ", ".join(available_methods)
     
-    if method == 'bottcher':
-        quality = eda_sqi_bottcher(x, sampling_rate)
+        if method == 'bottcher':
+            quality = eda_sqi_bottcher(x, sampling_rate)
     
-    args = (quality,)
-    names = ('SQI',)
+        args += (quality,)
+        names += (method,)
 
     return utils.ReturnTuple(args, names)
 
 
-def quality_ecg(segment, method=['3Level'], sampling_rate=None, 
+def quality_ecg(segment, methods=['3Level'], sampling_rate=None, 
                 fisher=True, f_thr=0.01, threshold=0.9, bit=0, 
                 nseg=1024, num_spectrum=[], dem_spectrum=[], 
                 mode_fsqi='simple'):
     
     """Compute the quality index for one ECG segment.
-
 
     Parameters
     ----------
@@ -89,41 +86,75 @@ def quality_ecg(segment, method=['3Level'], sampling_rate=None,
 
     Returns
     -------
-    r : float
-        Signal Quality Index ranging between -1 and +1.
-
-    Raises
-    ------
-    ValueError
-        If the input signals do not have the same length.
-
+    args : tuple
+        Tuple containing the quality index for each method.
+    names : tuple
+        Tuple containing the name of each method.
     """
     args, names = (), ()
 
-    for method_ in method:
+    for method in methods:
 
-        assert method_ in ['Level3', 'pSQI', 'kSQI', 'Zhao'], 'Method should be one of the following: 3Level, pSQI, kSQI, Zhao'
+        assert method in ['Level3', 'pSQI', 'kSQI', 'Zhao'], 'Method should be one of the following: 3Level, pSQI, kSQI, Zhao'
 
-        if method_ == 'Level3':
+        if method == 'Level3':
             # returns a SQI level 0, 0.5 or 1.0
-            quality = sqi_ecg_3level(segment, sampling_rate, threshold, bit)
+            quality = ecg_sqi_level3(segment, sampling_rate, threshold, bit)
 
-        elif method_ == 'pSQI':
+        elif method == 'pSQI':
             quality = ecg.pSQI(segment, f_thr=f_thr)
         
-        elif method_ == 'kSQI':
+        elif method == 'kSQI':
             quality = ecg.kSQI(segment, fisher=fisher)
 
-        elif method_ == 'fSQI':
+        elif method == 'fSQI':
             quality = ecg.fSQI(segment, fs=sampling_rate, nseg=nseg, num_spectrum=num_spectrum, dem_spectrum=dem_spectrum, mode=mode_fsqi)
 
         args += (quality,)
-        names += (method_,)
+        names += (method,)
 
     return utils.ReturnTuple(args, names)
 
 
-def sqi_ecg_3level(segment, sampling_rate, threshold, bit):
+def quality_ppg(x=None, methods=['glasstetter'], sampling_rate=None, q_thr=0.8):
+    """Compute the quality index for one PPG segment.
+
+    Parameters
+    ----------
+    x : array
+        Input signal to test.
+    methods : list
+        Methods to assess quality. One or more of the following: 'glasstetter'.
+    sampling_rate : int
+        Sampling frequency (Hz).
+    q_thr : float
+        Threshold for the spectral entropy acceptability.
+
+    Returns
+    -------
+    args : tuple
+        Tuple containing the quality index for each method.
+    names : tuple
+        Tuple containing the name of each method.
+    """
+
+    args, names = (), ()
+    available_methods = ['glasstetter']
+
+    for method in methods:
+
+        assert method in available_methods, 'Method should be one or more of the following: ' + ', '.join(available_methods)
+
+        if method == 'glasstetter':
+            quality = ppg_sqi(x, sampling_rate, q_thr=q_thr)
+        
+        args += (quality,)
+        names += (method,)
+
+    return utils.ReturnTuple(args, names)
+
+
+def ecg_sqi_level3(segment, sampling_rate, threshold, bit):
 
     """Compute the quality index for one ECG segment. The segment should have 10 seconds.
 
@@ -205,3 +236,79 @@ def eda_sqi_bottcher(x=None, sampling_rate=None):  # -> Timeline
     # the final SQI is the average of the scores 
     return np.mean(quality_score)
     
+
+def spectral_entropy(x, sampling_rate, nperseg, fmin, fmax):
+    """Spectral entropy for a PPG Signal.
+
+    As proposed by Glasstetter et al. MDPI Sensors, 21, 2021.
+    "Identification of Ictal Tachycardia in Focal Motor- and Non-Motor Seizures by Means of a Wearable PPG Sensor."
+
+    Parameters
+    ----------
+    x : array
+        Input signal.
+    sampling_rate : int
+        Sampling frequency (Hz).
+    nperseg : int
+        Length of each segment.
+    fmin : float
+        Minimum frequency (Hz).
+    fmax : float
+        Maximum frequency (Hz).
+    
+    Returns
+    -------
+    entropy_norm : float
+        Normalized entropy.
+    """
+
+    assert len(x) >= nperseg, 'Segment must be 4s long'
+    
+    # if nperseg = 4s, then 3.75 s of overlap
+    noverlap = int(0.9375 * nperseg)  
+    
+    # use the welch spectrum to compute the PSD and the frequency vector
+    f, psd = tools.welch_spectrum(signal=x, sampling_rate=sampling_rate, size=nperseg, overlap=noverlap)
+    
+    # select the frequency band of interest
+    idx_min = np.argmin(np.abs(f - fmin))
+    idx_max = np.argmin(np.abs(f - fmax))
+    psd = psd[idx_min:idx_max]
+    # normalize the PSD
+    psd /= np.sum(psd)  
+    entropy = - np.sum(psd * np.log2(psd))
+    N = idx_max - idx_min
+    entropy_norm = entropy / np.log2(N)
+    return entropy_norm
+
+
+def ppg_sqi(x, sampling_rate, q_thr=0.8):
+    """PPG SQI as proposed by Glasstetter et al. MDPI Sensors, 21, 2021.
+    "Identification of Ictal Tachycardia in Focal Motor- and Non-Motor Seizures by Means of a Wearable PPG Sensor."
+    Also used in Böttcher et al. Scientific Reports, 2022.
+    "Data Quality Monitoring
+    
+    Parameters
+    ----------
+    x : array
+        Input signal.
+    sampling_rate : int
+        Sampling frequency (Hz).
+    q_thr : float
+        Quality threshold. Used as 0.72 in Glasstetter et al. and 0.8 in Böttcher et al. The higher, more lower quality segments are accepted.
+    
+    Returns
+    -------
+    quality_score : float
+        Quality score ranging between 0 and 1. Average of the binary quality scores of each 4s segment with 3.75 overlap.
+    """
+
+    nperseg = int(4 * sampling_rate)  # 4 s window
+    fmin = 0.1  # Hz
+    fmax = 5  # Hz
+
+    sp_ent = [spectral_entropy(xi, sampling_rate, nperseg, fmin, fmax) for xi in x.reshape(-1, nperseg)]
+
+    quality_score = np.mean((sp_ent < q_thr).astype(int))
+
+    return quality_score
