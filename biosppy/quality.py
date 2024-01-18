@@ -66,7 +66,7 @@ def quality_eda(x=None, methods=['bottcher'], sampling_rate=None):
 
 def quality_ecg(segment, methods=['Level3'], sampling_rate=None, 
                 fisher=True, f_thr=0.01, threshold=0.9, bit=0, 
-                nseg=1024, num_spectrum=[], dem_spectrum=[], 
+                nseg=1024, num_spectrum=[5, 20], dem_spectrum=None, 
                 mode_fsqi='simple'):
     
     """Compute the quality index for one ECG segment.
@@ -76,13 +76,13 @@ def quality_ecg(segment, methods=['Level3'], sampling_rate=None,
     segment : array
         Input signal to test.
     method : string
-        Method to assess quality. One of the following: 'Level3', 'pSQI', 'kSQI', 'Zhao'.
+        Method to assess quality. One or more of the following: 'Level3', 'pSQI', 'kSQI', 'fSQI'.
     sampling_rate : int
         Sampling frequency (Hz).
     threshold : float
         Threshold for the correlation coefficient.
     bit : int
-        Number of bits of the ADC.? Resolution bits, for the BITalino is 10 bits.
+        Number of bits of the ADC. Resolution bits, for the BITalino is 10 bits.
 
     Returns
     -------
