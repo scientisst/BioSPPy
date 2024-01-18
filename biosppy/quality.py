@@ -64,7 +64,7 @@ def quality_eda(x=None, methods=['bottcher'], sampling_rate=None):
     return utils.ReturnTuple(args, names)
 
 
-def quality_ecg(segment, methods=['3Level'], sampling_rate=None, 
+def quality_ecg(segment, methods=['Level3'], sampling_rate=None, 
                 fisher=True, f_thr=0.01, threshold=0.9, bit=0, 
                 nseg=1024, num_spectrum=[], dem_spectrum=[], 
                 mode_fsqi='simple'):
@@ -76,7 +76,7 @@ def quality_ecg(segment, methods=['3Level'], sampling_rate=None,
     segment : array
         Input signal to test.
     method : string
-        Method to assess quality. One of the following: '3Level', 'pSQI', 'kSQI', 'Zhao'.
+        Method to assess quality. One of the following: 'Level3', 'pSQI', 'kSQI', 'Zhao'.
     sampling_rate : int
         Sampling frequency (Hz).
     threshold : float
@@ -92,10 +92,11 @@ def quality_ecg(segment, methods=['3Level'], sampling_rate=None,
         Tuple containing the name of each method.
     """
     args, names = (), ()
+    available_methods = ['Level3', 'pSQI', 'kSQI', 'fSQI']
 
     for method in methods:
 
-        assert method in ['Level3', 'pSQI', 'kSQI', 'Zhao'], 'Method should be one of the following: 3Level, pSQI, kSQI, Zhao'
+        assert method in available_methods, 'Method should be one of the following: ' + ', '.join(available_methods)
 
         if method == 'Level3':
             # returns a SQI level 0, 0.5 or 1.0
@@ -268,7 +269,7 @@ def spectral_entropy(x, sampling_rate, nperseg, fmin, fmax):
     noverlap = int(0.9375 * nperseg)  
     
     # use the welch spectrum to compute the PSD and the frequency vector
-    f, psd = tools.welch_spectrum(signal=x, sampling_rate=sampling_rate, size=nperseg, overlap=noverlap)
+    f, psd = tools.welch_spectrum(signal=x, sampling_rate=sampling_rate, size=nperseg, decibel=False)
     
     # select the frequency band of interest
     idx_min = np.argmin(np.abs(f - fmin))
@@ -306,8 +307,8 @@ def ppg_sqi(x, sampling_rate, q_thr=0.8):
     nperseg = int(4 * sampling_rate)  # 4 s window
     fmin = 0.1  # Hz
     fmax = 5  # Hz
-
-    sp_ent = [spectral_entropy(xi, sampling_rate, nperseg, fmin, fmax) for xi in x.reshape(-1, nperseg)]
+    x_segments = [x[i:i+nperseg] for i in range(0, len(x)-nperseg, int(nperseg*(1-0.9375)))]
+    sp_ent = np.array([spectral_entropy(xi, sampling_rate, nperseg, fmin, fmax) for xi in x_segments])
 
     quality_score = np.mean((sp_ent < q_thr).astype(int))
 
