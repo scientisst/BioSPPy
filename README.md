@@ -1,5 +1,5 @@
 ```
-:cyclone: New module for signal quality assessment :cyclone: 
+🌀 New module for signal quality assessment 🌀
 With the signals.quality module you can now evaluate the quality of your signals!
 So far, the EDA and ECG quality are available, but more could be added soon. 
 ```
