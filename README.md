@@ -1,4 +1,10 @@
 ```
+:cyclone: New module for signal quality assessment :cyclone: 
+With the signals.quality module you can now evaluate the quality of your signals!
+So far, the EDA and ECG quality are available, but more could be added soon. 
+```
+
+```
 🫀 New module for heart rate variability 🫀
 With the signals.hrv module you can now extract HRV features. Check it out! (PR #19)
 ```
