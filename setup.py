@@ -16,8 +16,6 @@ A toolbox for biosignal processing written in Python.
 import io
 import os
 import sys
-import re
-import ast
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
@@ -29,7 +27,7 @@ URL = 'https://github.com/scientisst/BioSPPy'
 EMAIL = 'developer@scientisst.com'
 AUTHOR = 'Instituto de Telecomunicacoes'
 REQUIRES_PYTHON = '>3.5.2'
-VERSION = '2.1.2'
+VERSION = '2.1.3'
 LICENSE = 'BSD 3-clause'
 
 # What packages are required for this module to be executed?
