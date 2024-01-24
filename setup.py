@@ -45,6 +45,7 @@ REQUIRED = [
     'joblib',
     'opencv-python',
     'pywavelets',
+    'mock',
 ]
 
 # What packages are optional?
