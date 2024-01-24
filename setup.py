@@ -22,12 +22,6 @@ from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
 
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
-
-with open('biosppy/__init__.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
-
 # Package meta-data.
 NAME = 'biosppy'
 DESCRIPTION = 'A toolbox for biosignal processing written in Python.'
@@ -35,7 +29,7 @@ URL = 'https://github.com/scientisst/BioSPPy'
 EMAIL = 'developer@scientisst.com'
 AUTHOR = 'Instituto de Telecomunicacoes'
 REQUIRES_PYTHON = '>3.5.2'
-VERSION = version
+VERSION = 2.1.2
 LICENSE = 'BSD 3-clause'
 
 # What packages are required for this module to be executed?
