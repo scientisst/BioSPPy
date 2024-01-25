@@ -24,6 +24,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 import matplotlib.lines as lines
 import numpy as np
+from mock import MagicMock
 
 # local
 from . import utils
@@ -38,26 +39,38 @@ LOGOS_FOLDER = '.logos'
 BIOSPPY_LOGO = 'biosppy.png'
 SCIENTISST_LOGO = 'scientisst.png'
 
-# matplotlib settings
-plt.rcParams['text.color'] = '#495057'
-plt.rcParams['axes.labelcolor'] = '#495057'
-plt.rcParams['axes.labelsize'] = 10
-plt.rcParams['axes.edgecolor'] = '#495057'
-plt.rcParams['axes.facecolor'] = '#f8f9fa'
-plt.rcParams['axes.titlesize'] = 11
-plt.rcParams['xtick.color'] = '#495057'
-plt.rcParams['ytick.color'] = '#495057'
-plt.rcParams['grid.color'] = '#ebeef0'
-plt.rcParams['axes.spines.top'] = False
-plt.rcParams['axes.spines.right'] = False
-plt.rcParams['axes.grid'] = True
-plt.rcParams['grid.linestyle'] = '-'
-plt.rcParams['grid.color'] = '#ebeef0'
-plt.rcParams['legend.facecolor'] = 'white'
-plt.rcParams['legend.framealpha'] = 0.75
-plt.rcParams['legend.loc'] = 'upper right'
-plt.rcParams['legend.fontsize'] = 8
+def _get_params():
+    """Get matplotlib parameters.
 
+    Returns
+    -------
+    params : dict
+        Dictionary of matplotlib parameters.
+
+    """
+
+    params = {
+        'text.color': '#495057',
+        'axes.labelcolor': '#495057',
+        'axes.labelsize': 10,
+        'axes.edgecolor': '#495057',
+        'axes.facecolor': '#f8f9fa',
+        'axes.titlesize': 11,
+        'xtick.color': '#495057',
+        'ytick.color': '#495057',
+        'grid.color': '#ebeef0',
+        'axes.spines.top': False,
+        'axes.spines.right': False,
+        'axes.grid': True,
+        'grid.linestyle': '-',
+        'grid.color': '#ebeef0',
+        'legend.facecolor': 'white',
+        'legend.framealpha': 0.75,
+        'legend.loc': 'upper right',
+        'legend.fontsize': 8
+    }
+
+    return params
 
 def color_palette(idx):
     """Color palette to use throughout the biosppy package
@@ -163,6 +176,9 @@ def _plot_filter(b, a, sampling_rate=1000., nfreqs=4096, log_xscale=True,
     freqs, resp = st._filter_resp(b, a,
                                   sampling_rate=sampling_rate,
                                   nfreqs=nfreqs)
+    
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     # plot
     if ax is None:
@@ -308,6 +324,9 @@ def plot_spectrum(signal=None, sampling_rate=1000., path=None, show=True):
                                      pow2=False,
                                      decibel=True)
 
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -368,6 +387,9 @@ def plot_acc(ts=None,
 
     raw_t = np.transpose(raw)
     acc_x, acc_y, acc_z = raw_t[0], raw_t[1], raw_t[2]
+
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('ACC Summary', fontsize=12, fontweight='bold')
@@ -496,6 +518,8 @@ def plot_ppg(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('PPG Summary', fontsize=12, fontweight='bold')
@@ -612,6 +636,8 @@ def plot_bvp(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure()
     fig.suptitle('BVP Summary')
@@ -705,6 +731,8 @@ def plot_abp(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure()
     fig.suptitle('ABP Summary')
@@ -808,6 +836,8 @@ def plot_eda(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('EDA Summary', fontsize=14, fontweight='bold')
@@ -946,6 +976,8 @@ def plot_emg(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('EMG Summary', fontsize=12, fontweight='bold')
@@ -1061,6 +1093,8 @@ def plot_resp(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('RESP Summary', fontsize=12, fontweight='bold')
@@ -1353,6 +1387,9 @@ def _plot_multichannel(ts=None,
 
     ncols = int(np.ceil(nch / float(nrows)))
 
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
+
     fig = plt.figure()
 
     # title
@@ -1455,6 +1492,8 @@ def plot_ecg(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(10, 5))
     fig.suptitle('ECG Summary', fontsize=12, fontweight='bold')
@@ -1577,6 +1616,8 @@ def plot_bcg(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure()
     fig.suptitle('BCG Summary')
@@ -1687,6 +1728,8 @@ def plot_pcg(ts=None,
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure(figsize=(12, 5))
     fig.suptitle('PCG Summary', fontsize=12, fontweight='bold')
@@ -1814,6 +1857,8 @@ def _plot_rates(thresholds, rates, variables,
         Figure object.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     if ax is None:
         fig = plt.figure()
@@ -1858,6 +1903,8 @@ def plot_biometrics(assessment=None, eer_idx=None, path=None, show=False):
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure()
     fig.suptitle('Biometrics Summary')
@@ -1956,6 +2003,8 @@ def plot_clustering(data=None, clusters=None, path=None, show=False):
         If True, show the plot immediately.
 
     """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
 
     fig = plt.figure()
     fig.suptitle('Clustering Summary')
@@ -2383,6 +2432,9 @@ def plot_hrv(rri,
         fd_out = fd_out.as_dict()
 
     # plot
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
+
     fig = plt.figure(figsize=(12, 6))
     fig.suptitle('HRV Summary', fontsize=12, fontweight='bold')
     gs = gridspec.GridSpec(6, 2)

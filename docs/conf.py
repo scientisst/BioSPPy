@@ -29,14 +29,15 @@ class Mock(MagicMock):
             return Mock()
 
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot',
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot','matplotlib.lines',
+                'matplotlib.patches','matplotlib.backends.backend_tkagg',
                 'scipy.signal', 'scipy.interpolate', 'scipy.optimize',
                 'scipy.stats', 'scipy.cluster', 'scipy.cluster.hierarchy',
                 'scipy.cluster.vq', 'scipy.sparse', 'scipy.spatial',
                 'scipy.spatial.distance', 'sklearn', 'sklearn.cluster',
                 'sklearn.model_selection', 'sklearn.externals',
                 'matplotlib.gridspec', 'h5py', 'shortuuid', 'bidict', 'svm',
-                'sksvm']
+                'sksvm','pywt','joblib']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
@@ -80,7 +81,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'BioSPPy'
-copyright = '2015-2018, Instituto de Telecomunicacoes'
+copyright = '2015-2024, Instituto de Telecomunicacoes'
 author = 'Instituto de Telecomunicacoes'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -88,7 +89,7 @@ author = 'Instituto de Telecomunicacoes'
 # built documents.
 #
 # The short X.Y version.
-version = '0.6.1'
+version = '2.1.2'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -97,7 +98,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
