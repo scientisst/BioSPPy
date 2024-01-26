@@ -10,6 +10,9 @@ Packages
    :maxdepth: 1
 
    biosppy.signals
+   biosppy.features
+   biosppy.synthetizers
+   biosppy.inter_plotting
 
 Modules
 -------
