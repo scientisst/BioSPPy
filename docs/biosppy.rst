@@ -42,6 +42,11 @@ Modules
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: biosppy.stats
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: biosppy.storage
     :members:
     :undoc-members:
