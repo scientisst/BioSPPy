@@ -45,6 +45,11 @@ Modules
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: biosppy.signals.hrv
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: biosppy.signals.pcg
     :members:
     :undoc-members:
