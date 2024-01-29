@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-biosppy.signals.ecg
+biosppy.synthesizers.ecg
 -------------------
 
 This module provides methods to synthesize Electrocardiographic (ECG) signals.
