@@ -117,10 +117,8 @@ def acc(signal=None, sampling_rate=100.0, units=None, path=None, show=True, inte
 def activity_index(signal=None, sampling_rate=100.0, window_1=5, window_2=60):
     """
     Compute the activity index of an ACC signal.
-
     Follows the method described in [Lin18]_, the activity index is computed as
     follows:
-    
     1) Calculate the ACC magnitude if the signal is triaxial
     2) Calculate the standard deviation of the ACC magnitude for each
     'window_1' seconds

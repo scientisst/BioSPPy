@@ -1703,6 +1703,7 @@ def plot_pcg(ts=None,
              path=None,
              show=False):
     """Create a summary plot from the output of signals.pcg.pcg.
+    
     Parameters
     ----------
     ts : array

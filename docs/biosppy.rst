@@ -11,7 +11,7 @@ Packages
 
    biosppy.signals
    biosppy.features
-   biosppy.synthetizers
+   biosppy.synthesizers
    biosppy.inter_plotting
 
 Modules

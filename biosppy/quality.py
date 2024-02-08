@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 biosppy.quality
--------------
+----------------
 
 This provides functions to assess the quality of several biosignals.
 
@@ -167,15 +167,24 @@ def ecg_sqi_level3(segment, sampling_rate, threshold, bit):
 
 
 def eda_sqi_bottcher(x=None, sampling_rate=None):  # -> Timeline
-    """
-    Suggested by Böttcher et al. Scientific Reports, 2022, for wearable wrist EDA.
-
+    """ Suggested by Böttcher et al. Scientific Reports, 2022, for wearable wrist EDA.
     This is given by a binary score 0/1 defined by the following rules:
-     - mean of the segment of 2 seconds should be > 0.05
-     - rate of amplitude change (given by racSQI) should be < 0.2
+    - mean of the segment of 2 seconds should be > 0.05
+    - rate of amplitude change (given by racSQI) should be < 0.2
     This score is calculated for each 2 seconds window of the segment. The average of the scores is the final SQI.
-
     This method was designed for a segment of 60s
+
+    Parameters
+    ----------
+    x : array
+        Input signal to test.
+    sampling_rate : int
+        Sampling frequency (Hz).
+    
+    Returns
+    -------
+    quality_score : string
+        Signal Quality Index.
 
     """
     quality_score = 0

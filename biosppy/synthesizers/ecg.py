@@ -27,7 +27,7 @@ from .. import plotting, utils
 def B(l, Kb):
     """Generates the amplitude values of the first isoelectric line (B segment) of the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameter introduced doesn't make sense in this context, an error will raise.
     Parameters
@@ -58,7 +58,7 @@ def B(l, Kb):
 def P(i, Ap, Kp):
     """Generates the amplitude values of the P wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -94,7 +94,7 @@ def P(i, Ap, Kp):
 def Pq(l, Kpq):
     """Generates the amplitude values of the PQ segment in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -125,7 +125,7 @@ def Pq(l, Kpq):
 def Q1(i, Aq, Kq1):
     """Generates the amplitude values of the first 5/6 of the Q wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -161,7 +161,7 @@ def Q1(i, Aq, Kq1):
 def Q2(i, Aq, Kq2):
     """Generates the amplitude values of the last 1/6 of the Q wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -197,7 +197,7 @@ def Q2(i, Aq, Kq2):
 def R(i, Ar, Kr):
     """Generates the amplitude values of the R wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -233,7 +233,7 @@ def R(i, Ar, Kr):
 def S(i, As, Ks, Kcs, k=0):
     """Generates the amplitude values of the S wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -293,7 +293,7 @@ def S(i, As, Ks, Kcs, k=0):
 def St(i, As, Ks, Kcs, sm, Kst, k=0):
     """Generates the amplitude values of the ST segment in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -341,7 +341,7 @@ def St(i, As, Ks, Kcs, sm, Kst, k=0):
 def T(i, As, Ks, Kcs, sm, Kst, At, Kt, k=0):
     """Generates the amplitude values of the T wave in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -401,7 +401,7 @@ def T(i, As, Ks, Kcs, sm, Kst, At, Kt, k=0):
 def I(i, As, Ks, Kcs, sm, Kst, At, Kt, si, Ki):
     """Generates the amplitude values of the final isoelectric segment (I segment) in the ECG signal.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced don't make sense in this context, an error will raise.
     Parameters
@@ -470,7 +470,7 @@ def ecg(
 ):  # normal values by default
     """Concatenates the segments and waves to make an ECG signal. The default values are physiological.
 
-    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03].
+    Follows the approach by Dolinský, Andráš, Michaeli and Grimaldi [Model03]_.
 
     If the parameters introduced aren't within physiological values (limits based on the website [ECGwaves]), a warning will raise.
 

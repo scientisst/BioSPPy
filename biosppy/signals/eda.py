@@ -296,9 +296,9 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother",
 def cvx_decomposition(signal=None, sampling_rate=1000.0, tau0=2., tau1=0.7,
                       delta_knot=10., alpha=8e-4, gamma=1e-2, solver=None,
                       options={'reltol': 1e-9}):
-    """Performs EDA decomposition using the cvxEDA algorithm.
+    """Performs EDA decomposition using the cvxEDA algorithm [Figner2011]_.
 
-    This function was originally developed by Luca Citi and Alberto Greco. You
+    This function was originally developed by Luca Citi and Alberto Greco [cvxEDA]_. You
     can find the original code and repository at:
     https://github.com/lciti/cvxEDA
 
