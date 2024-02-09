@@ -174,7 +174,7 @@ def synth_uniform(duration=10,
         if not (isinstance(burst_location, list) and all((isinstance(loc, int) or isinstance(loc, float)) for loc in burst_location)):
             raise TypeError("Error! 'burst_location' must be a list of integers or floats.")
         if len(burst_location) != burst_number:
-            raise ValueError("Error! 'burst_location' cannot be longer than the value of 'burst_number'.")
+            raise ValueError("Error! 'burst_location' list cannot be longer than the value of 'burst_number'.")
         if not all(np.round(((loc)/(1/sampling_rate)),10).is_integer() for loc in burst_location):
             warnings.warn("The precision derived from the selected sampling rate is not compatible with the burst locations. This might alter or compromise synthesization of the signals, increasing the sampling rate or altering the burst location/duration is recommended.")
         burst_location.sort()
@@ -188,11 +188,14 @@ def synth_uniform(duration=10,
             else:
                 if i == 0: # First burst
                     quiet_duration[i] = loc
-                    next_loc = burst_location[i+1]
-                    if loc + dur >= next_loc: 
-                        raise ValueError("Error! Burst location times overlap.")
-                    elif loc + dur == next_loc - 1/sampling_rate:
-                        consecutive_bursts = True
+                    if burst_number == 1:
+                        quiet_duration[i+1] = duration - (loc + dur)
+                    else:
+                        next_loc = burst_location[i+1]
+                        if loc + dur >= next_loc: 
+                            raise ValueError("Error! Burst location times overlap.")
+                        elif loc + dur == next_loc - 1/sampling_rate:
+                            consecutive_bursts = True
                 elif i < burst_number - 1: # Intermediate burst
                     next_loc = burst_location[i+1]
                     if loc + dur >= next_loc: 
@@ -213,7 +216,7 @@ def synth_uniform(duration=10,
         if not all(np.round((dur)/(1/sampling_rate),10).is_integer() for dur in quiet_duration):
             warnings.warn("The precision derived from the selected sampling rate is not compatible with the duration of quiet periods between evenly distributed bursts. This might alter (unequal duration of quiet periods) or compromise (impossible to separate bursts in the time domain) synthesization of the signals.")
     total_duration = total_duration_bursts + np.sum(quiet_duration)
-    if total_duration != duration:
+    if np.round(total_duration,10) != duration:
         raise ValueError("Error! The total duration of bursts and quiet periods does not match the total duration of the signal.")
     
     if amplitude_mult is None:
@@ -518,11 +521,14 @@ def synth_gaussian(duration=10,
             else:
                 if i == 0: # First burst
                     quiet_duration[i] = loc
-                    next_loc = burst_location[i+1]
-                    if loc + dur >= next_loc: 
-                        raise ValueError("Error! Burst location times overlap.")
-                    elif loc + dur == next_loc - 1/sampling_rate:
-                        consecutive_bursts = True
+                    if burst_number == 1:
+                        quiet_duration[i+1] = duration - (loc + dur)
+                    else:
+                        next_loc = burst_location[i+1]
+                        if loc + dur >= next_loc: 
+                            raise ValueError("Error! Burst location times overlap.")
+                        elif loc + dur == next_loc - 1/sampling_rate:
+                            consecutive_bursts = True
                 elif i < burst_number - 1: # Intermediate burst
                     next_loc = burst_location[i+1]
                     if loc + dur >= next_loc: 
