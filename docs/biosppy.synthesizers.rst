@@ -14,3 +14,8 @@ Modules
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: biosppy.synthesizers.emg
+   :members:
+   :undoc-members:
+   :show-inheritance:
