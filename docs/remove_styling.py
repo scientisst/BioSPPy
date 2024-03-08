@@ -29,4 +29,6 @@ def get_all_filePaths(folderPath):
         result.extend([os.path.join(dirpath, filename) for filename in filenames])
     return result
 
-formatAll(dir=r'C:\Users\sofia\Documents\GitHub\BioSPPy\docs\notebooks')
+# formatAll(dir=r'C:\Users\sofia\Documents\GitHub\BioSPPy\docs\notebooks')
+
+makePlain(notebook=r"C:\Users\sofia\Documents\GitHub\BioSPPy\docs\notebooks\A.Setting up Your Tools and Workspace\A002 Arduino Essentials\A002 Arduino Essentials.ipynb",template=r"docs\notebooks\_Utilities\dictNB.txt")
