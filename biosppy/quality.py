@@ -302,7 +302,7 @@ def hosSQI(signal=None, quantitative=False, verbose=1):
 
     if verbose == 1:
         print('-------------------------------------------------------') 
-        print('hosSQI Advice (comment this by setting verbose=0) -> The signal should be filtered before this SQI and 5s long.')
+        print('hosSQI Advice (remove this by setting verbose=0) -> The signal must be at least 5s long and should be filtered before applying this function.')
         print('hosSQI is a measure without an upper limit.')
         if hosSQI > 0.8:
             str_level = "Optimal"
