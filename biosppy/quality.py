@@ -251,7 +251,7 @@ def cSQI(rpeaks=None, verbose=1):
 
     if verbose == 1:
         print('-------------------------------------------------------') 
-        print('cSQI Advice (comment this by setting verbose=0) -> The original segment should be more than 30s long for optimal results.')
+        print('cSQI Advice (remove this by setting verbose=0) -> The original segment should be more than 30s long for optimal results.')
 
         if cSQI < 0.45:
             str_level = "Optimal"
