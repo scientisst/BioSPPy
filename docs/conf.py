@@ -89,7 +89,7 @@ author = 'Instituto de Telecomunicacoes'
 # built documents.
 #
 # The short X.Y version.
-version = '2.1.2'
+version = '2.2.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
