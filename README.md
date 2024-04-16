@@ -1,21 +1,15 @@
+### 🎙️ Announcements
+#### Latest
 ```
 🌀 New module for signal quality assessment 🌀
-With the signals.quality module you can now evaluate the quality of your signals!
+With the biosppy.quality module you can now evaluate the quality of your signals!
 So far, the EDA and ECG quality are available, but more could be added soon. 
 ```
-
+#### New features
 ```
-🫀 New module for heart rate variability 🫀
-With the signals.hrv module you can now extract HRV features. Check it out! (PR #19)
-```
-```
-✨ New plotting design ✨
-New colors, new style and new features, check it out!
-```
-```
-🎊 New module for feature extraction 🎊
-With the 'features' module you can easily extract features from your biosignals!
-(Check PR #4)
+🌀 New module for signal quality assessment (biosppy.quality)
+🫀 New module for heart rate variability (biosppy.signals.hrv)
+🎊 New module for feature extraction (biosppy.features)
 ```
 
 
@@ -23,7 +17,7 @@ With the 'features' module you can easily extract features from your biosignals!
 
 *A toolbox for biosignal processing written in Python.*
 
-<a href="http://biosppy.readthedocs.org/">
+<a href="https://biosppy.readthedocs.org/">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
   <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
@@ -41,7 +35,7 @@ Highlights:
 - Clustering
 - Biometrics
 
-Documentation can be found at: <http://biosppy.readthedocs.org/>
+Documentation can be found at: <https://biosppy.readthedocs.org/>
 
 ## Installation
 
