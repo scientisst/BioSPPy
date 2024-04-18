@@ -18,7 +18,11 @@ So far, the EDA and ECG quality are available, but more could be added soon.
 [![PyPI version](https://img.shields.io/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/biosppy)](https://pypi.org/project/biosppy/)
 [![Documentation Status](https://readthedocs.org/projects/biosppy/badge/?version=latest)](https://biosppy.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/github/license/scientisst/BioSPPy)]()
+[![License](https://img.shields.io/pypi/l/biosppy)]()
+[![GitHub issues](https://img.shields.io/github/issues/scientisst/BioSPPy)]()
+
+[![GitHub stars](https://img.shields.io/github/stars/scientisst/BioSPPy)]()
+[![GitHub forks](https://img.shields.io/github/forks/scientisst/BioSPPy)]()
 
 *A toolbox for biosignal processing written in Python.*
 
