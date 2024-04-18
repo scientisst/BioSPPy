@@ -1,3 +1,9 @@
+```
+🌀 New module for signal quality assessment 🌀
+With the biosppy.quality module you can now evaluate the quality of your signals!
+So far, the EDA and ECG quality are available, but more could be added soon. 
+```
+
 # BioSPPy - Biosignal Processing in Python
 
 [![PyPI version](https://img.shields.io/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
@@ -22,24 +28,12 @@
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
 
-### 🎙️ Announcements
-#### Latest
-```
-🌀 New module for signal quality assessment 🌀
-With the biosppy.quality module you can now evaluate the quality of your signals!
-So far, the EDA and ECG quality are available, but more could be added soon. 
-```
-#### New features
-```
-🌀 New module for signal quality assessment (biosppy.quality)
-🫀 New module for heart rate variability (biosppy.signals.hrv)
-🎊 New module for feature extraction (biosppy.features)
-```
-
 Highlights:
 
-- Support for various biosignals: BVP, ECG, EDA, EEG, EMG, PCG, PPG, Respiration
+- Support for various biosignals: ECG, EDA, EEG, EMG, PCG, PPG, Respiration, HRV
 - Signal analysis primitives: filtering, frequency analysis
+- Feature extraction: time, frequency, and non-linear domain
+- Signal quality assessment
 - Clustering
 - Biometrics
 
