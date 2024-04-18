@@ -11,9 +11,13 @@
 
 *A toolbox for biosignal processing written in Python.*
 
-[![BioSPPy](docs/logo/logo_400.png#gh-light-mode-only)](https://biosppy.readthedocs.io/)
-[![BioSPPy](docs/logo/logo_inverted_400.png#gh-dark-mode-only)](https://biosppy.readthedocs.io/)
-
+<a href="https://biosppy.readthedocs.org/">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
+  <img alt="Image" title="I know you're listening! - xkcd.com/525">
+</picture>
+</a>
 
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
