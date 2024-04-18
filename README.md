@@ -1,18 +1,3 @@
-### 🎙️ Announcements
-#### Latest
-```
-🌀 New module for signal quality assessment 🌀
-With the biosppy.quality module you can now evaluate the quality of your signals!
-So far, the EDA and ECG quality are available, but more could be added soon. 
-```
-#### New features
-```
-🌀 New module for signal quality assessment (biosppy.quality)
-🫀 New module for heart rate variability (biosppy.signals.hrv)
-🎊 New module for feature extraction (biosppy.features)
-```
-
-
 # BioSPPy - Biosignal Processing in Python
 
 [![PyPI version](https://img.shields.io/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
@@ -26,16 +11,26 @@ So far, the EDA and ECG quality are available, but more could be added soon.
 
 *A toolbox for biosignal processing written in Python.*
 
-<a href="https://biosppy.readthedocs.org/">
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
-  <img alt="Image" title="I know you're listening! - xkcd.com/525">
-</picture>
-</a>
+[![BioSPPy](docs/logo/logo_400.png#gh-light-mode-only)](https://biosppy.readthedocs.io/)
+[![BioSPPy](docs/logo/logo_inverted_400.png#gh-dark-mode-only)](https://biosppy.readthedocs.io/)
+
 
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
+
+### 🎙️ Announcements
+#### Latest
+```
+🌀 New module for signal quality assessment 🌀
+With the biosppy.quality module you can now evaluate the quality of your signals!
+So far, the EDA and ECG quality are available, but more could be added soon. 
+```
+#### New features
+```
+🌀 New module for signal quality assessment (biosppy.quality)
+🫀 New module for heart rate variability (biosppy.signals.hrv)
+🎊 New module for feature extraction (biosppy.features)
+```
 
 Highlights:
 
