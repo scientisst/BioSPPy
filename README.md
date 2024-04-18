@@ -35,6 +35,7 @@ Highlights:
 - Signal analysis primitives: filtering, frequency analysis
 - Feature extraction: time, frequency, and non-linear domain
 - Signal quality assessment
+- Signal synthesizers
 - Clustering
 - Biometrics
 
