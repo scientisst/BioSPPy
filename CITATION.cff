@@ -1,0 +1,30 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: BioSPPy - Biosignal Processing in Python
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - family-names: Carreiras
+    given-names: Carlos
+  - given-names: Ana Priscila
+    family-names: Alves
+  - given-names: André
+    family-names: Lourenço
+  - given-names: Filipe
+    family-names: Canento
+  - given-names: Hugo
+    family-names: Silva
+  - given-names: Ana
+    family-names: Fred
+repository-code: 'https://github.com/scientisst/BioSPPy'
+abstract: >-
+  The toolbox bundles together various signal processing and
+  pattern recognition methods geared towards the analysis of
+  biosignals.
+license: BSD-3-Clause
+version: 2.1.2
+date-released: '2024-01-24'
