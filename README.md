@@ -1,11 +1,12 @@
-### 🎙️ Announcements
-```
-🌀 New module for signal quality assessment 🌀
-With the biosppy.quality module you can now evaluate the quality of your signals!
-So far, the EDA and ECG quality are available, but more could be added soon. 
-```
+<a href="https://biosppy.readthedocs.org/">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
+  <img alt="Image" title="I know you're listening! - xkcd.com/525">
+</picture>
+</a>
 
-# BioSPPy - Biosignal Processing in Python
+*A toolbox for biosignal processing written in Python.*
 
 [![PyPI version](https://img.shields.io/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/biosppy)](https://pypi.org/project/biosppy/)
@@ -16,15 +17,18 @@ So far, the EDA and ECG quality are available, but more could be added soon.
 [![GitHub stars](https://img.shields.io/github/stars/scientisst/BioSPPy)]()
 [![GitHub forks](https://img.shields.io/github/forks/scientisst/BioSPPy)]()
 
-*A toolbox for biosignal processing written in Python.*
 
-<a href="https://biosppy.readthedocs.org/">
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
-  <img alt="Image" title="I know you're listening! - xkcd.com/525">
-</picture>
-</a>
+### 🎙️ Announcements
+```
+🌀 New module for signal quality assessment 🌀
+With the biosppy.quality module you can now evaluate the quality of your signals!
+So far, the EDA and ECG quality are available, but more could be added soon. 
+```
+
+# BioSPPy - Biosignal Processing in Python
+
+
+
 
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
