@@ -24,6 +24,11 @@
 With the biosppy.quality module you can now evaluate the quality of your signals!
 So far, the EDA and ECG quality are available, but more could be added soon. 
 ```
+```
+🫀 New module for heart rate variability (biosppy.signals.hrv)
+🎊 New module for feature extraction (biosppy.features)
+```
+
 
 # BioSPPy - Biosignal Processing in Python
 
@@ -96,20 +101,19 @@ Please use the following if you need to cite BioSPPy:
 
 - Carreiras C, Alves AP, Lourenço A, Canento F, Silva H, Fred A, *et al.*
   **BioSPPy - Biosignal Processing in Python**, 2015-,
-  https://github.com/PIA-Group/BioSPPy/ [Online; accessed ```<year>-<month>-<day>```].
+  https://github.com/scientisst/BioSPPy/ [Online; accessed ```<year>-<month>-<day>```].
 
 ```latex
 @Misc{,
   author = {Carlos Carreiras and Ana Priscila Alves and Andr\'{e} Louren\c{c}o and Filipe Canento and Hugo Silva and Ana Fred and others},
   title = {{BioSPPy}: Biosignal Processing in {Python}},
   year = {2015--},
-  url = "https://github.com/PIA-Group/BioSPPy/",
+  url = "https://github.com/scientisst/BioSPPy/",
   note = {[Online; accessed <today>]}
 }
 ```
 
 ## License
-
 BioSPPy is released under the BSD 3-clause license. See LICENSE for more details.
 
 ## Disclaimer
