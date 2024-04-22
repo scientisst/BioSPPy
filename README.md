@@ -8,14 +8,12 @@
 
 *A toolbox for biosignal processing written in Python.*
 
-[![PyPI version](https://img.shields.io/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
-[![PyPI downloads](https://img.shields.io/pypi/dm/biosppy)](https://pypi.org/project/biosppy/)
-[![Documentation Status](https://readthedocs.org/projects/biosppy/badge/?version=latest)](https://biosppy.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/pypi/l/biosppy)](https://github.com/scientisst/BioSPPy/blob/main/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/scientisst/BioSPPy)](https://github.com/scientisst/BioSPPy/issues)
+[![PyPI downloads](https://badgen.net/pypi/dm/biosppy/?color=blue)](https://pypi.org/project/biosppy/)
+[![PyPI version](https://badgen.net/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
+[![License](https://badgen.net/pypi/license/biosppy?color=grey)](https://github.com/scientisst/BioSPPy/blob/main/LICENSE)
 
-[![GitHub stars](https://img.shields.io/github/stars/scientisst/BioSPPy)]()
-[![GitHub forks](https://img.shields.io/github/forks/scientisst/BioSPPy)]()
+[![GitHub stars](https://badgen.net/github/stars/scientisst/BioSPPy?color=yellow)]()
+[![GitHub issues](https://badgen.net/github/open-issues/scientisst/BioSPPy?color=cyan)](https://github.com/scientisst/BioSPPy/issues)
 
 
 ### 🎙️ Announcements
@@ -31,10 +29,6 @@ So far, the EDA and ECG quality are available, but more could be added soon.
 
 
 # BioSPPy - Biosignal Processing in Python
-
-
-
-
 The toolbox bundles together various signal processing and pattern recognition
 methods geared towards the analysis of biosignals.
 
