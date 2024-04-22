@@ -25,3 +25,23 @@ abstract: >-
 license: BSD-3-Clause
 version: 2.2.0
 date-released: '2024-04-16'
+preferred-citation:
+    type: article
+    authors:
+    - family-names: Bota
+      given-names: Patrícia
+    - family-names: Silva
+      given-names: Rafael
+    - family-names: Carreiras
+      given-names: Carlos
+    - family-names: Fred
+      given-names: Ana
+    - family-names: Plácido da Silva
+      given-names: Hugo
+    doi: "10.1016/j.softx.2024.101712"
+    journal: "SoftwareX"
+    title: "BioSPPy: A Python toolbox for physiological signal processing"
+    volume: 26
+    month: 5
+    year: 2024
+    start: 101712
