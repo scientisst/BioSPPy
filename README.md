@@ -8,8 +8,8 @@
 
 *A toolbox for biosignal processing written in Python.*
 
-[![PyPI downloads](https://badgen.net/pypi/dm/biosppy/?color=blue)](https://pypi.org/project/biosppy/)
 [![PyPI version](https://badgen.net/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
+[![PyPI downloads](https://badgen.net/pypi/dm/biosppy/?color=blue)](https://pypi.org/project/biosppy/)
 [![License](https://badgen.net/pypi/license/biosppy?color=grey)](https://github.com/scientisst/BioSPPy/blob/main/LICENSE)
 
 [![GitHub stars](https://badgen.net/github/stars/scientisst/BioSPPy?color=yellow)]()
