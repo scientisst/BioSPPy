@@ -6,7 +6,7 @@ BioSPPy
 
 A toolbox for biosignal processing written in Python.
 
-:copyright: (c) 2015-2018 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2024 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 
@@ -27,7 +27,7 @@ URL = 'https://github.com/scientisst/BioSPPy'
 EMAIL = 'developer@scientisst.com'
 AUTHOR = 'Instituto de Telecomunicacoes'
 REQUIRES_PYTHON = '>3.5.2'
-VERSION = '2.2.0'
+VERSION = '2.2.1'
 LICENSE = 'BSD 3-clause'
 
 # What packages are required for this module to be executed?
