@@ -111,7 +111,6 @@ P. Bota, R. Silva, C. Carreiras, A. Fred, and H. P. da Silva, "BioSPPy: A Python
 
 However, if you want to cite a specific version of BioSPPy, you can use Zenodo's DOI:
 
-
 ## License
 BioSPPy is released under the BSD 3-clause license. See LICENSE for more details.
 
