@@ -23,7 +23,7 @@ abstract: >-
   pattern recognition methods geared towards the analysis of
   biosignals.
 license: BSD-3-Clause
-version: 2.2.1
+version: 2.2.2
 date-released: '2024-04-23'
 preferred-citation:
     type: article
