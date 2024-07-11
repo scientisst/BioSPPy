@@ -55,7 +55,7 @@ It is recommended to make small, focused commits with clear descriptions of the 
 ## Opening a Pull Request
 To open a PR you need first to push your changes to your remote repository:
 ```bash
-git push origin feature/your-feature-name
+git push origin your-feature-name
 ```
 
 Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open Pull Request". Make sure make a PR to the `main` branch of the `scientisst` repository. 
