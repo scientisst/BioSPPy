@@ -20,6 +20,7 @@ import six
 import sys
 import numpy as np
 import scipy.signal as ss
+from scipy.signal import windows as ssw
 from scipy import interpolate, optimize
 from scipy.stats import stats
 from scipy.sparse import spdiags, eye, csr_matrix
@@ -191,33 +192,33 @@ def _get_window(kernel, size, **kwargs):
 
     """
 
-    # mimics scipy.signal.get_window
+    # mimics scipy.signal.windows.get_window
     if kernel in ["blackman", "black", "blk"]:
-        winfunc = ss.blackman
+        winfunc = ssw.blackman
     elif kernel in ["triangle", "triang", "tri"]:
-        winfunc = ss.triang
+        winfunc = ssw.triang
     elif kernel in ["hamming", "hamm", "ham"]:
-        winfunc = ss.hamming
+        winfunc = ssw.hamming
     elif kernel in ["bartlett", "bart", "brt"]:
-        winfunc = ss.bartlett
+        winfunc = ssw.bartlett
     elif kernel in ["hanning", "hann", "han"]:
-        winfunc = ss.hann
+        winfunc = ssw.hann
     elif kernel in ["blackmanharris", "blackharr", "bkh"]:
-        winfunc = ss.blackmanharris
+        winfunc = ssw.blackmanharris
     elif kernel in ["parzen", "parz", "par"]:
-        winfunc = ss.parzen
+        winfunc = ssw.parzen
     elif kernel in ["bohman", "bman", "bmn"]:
-        winfunc = ss.bohman
+        winfunc = ssw.bohman
     elif kernel in ["nuttall", "nutl", "nut"]:
-        winfunc = ss.nuttall
+        winfunc = ssw.nuttall
     elif kernel in ["barthann", "brthan", "bth"]:
-        winfunc = ss.barthann
+        winfunc = ssw.barthann
     elif kernel in ["flattop", "flat", "flt"]:
-        winfunc = ss.flattop
+        winfunc = ssw.flattop
     elif kernel in ["kaiser", "ksr"]:
-        winfunc = ss.kaiser
+        winfunc = ssw.kaiser
     elif kernel in ["gaussian", "gauss", "gss"]:
-        winfunc = ss.gaussian
+        winfunc = ssw.gaussian
     elif kernel in [
         "general gaussian",
         "general_gaussian",
@@ -225,15 +226,15 @@ def _get_window(kernel, size, **kwargs):
         "general_gauss",
         "ggs",
     ]:
-        winfunc = ss.general_gaussian
+        winfunc = ssw.general_gaussian
     elif kernel in ["boxcar", "box", "ones", "rect", "rectangular"]:
-        winfunc = ss.boxcar
+        winfunc = ssw.boxcar
     elif kernel in ["slepian", "slep", "optimal", "dpss", "dss"]:
-        winfunc = ss.slepian
+        winfunc = ssw.dpss
     elif kernel in ["cosine", "halfcosine"]:
-        winfunc = ss.cosine
+        winfunc = ssw.cosine
     elif kernel in ["chebwin", "cheb"]:
-        winfunc = ss.chebwin
+        winfunc = ssw.chebwin
     else:
         raise ValueError("Unknown window type.")
 

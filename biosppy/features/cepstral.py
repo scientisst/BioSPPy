@@ -63,7 +63,7 @@ def cepstral(signal=None, sampling_rate=1000.):
 
 
 def freq_to_mel(hertz):
-    """Converts mel-frequencies to hertz frequencies.
+    """Converts mel-frequencies to hertz frequencies [Kool12]_.
     
     Parameters
     ----------
@@ -129,15 +129,15 @@ def mfcc(signal=None, sampling_rate=1000., window_size=100, num_filters=10):
 
     References
     ----------
-    .. [Haytham16] Fayek, Haytham. "Speech Processing for Machine Learning: Filter
-    banks, Mel-Frequency Cepstral Coefficients (MFCCs) and What's In-Between."
-    Blog post. 2016. https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
-    .. 'Vanilla STFT and MFCC' by brihijoshi, accessed in october 2022:
-    https://github.com/brihijoshi/vanilla-stft-mfcc/
-    .. 'Time Series Feature Extraction Library' by fraunhoferportugal, accessed in october 2022:
-    https://github.com/fraunhoferportugal/tsfel/
-    .. 'MFCC implementation and tutorial' by ilyamich, accessed in october 2022:
-    https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
+    .. [Haytham16] Fayek, Haytham. "Speech Processing for Machine Learning: Filter banks, 
+        Mel-Frequency Cepstral Coefficients (MFCCs) and What's In-Between."Blog post. 2016. 
+        https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html
+    .. [Brihijoshi] 'Vanilla STFT and MFCC' by brihijoshi, 
+        accessed in october 2022:https://github.com/brihijoshi/vanilla-stft-mfcc/
+    .. [Tsfel] 'Time Series Feature Extraction Library' by fraunhoferportugal, 
+        accessed in october 2022: https://github.com/fraunhoferportugal/tsfel/
+    .. [Ilyamich] 'MFCC implementation and tutorial' by ilyamich, accessed in october 2022:
+        https://www.kaggle.com/code/ilyamich/mfcc-implementation-and-tutorial
 
    """
 

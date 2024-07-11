@@ -18,10 +18,6 @@ from scipy.spatial.distance import pdist, squareform
 # local
 from .. import utils
 
-# variables
-MIN = 2
-
-
 def phase_space(signal=None):
     """Compute phase-space features describing the signal.
 
@@ -153,6 +149,9 @@ def recurrence_plot_features(rec_matrix=None):
     # initialize output
     feats = utils.ReturnTuple((), ())
 
+    # variables
+    MIN = 2
+    
     # compute features
     threshold = 0.5
     len_rec_matrix = len(rec_matrix)

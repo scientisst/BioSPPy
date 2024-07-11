@@ -24,7 +24,7 @@ from . import tools as st
 from .. import plotting, utils
 
 
-def eda(signal=None, sampling_rate=1000., units=None, path=None, show=True):
+def eda(signal=None, sampling_rate=1000., units=None, path=None, show=True, min_amplitude=0.1, size=0.9):
     """Process a raw EDA signal and extract relevant signal features using
     default parameters.
 
@@ -41,6 +41,10 @@ def eda(signal=None, sampling_rate=1000., units=None, path=None, show=True):
         If provided, the plot will be saved to the specified file.
     show : bool, optional
         If True, show a summary plot.
+    min_amplitude : float, optional
+        Minimum threshold by which to exclude SCRs.
+    size : float, optional
+        Size of the filter applied to exluced SCRs.
 
     Returns
     -------
@@ -90,7 +94,7 @@ def eda(signal=None, sampling_rate=1000., units=None, path=None, show=True):
     # get SCR info
     onsets, peaks, amplitudes, phasic_rate, rise_times, half_rec, six_rec = eda_events(signal=filtered,
                                                                                        sampling_rate=sampling_rate,
-                                                                                       min_amplitude=0.1, size=0.9)
+                                                                                       min_amplitude=min_amplitude, size=size)
 
     # get time vectors
     length = len(signal)
@@ -184,6 +188,10 @@ def eda_events(signal=None, sampling_rate=1000., method="emotiphai", **kwargs):
 
     else:
         raise TypeError("Please specify a supported method.")
+    
+    # sanity check
+    if len(onsets) == 0:
+        raise ValueError("Could not find SCR pulses.")
 
     # compute phasic rate
     try:
@@ -296,9 +304,9 @@ def biosppy_decomposition(signal=None, sampling_rate=1000.0, method="smoother",
 def cvx_decomposition(signal=None, sampling_rate=1000.0, tau0=2., tau1=0.7,
                       delta_knot=10., alpha=8e-4, gamma=1e-2, solver=None,
                       options={'reltol': 1e-9}):
-    """Performs EDA decomposition using the cvxEDA algorithm.
+    """Performs EDA decomposition using the cvxEDA algorithm [Figner2011]_.
 
-    This function was originally developed by Luca Citi and Alberto Greco. You
+    This function was originally developed by Luca Citi and Alberto Greco [cvxEDA]_. You
     can find the original code and repository at:
     https://github.com/lciti/cvxEDA
 
@@ -674,7 +682,10 @@ def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1,
                 peaks += [zeros[z] + p]
                 onsets += [zeros[z]]
                 amps += [s[p] - s[0]]
-
+    # sanity check
+    if len(onsets) == 0:
+        raise ValueError("Could not find SCR pulses. Try to adjust min_amplitude or the filter size.")
+    
     # convert to array
     onsets, peaks, amps = np.array(onsets), np.array(peaks), np.array(amps)
 

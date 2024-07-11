@@ -117,6 +117,7 @@ def find_onsets_zong2003(
     """Determine onsets of ABP pulses.
     Skips corrupted signal parts.
     Based on the approach by Zong *et al.* [Zong03]_.
+
     Parameters
     ----------
     signal : array
@@ -141,6 +142,7 @@ def find_onsets_zong2003(
     d2_th : int, optional
         Smallest allowed time between maxima and minima (seconds),
         Defaults to 0.15
+        
     Returns
     -------
     onsets : array

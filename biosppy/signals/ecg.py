@@ -26,7 +26,6 @@ from scipy import stats, integrate
 # local
 from . import tools as st
 from .. import plotting, utils
-from biosppy.inter_plotting import ecg as inter_plotting
 from scipy.signal import argrelextrema
 
 
@@ -123,6 +122,7 @@ def ecg(signal=None, sampling_rate=1000.0, units=None, path=None, show=True, int
     # plot
     if show:
         if interactive:
+            from biosppy.inter_plotting import ecg as inter_plotting
             inter_plotting.plot_ecg(
                 ts=ts,
                 raw=signal,
