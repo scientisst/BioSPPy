@@ -8,7 +8,7 @@ You will need to have a [GitHub account](https://github.com/signup) to contribut
 Navigate to the [BioSPPy's](https://github.com/scientisst/BioSPPy) GitHub repository.
 Click the "Fork" button in the top right corner to create your own copy of the repository. Now you have a copy of the original repository in your GitHub account.
 
-![](/docs/images/fork_button.png)
+<img src="docs/images/fork_button.png" width="600">
 
 2. Clone Your Fork
 
@@ -21,7 +21,7 @@ cd biosppy
 
 Instead of using the terminal, you can also use [GitHub Desktop](https://github.com/apps/desktop) to clone the repository.
 
-![](/docs/images/code_button.png)
+<img src="docs/images/code_button.png" width="400">
 
 3. Create a Branch
 
@@ -61,7 +61,7 @@ git push origin feature/your-feature-name
 Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open Pull Request". Make sure make a PR to the `main` branch of the `scientisst` repository. 
 Please provide a clear title and description for your PR. Include a summary of the changes you have made and any relevant information that will help the maintainers review your code.
 
-![pr_button.png](docs/images/pr_button.png)
+<img src='docs/images/pr_button.png' width='400'>
 
 ## Code Style and Best Practices
 Consistency: Follow the existing code style and format. Consistency is key to maintaining readability and maintainability.
@@ -74,9 +74,9 @@ Comments: Comment your code where necessary to explain complex logic.
 
 Dependencies: Avoid adding new dependencies unless absolutely necessary.
 
-![code_formatting.png](docs/images/code_formatting.png)
+<img src='docs/images/code_formatting.png' width='600'>
 
 ## Getting Help
-If you have any questions or need assistance, feel free to open an issue on the GitHub repository or reach out to the project maintainers.
+If you have any questions or need assistance, feel free to [open an issue](https://github.com/scientisst/BioSPPy/issues/new) on the GitHub repository or [reach out](mailto:developer@scientisst.com) to the project maintainers.
 
 Thank you for contributing to BioSPPy!
