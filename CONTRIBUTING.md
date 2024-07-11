@@ -59,7 +59,7 @@ To open a Pull Request (PR) you need first to push your changes to your remote r
 git push origin your-feature-name
 ```
 
-Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open pull request". Make sure make a PR to the `main` branch of the `scientisst/biosppy` repository. 
+Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open pull request". Make sure to make a PR to the `main` branch of the `scientisst/biosppy` repository. 
 Please provide a clear title and description for your PR. Include a summary of the changes you have made and any relevant information that will help the maintainers review your code.
 
 <img src='docs/images/pr_button.png' width='400'>
