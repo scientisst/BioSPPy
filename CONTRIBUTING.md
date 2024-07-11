@@ -82,6 +82,3 @@ If you don't have the latest changes from the `main` branch of the `scientisst/b
 If you have any questions or need assistance, feel free to [open an issue](https://github.com/scientisst/BioSPPy/issues/new) on the GitHub repository or [reach out](mailto:developer@scientisst.com) to the project maintainers.
 
 Thank you for contributing to BioSPPy!
-
-PR to add the contribution guidelines:
-- This PR adds a new file `CONTRIBUTING.md` to the repository, which contains the guidelines for contributing to BioSPPy.
