@@ -53,26 +53,26 @@ git commit -m "Description of your changes"
 It is recommended to make small, focused commits with clear descriptions of the changes you have made.
 
 ## Opening a Pull Request
-To open a PR you need first to push your changes to your remote repository:
+To open a Pull Request (PR) you need first to push your changes to your remote repository:
 ```bash
 git push origin your-feature-name
 ```
 
-Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open Pull Request". Make sure make a PR to the `main` branch of the `scientisst` repository. 
+Then, in your forked repository, you will see a "Contribute" button. Click on it and then select "Open pull request". Make sure make a PR to the `main` branch of the `scientisst/biosppy` repository. 
 Please provide a clear title and description for your PR. Include a summary of the changes you have made and any relevant information that will help the maintainers review your code.
 
 <img src='docs/images/pr_button.png' width='400'>
 
 ## Code Style and Best Practices
-Consistency: Follow the existing code style and format. Consistency is key to maintaining readability and maintainability.
+**Consistency**: Follow the existing code style and format. Consistency is key to maintaining readability and maintainability.
 
-Style: Ensure your code adheres to the [PEP 8](https://peps.python.org/pep-0008/) style guide. Use [snake_case](https://en.wikipedia.org/wiki/Snake_case) for function and variable names.
+**Style**: Ensure your code adheres to the [PEP 8](https://peps.python.org/pep-0008/) style guide. Use [snake_case](https://en.wikipedia.org/wiki/Snake_case) for function and variable names.
 
-Docstrings: Use docstrings to document your functions and modules. Include descriptions for parameters and return values. Follow the [numpydoc format](https://numpydoc.readthedocs.io/en/latest/format.html).
+**Docstrings**: Use docstrings to document your functions and modules. Include descriptions for parameters and return values. Follow the [numpydoc format](https://numpydoc.readthedocs.io/en/latest/format.html).
 
-Comments: Comment your code where necessary to explain complex logic.
+**Comments**: Comment your code where necessary to explain complex logic.
 
-Dependencies: Avoid adding new dependencies unless absolutely necessary.
+**Dependencies**: Avoid adding new dependencies unless absolutely necessary.
 
 <img src='docs/images/code_formatting.png' width='600'>
 
