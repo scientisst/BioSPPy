@@ -25,7 +25,6 @@ import numpy as np
 
 # local
 from .. import plotting, utils
-from biosppy.inter_plotting import acc as inter_plotting
 
 
 def acc(signal=None, sampling_rate=100.0, units=None, path=None, show=True, interactive=False):
@@ -88,6 +87,7 @@ def acc(signal=None, sampling_rate=100.0, units=None, path=None, show=True, inte
     # plot
     if show:
         if interactive:
+            from biosppy.inter_plotting import acc as inter_plotting
             inter_plotting.plot_acc(
                 ts=ts,  # plotting.plot_acc
                 raw=signal,
