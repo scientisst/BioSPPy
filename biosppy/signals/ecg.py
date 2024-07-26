@@ -1381,6 +1381,858 @@ def ASI_segmenter(signal=None, sampling_rate=1000.0, Pth=5.0):
     return utils.ReturnTuple((rpeaks,), ("rpeaks",))
 
 
+def Pan_Tompkins_Plus_Plus_segmenter(signal=None, sampling_rate=1000.0):
+    """ ECG QRS-Peak Detection Algorithm 
+
+    Follows the approach by Md Niaz and Naimul [MdNiNai22]_.
+
+    Parameters
+    ----------
+    
+    signal : array
+        Input raw ECG signal.
+    sampling_rate: int, float, optional
+        Sampling frequency (Hz).
+
+    Returns
+    ----------
+    qrs_i_raw: array
+        R-peak location indices.
+
+    References
+    ----------
+    .. [MdNiNai22] Khan, Naimul and Imtiaz, Md Niaz, "Pan-Tompkins++: A Robust Approach to Detect R-peaks in ECG Signals", 
+        arXiv preprint arXiv:2211.03171, 2022
+
+    """
+
+    # check inputs
+    if ecg is None:
+        raise TypeError("Please specify an input signal.")
+        
+    ''' Initialize '''
+    delay = 0
+    skip = 0                    # Becomes one when a T wave is detected
+    m_selected_RR = 0
+    mean_RR = 0
+    ser_back = 0
+
+
+    ''' Noise Cancelation (Filtering) (5-18 Hz) '''
+
+    if fs == 200:
+        ''' Remove the mean of Signal '''
+        #If fs=200 keep frequency 5-12 Hz otherwise 5-18 Hz
+        ecg = ecg - np.mean(ecg)  
+
+        Wn = 12*2/fs
+        N = 3
+        a, b = ss.butter(N, Wn, btype='lowpass')
+        ecg_l = ss.filtfilt(a, b, ecg)
+        
+        ecg_l = ecg_l/np.max(np.abs(ecg_l)) #Normalize by dividing high value. This reduces time of calculation
+
+        Wn = 5*2/fs
+        N = 3                                           # Order of 3 less processing
+        a, b = signal.butter(N, Wn, btype='highpass')             # Bandpass filtering
+        ecg_h = signal.filtfilt(a, b, ecg_l, padlen=3*(max(len(a), len(b))-1))
+        ecg_h = ecg_h/np.max(np.abs(ecg_h))  #Normalize by dividing high value. This reduces time of calculation
+
+    else:
+        ''' Band Pass Filter for noise cancelation of other sampling frequencies (Filtering)'''
+        f1 = 5 #3 #5                                          # cutoff low frequency to get rid of baseline wander
+        f2 = 18 #25  #15                                         # cutoff frequency to discard high frequency noise
+        Wn = [f1*2/fs, f2*2/fs]                         # cutoff based on fs
+        N = 3                                           
+        a, b = ss.butter(N=N, Wn=Wn, btype='bandpass')   # Bandpass filtering
+        ecg_h = ss.filtfilt(a, b, ecg, padlen=3*(max(len(a), len(b)) - 1))
+                    
+        ecg_h = ecg_h/np.max(np.abs(ecg_h))
+
+    vector = [1, 2, 0, -2, -1]
+    if fs != 200:
+        int_c = 160/fs
+        b = interp.interp1d(range(1, 6), [i*fs/8 for i in vector])(np.arange(1, 5.1, int_c))  
+                                                                                    
+    else:
+        b = [i*fs/8 for i in vector]      
+
+    ecg_d = ss.filtfilt(b, 1, ecg_h, padlen=3*(max(len(a), len(b)) - 1))
+
+    ecg_d = ecg_d/np.max(ecg_d)
+
+
+    ''' Squaring nonlinearly enhance the dominant peaks '''
+
+    ecg_s = ecg_d**2
+    
+    #Smoothing
+    sm_size = int(0.06 * fs)       
+    ecg_s = st.smoother(signal=ecg_s, kernel='flattop', size=sm_size, mirror=True)
+
+
+    temp_vector = np.ones((1, round(0.150*fs)))/round(0.150*fs) # 150ms moving window, widest possible QRS width
+    temp_vector = temp_vector.flatten()
+    ecg_m = np.convolve(ecg_s, temp_vector)  #Convolution signal and moving window sample
+
+    delay = delay + round(0.150*fs)/2
+
+
+    pks = []
+    locs = peakutils.indexes(y=ecg_m, thres=0, min_dist=round(0.231*fs))  #Find all the peaks apart from previous peak 231ms, peak indices
+    for val in locs:
+        pks.append(ecg_m[val])     #Peak magnitudes
+
+    ''' Initialize Some Other Parameters '''
+    LLp = len(pks)
+
+    ''' Stores QRS with respect to Signal and Filtered Signal '''
+    qrs_c = np.zeros(LLp)           # Amplitude of R peak in convoluted (after moving window) signal
+    qrs_i = np.zeros(LLp)           # Index of R peak in convoluted (after moving window) signal
+    qrs_i_raw = np.zeros(LLp)       # Index of R peak in filtered (before derivative and moving windoe) signal 
+    qrs_amp_raw = np.zeros(LLp)     # Amplitude of R in filtered signal
+    ''' Noise Buffers '''
+    nois_c = np.zeros(LLp)
+    nois_i = np.zeros(LLp)
+
+    ''' Buffers for signal and noise '''
+
+    SIGL_buf = np.zeros(LLp)
+    NOISL_buf = np.zeros(LLp)
+    THRS_buf = np.zeros(LLp)
+    SIGL_buf1 = np.zeros(LLp)
+    NOISL_buf1 = np.zeros(LLp)
+    THRS_buf1 = np.zeros(LLp)
+
+    ''' Initialize the training phase (2 seconds of the signal) to determine the THR_SIG and THR_NOISE '''
+    #Threshold of signal after moving average operation; Take first 2s window max peak to set initial Threshold
+    THR_SIG = np.max(ecg_m[:2*fs+1])*1/3                 # Threshold-1 (paper) #0.33 of the max amplitude 
+    THR_NOISE = np.mean(ecg_m[:2*fs+1])*1/2              #Threshold-2 (paper) # 0.5 of the mean signal is considered to be noise
+    SIG_LEV = THR_SIG                         #SPK for convoluted (after moving window) signal
+    NOISE_LEV = THR_NOISE                     #NPK for convoluted (after moving window) signal
+
+
+    ''' Initialize bandpath filter threshold (2 seconds of the bandpass signal) '''
+    #Threshold of signal before derivative and moving average operation, just after 5-18 Hz filtering
+    THR_SIG1 = np.max(ecg_h[:2*fs+1])*1/3               #Threshold-1
+    THR_NOISE1 = np.mean(ecg_h[:2*fs+1])*1/2            #Threshold-2
+    SIG_LEV1 = THR_SIG1                                 # Signal level in Bandpassed filter; SPK for filtered signal
+    NOISE_LEV1 = THR_NOISE1                             # Noise level in Bandpassed filter; NPK for filtered signal
+
+
+
+    ''' Thresholding and decision rule '''
+
+    Beat_C = 0       #Beat count for convoluted signal
+    Beat_C1 = 0      #Beat count for filtred signal
+    Noise_Count = 0
+    Check_Flag=0
+    for i in range(LLp):
+        ''' Locate the corresponding peak in the filtered signal '''
+
+        if locs[i] - round(0.150*fs) >= 1 and locs[i] <= len(ecg_h): 
+            temp_vec = ecg_h[locs[i] - round(0.150*fs):locs[i]+1]     # Find the values from the preceding 150ms of the peak
+            y_i = np.max(temp_vec)                      #Find the max magnitude in that 150ms window
+            x_i = list(temp_vec).index(y_i)             #Find the index of the max value with respect to (peak-150ms) starts as 0 index
+        else:
+            if i == 0:
+                temp_vec = ecg_h[:locs[i]+1]
+                y_i = np.max(temp_vec)
+                x_i = list(temp_vec).index(y_i)
+                ser_back = 1
+            elif locs[i] >= len(ecg_h):
+                temp_vec = ecg_h[int(locs[i] - round(0.150*fs)):] #c
+                y_i = np.max(temp_vec)
+                x_i = list(temp_vec).index(y_i)
+
+
+        ''' Update the Hearth Rate '''
+        if Beat_C >= 9:
+            diffRR = np.diff(qrs_i[Beat_C-9:Beat_C])            # Calculate RR interval of recent 8 heart beats (taken from R peaks)
+            mean_RR = np.mean(diffRR)                           # Calculate the mean of 8 previous R waves interval
+            comp = qrs_i[Beat_C-1] - qrs_i[Beat_C-2]              # Latest RR
+            
+            m_selected_RR = mean_RR                         #The latest regular beats mean
+        
+        ''' Calculate the mean last 8 R waves '''
+        if bool(m_selected_RR):
+            test_m = m_selected_RR                              #if the regular RR available use it
+        elif bool(mean_RR) and m_selected_RR == 0:
+            test_m = mean_RR
+        else:
+            test_m = 0
+
+        #If no R peaks in 1.4s then check with the reduced Threshold    
+        if (locs[i] - qrs_i[Beat_C-1]) >= round(1.4*fs):     
+                
+                temp_vec = ecg_m[int(qrs_i[Beat_C-1] + round(0.360*fs)):int(locs[i])+1] #Search after 360ms of previous QRS to current peak
+                if temp_vec.size:
+                    pks_temp = np.max(temp_vec) #search back and locate the max in the interval
+                    locs_temp = list(temp_vec).index(pks_temp)
+                    locs_temp = qrs_i[Beat_C-1] + round(0.360*fs) + locs_temp
+                    
+
+                    if pks_temp > THR_NOISE*0.2:  #Check with 20% of the noise threshold
+                                            
+                        Beat_C = Beat_C + 1
+                        if (Beat_C-1)>=LLp:
+                            break
+                        qrs_c[Beat_C-1] = pks_temp   
+                        qrs_i[Beat_C-1] = locs_temp
+
+
+                        ''' Locate in Filtered Signal '''
+                    #Once we find the peak in convoluted signal, we will search in the filtered signal for max peak with a 150 ms window before that location
+                        if locs_temp <= len(ecg_h):
+                            
+                            temp_vec = ecg_h[int(locs_temp-round(0.150*fs))+1:int(locs_temp)+2]  
+                            y_i_t = np.max(temp_vec)
+                            x_i_t = list(temp_vec).index(y_i_t)
+                        else:
+                            temp_vec = ecg_h[int(locs_temp-round(0.150*fs)):]
+                            y_i_t = np.max(temp_vec)
+                            x_i_t = list(temp_vec).index(y_i_t)
+            
+
+                        if y_i_t > THR_NOISE1*0.2:
+                            Beat_C1 = Beat_C1 + 1
+                            if (Beat_C1-1)>=LLp:
+                                break
+                            temp_value = locs_temp - round(0.150*fs) + x_i_t
+                            qrs_i_raw[Beat_C1-1] = temp_value                           
+                            qrs_amp_raw[Beat_C1-1] = y_i_t                                 
+                            
+                            SIG_LEV1 = 0.75 * y_i_t + 0.25 *SIG_LEV1                     
+                                                                                    
+
+                        not_nois = 1
+                        
+                        SIG_LEV = 0.75 * pks_temp + 0.25 *SIG_LEV           
+                else:
+                    not_nois = 0
+        
+        
+        elif bool(test_m):  #Check for missed QRS if no QRS is detected in 166 percent of
+                            #the current average RR interval or 1s after the last detected QRS. the maximal peak detected in
+                            #that time interval that lies Threshold1 and Threshold-3 (paper) is considered to be a possible QRS complex
+
+            if ((locs[i] - qrs_i[Beat_C-1]) >= round(1.66*test_m)) or ((locs[i] - qrs_i[Beat_C-1]) > round(1*fs)):     #it shows a QRS is missed
+                                    
+                temp_vec = ecg_m[int(qrs_i[Beat_C-1] + round(0.360*fs)):int(locs[i])+1] #Search after 360ms of previous QRS to current peak
+                if temp_vec.size:
+                    pks_temp = np.max(temp_vec) #search back and locate the max in the interval
+                    locs_temp = list(temp_vec).index(pks_temp)
+                    locs_temp = qrs_i[Beat_C-1] + round(0.360*fs) + locs_temp
+                    
+                    #Consider signal between the preceding 3 QRS complexes and the following 3 peaks to calculate Threshold-3 (paper)
+                    
+                    THR_NOISE_TMP=THR_NOISE
+                    if i<(len(locs)-3):
+                        temp_vec_tmp=ecg_m[int(qrs_i[Beat_C-3] + round(0.360*fs)):int(locs[i+3])+1] #values between the preceding 3 QRS complexes and the following 3 peaks
+                        THR_NOISE_TMP =0.5*THR_NOISE+0.5*( np.mean(temp_vec_tmp)*1/2) #Calculate Threshold3 
+                    
+                    if pks_temp > THR_NOISE_TMP:  #If max peak in that range greater than Threshold3 mark that as a heart beat
+                                                
+                        Beat_C = Beat_C + 1
+                        if (Beat_C-1)>=LLp:
+                            break
+                        qrs_c[Beat_C-1] = pks_temp   #Mark R peak in the convoluted signal
+                        qrs_i[Beat_C-1] = locs_temp
+
+
+                        ''' Locate in Filtered Signal '''
+                        #Once we find the peak in convoluted signal, we will search in the filtered signal for max peak with a 150 ms window before that location
+                        if locs_temp <= len(ecg_h):
+                        
+                            temp_vec = ecg_h[int(locs_temp-round(0.150*fs))+1:int(locs_temp)+2]  
+                            y_i_t = np.max(temp_vec)
+                            x_i_t = list(temp_vec).index(y_i_t)
+                        else:
+                            temp_vec = ecg_h[int(locs_temp-round(0.150*fs)):]
+                            y_i_t = np.max(temp_vec)
+                            x_i_t = list(temp_vec).index(y_i_t)
+                        
+                
+                        ''' Band Pass Signal Threshold '''
+                        THR_NOISE1_TMP=THR_NOISE1
+                        if i<(len(locs)-3):
+                            temp_vec_tmp=ecg_h[int(qrs_i[Beat_C-3] + round(0.360*fs)-round(0.150*fs)+1):int(locs[i+3])+1]
+                            THR_NOISE1_TMP =0.5*THR_NOISE1+0.5*( np.mean(temp_vec_tmp)*1/2)
+                        if y_i_t > THR_NOISE1_TMP:
+                            Beat_C1 = Beat_C1 + 1
+                            if (Beat_C1-1)>=LLp:
+                                break
+                            temp_value = locs_temp - round(0.150*fs) + x_i_t
+                            qrs_i_raw[Beat_C1-1] = temp_value                           # R peak marked with index in filtered signal
+                            qrs_amp_raw[Beat_C1-1] = y_i_t                                 # Amplitude of that R peak
+                            
+                            SIG_LEV1 = 0.75 * y_i_t + 0.25 *SIG_LEV1                     
+                                                                                        
+
+                        not_nois = 1
+                            #Changed- For missed R peaks- Update THR
+                        SIG_LEV = 0.75 * pks_temp + 0.25 *SIG_LEV          
+                else:
+                    not_nois = 0
+            else:
+                not_nois = 0
+                
+                
+
+        ''' Find noise and QRS Peaks '''
+
+        if pks[i] >= THR_SIG:
+            ''' if NO QRS in 360 ms of the previous QRS or in 50 percent of
+                            the current average RR interval, See if T wave '''
+            
+            if Beat_C >= 3:
+                if bool(test_m):
+                    if (locs[i] - qrs_i[Beat_C-1]) <= round(0.5*test_m): #Check 50 percent of the current average RR interval
+                            
+                        Check_Flag=1
+                if (locs[i] - qrs_i[Beat_C-1] <= round(0.36*fs)) or Check_Flag==1:  
+                    
+                    temp_vec = ecg_m[locs[i]-round(0.07*fs):locs[i]+1]
+                    Slope1 = np.mean(np.diff(temp_vec))          # mean slope of the waveform at that position
+                    temp_vec = ecg_m[int(qrs_i[Beat_C-1] - round(0.07*fs)) - 1 : int(qrs_i[Beat_C-1])+1]
+                    Slope2 = np.mean(np.diff(temp_vec))        # mean slope of previous R wave
+
+                    if np.abs(Slope1) <= np.abs(0.6*Slope2):          # slope less then 0.6 of previous R; checking if it is noise
+                        Noise_Count = Noise_Count + 1
+                        nois_c[Noise_Count] = pks[i]
+                        nois_i[Noise_Count] = locs[i]
+                        skip = 1                                              # T wave identification
+                    else:
+                        skip = 0
+
+            ''' Skip is 1 when a T wave is detected '''
+            if skip == 0:
+                Beat_C = Beat_C + 1
+                if (Beat_C-1)>=LLp:
+                    break
+                qrs_c[Beat_C-1] = pks[i]     #Mark as R peak in the convoluted signal
+                qrs_i[Beat_C-1] = locs[i]
+
+
+                ''' Band pass Filter check threshold '''
+
+                if y_i >= THR_SIG1:
+                    Beat_C1 = Beat_C1 + 1            #Mark as R peak in the filtered signal
+                    if (Beat_C1-1)>=LLp:
+                        break
+                    if bool(ser_back):
+                        # +1 to agree with Matlab implementation
+                        temp_value = x_i + 1
+                        qrs_i_raw[Beat_C1-1] = temp_value
+                    else:
+                        temp_value = locs[i] - round(0.150*fs) + x_i
+                        qrs_i_raw[Beat_C1-1] = temp_value
+
+                    qrs_amp_raw[Beat_C1-1] = y_i
+
+                    SIG_LEV1 = 0.125*y_i + 0.875*SIG_LEV1
+
+
+                SIG_LEV = 0.125*pks[i] + 0.875*SIG_LEV
+
+
+        elif THR_NOISE <= pks[i] and pks[i] < THR_SIG:
+            NOISE_LEV1 = 0.125 * y_i + 0.875 * NOISE_LEV1
+            NOISE_LEV = 0.125*pks[i] + 0.875 * NOISE_LEV
+
+        elif pks[i] < THR_NOISE:           #If less than noise threshold (Threshold-2) mark as noise
+            nois_c[Noise_Count] = pks[i]
+            nois_i[Noise_Count] = locs[i]
+            Noise_Count = Noise_Count + 1
+
+
+            NOISE_LEV1 = 0.125*y_i +0.875 *NOISE_LEV1
+            NOISE_LEV = 0.125*pks[i] + 0.875*NOISE_LEV
+
+        ''' Adjust the threshold with SNR '''
+
+        if NOISE_LEV != 0 or SIG_LEV != 0:
+            THR_SIG = NOISE_LEV + 0.25 * (np.abs(SIG_LEV - NOISE_LEV))  #Calculate Threshold-1 for convoluted signal; above this R peak
+            THR_NOISE = 0.4* THR_SIG                                   #Calculate Threshold-2 for convoluted signal; below this Noise
+        
+        ''' Adjust the threshold with SNR for bandpassed signal '''
+
+        if NOISE_LEV1 != 0 or SIG_LEV1 != 0:
+            THR_SIG1 = NOISE_LEV1 + 0.25*(np.abs(SIG_LEV1 - NOISE_LEV1)) #Calculate Threshold-1  for filtered signal; above this R peak
+            THR_NOISE1 = 0.4* THR_SIG1                   #Calculate Threshold-2 for filtered signal; below this Noise
+
+
+        ''' take a track of thresholds of smoothed signal '''
+
+        SIGL_buf[i] = SIG_LEV
+        NOISL_buf[i] = NOISE_LEV
+        THRS_buf[i] = THR_SIG
+
+        ''' take a track of thresholds of filtered signal '''
+
+        SIGL_buf1[i] = SIG_LEV1
+        NOISL_buf1[i] = NOISE_LEV1
+        THRS_buf1[i] = THR_SIG1
+
+        ''' reset parameters '''
+
+        skip = 0
+        not_nois = 0
+        ser_back = 0
+        Check_Flag=0
+
+
+
+    ''' Adjust lengths '''
+
+    qrs_i_raw = qrs_i_raw[:Beat_C1]
+    qrs_amp_raw = qrs_amp_raw[:Beat_C1]
+    qrs_c = qrs_c[:Beat_C+1]
+    qrs_i = qrs_i[:Beat_C+1]
+    
+    return utils.ReturnTuple((qrs_i_raw,), ("rpeaks",))
+
+
+def find_artifacts(peaks, sampling_rate):
+    '''find_artifacts: find and classify artifacts
+
+    Parameters
+    ----------
+        peaks: array
+            Vector containing indices of detected peaks (R waves locations)
+        sampling_rate : float
+            ECG sampling frequency, in Hz.
+
+    Returns
+    -------
+        artifacts: dictionary
+            Struct containing indices of detected artifacts.
+        subspaces: dictionary
+            Subspaces containing rr, drrs, mrrs, s12, s22, c1, c2 used to classify artifacts.
+    '''
+    c1 = 0.13
+    c2 = 0.17
+    alpha = 5.2
+    ww = 91
+    medfilt_order = 11
+
+    rr = np.diff(peaks) / sampling_rate
+    rr = np.insert(rr, 0, np.mean(rr))
+
+    # Artifact identification
+    drrs = np.diff(rr)
+    drrs = np.insert(drrs, 0, np.mean(drrs))
+    th1 = estimate_th(drrs, alpha, ww)  
+    drrs = drrs / th1
+
+    padding = 2
+
+    drrs_pad = np.pad(drrs, padding, "reflect")
+    
+    '''drrs_pad = np.pad(drrs, (padding, padding), 'symmetric')
+    drrs_pad[:padding] += 1
+    drrs_pad[-padding:] -= 1'''
+
+    s12 = np.zeros(len(drrs))
+    for d in range(padding, padding + len(drrs)):
+        if drrs_pad[d] > 0:
+            s12[d - padding] = max([drrs_pad[d - 1], drrs_pad[d + 1]])
+        elif drrs_pad[d] < 0:
+            s12[d - padding] = min([drrs_pad[d - 1], drrs_pad[d + 1]])
+
+    s22 = np.zeros(len(drrs))
+    for d in range(padding, padding + len(drrs)):
+        if drrs_pad[d] >= 0:
+            s22[d - padding] = min([drrs_pad[d + 1], drrs_pad[d + 2]])
+        elif drrs_pad[d] < 0:
+            s22[d - padding] = max([drrs_pad[d + 1], drrs_pad[d + 2]])
+
+    medrr = ss.medfilt(rr, medfilt_order)
+    mrrs = rr - medrr
+    mrrs[mrrs < 0] *= 2
+    th2 = estimate_th(mrrs, alpha, ww) 
+    mrrs = mrrs / th2
+
+    # Artifacts classification
+    extra_indices = []
+    missed_indices = []
+    ectopic_indices = []
+    longshort_indices = []
+
+    i = 0
+    while i < len(rr) - 2:
+        if abs(drrs[i]) <= 1:
+            i += 1
+            continue
+
+        eq1 = (drrs[i] > 1) and (s12[i] < (-c1 * drrs[i] - c2))
+        eq2 = (drrs[i] < -1) and (s12[i] > (-c1 * drrs[i] + c2))
+
+        if any([eq1, eq2]):
+            ectopic_indices.append(i)
+            i += 1
+            continue
+
+        if not any([abs(drrs[i]) > 1, abs(mrrs[i]) > 3]):
+            i += 1
+            continue
+
+        longshort_candidates = [i]
+
+        if abs(drrs[i + 1]) < abs(drrs[i + 2]):
+            longshort_candidates.append(i + 1)
+
+        for j in longshort_candidates:
+            eq3 = (drrs[j] > 1) and (s22[j] < -1)
+            eq4 = abs(mrrs[j]) > 3
+            eq5 = (drrs[j] < -1) and (s22[j] > 1)
+
+            if not any([eq3, eq4, eq5]):
+                i += 1
+                continue
+
+            eq6 = abs(rr[j] / 2 - medrr[j]) < th2[j]
+            eq7 = abs(rr[j] + rr[j + 1] - medrr[j]) < th2[j]
+
+            if all([eq5, eq7]):
+                extra_indices.append(j)
+                i += 1
+                continue
+
+            if all([eq3, eq6]):
+                missed_indices.append(j)
+                i += 1
+                continue
+
+            longshort_indices.append(j)
+            i += 1
+
+    artifacts = {
+        'ectopic': ectopic_indices, 
+        'missed': missed_indices, 
+        'extra': extra_indices, 
+        'longshort': longshort_indices
+    }
+    subspaces = {
+        'rr': rr,
+        'drrs': drrs,
+        'mrrs': mrrs,
+        's12': s12, 
+        's22': s22, 
+        'c1': c1, 
+        'c2': c2
+    }
+
+    return artifacts, subspaces
+
+def estimate_th(x, alpha, ww):
+    '''estimate_th: estimate threshold
+
+    Parameters
+    ----------
+        x: array
+            Vector containing drrs or mrrs.
+        alpha : float
+            Empirically obtaind constant used in threshold calculation.
+        ww: int
+            Window width in ms.
+
+    Returns
+    -------
+        th: float
+            Threshold.
+    '''
+    df = pd.DataFrame({"signal": np.abs(x)})
+    q1 = (
+        df.rolling(ww, center=True, min_periods=1)
+        .quantile(0.25)
+        .signal.values
+    )
+    q3 = (
+        df.rolling(ww, center=True, min_periods=1)
+        .quantile(0.75)
+        .signal.values
+    )
+    th = alpha * ((q3 - q1) / 2)
+    return th
+
+def correct_extra(extra_indices, peaks):
+    '''correct_extra: correct extra beat by deleting it.
+
+    Parameters
+    ----------
+        extra_indices: array
+            Vector containing indices of extra beats.
+        peaks : array
+            Vector containing indices of detected peaks (R waves locations).
+
+    Returns
+    -------
+        corrected_peaks: array
+            Vector containing indices of corrected peaks.
+    '''
+    corrected_peaks = peaks.copy()
+    corrected_peaks = np.delete(corrected_peaks, extra_indices)
+    return corrected_peaks
+
+def correct_misaligned(misaligned_indices, peaks):
+    '''correct_misaligned: correct misaligned beat (long or short) by interpolating new values to the RR time series.
+
+    Parameters
+    ----------
+        misaligned_indices: array
+            Vector containing indices of misaligned beats.
+        peaks : array
+            Vector containing indices of detected peaks (R waves locations).
+
+    Returns
+    -------
+        corrected_peaks: array
+            Vector containing indices of corrected peaks.
+    '''
+    corrected_peaks = np.array(peaks.copy())
+
+    misaligned_indices = np.array(misaligned_indices)
+    valid_indices = np.logical_and(
+        misaligned_indices > 1, 
+        misaligned_indices < len(corrected_peaks) - 1
+    )
+    misaligned_indices = misaligned_indices[valid_indices]
+    prev_peaks = corrected_peaks[misaligned_indices - 1]
+    next_peaks = corrected_peaks[misaligned_indices + 1]
+
+    half_ibi = (next_peaks - prev_peaks) / 2
+    peaks_interp = prev_peaks + half_ibi
+
+    corrected_peaks = np.delete(corrected_peaks, misaligned_indices)
+    corrected_peaks = np.round(np.sort(np.concatenate((corrected_peaks, peaks_interp))))
+
+    return corrected_peaks
+
+def correct_missed(missed_indices, peaks):
+    '''correct_missed: correct missed beat by adding new R-wave occurrence time so that 
+    it divides the detected long RR interval into two equal halves and RR interval series
+    is then recalculated.
+
+    Parameters
+    ----------
+        missed_indices: array
+            Vector containing indices of missed beats.
+        peaks : array
+            Vector containing indices of detected peaks (R waves locations).
+
+    Returns
+    -------
+        corrected_peaks: array
+            Vector containing indices of corrected peaks.
+    '''
+    corrected_peaks = peaks.copy()
+    missed_indices = np.array(missed_indices)
+    valid_indices = np.logical_and(
+        missed_indices > 1, missed_indices < len(corrected_peaks)
+    ) 
+    missed_indices = missed_indices[valid_indices]
+    prev_peaks = corrected_peaks[[i - 1 for i in missed_indices]]
+    next_peaks = corrected_peaks[missed_indices]
+    added_peaks = [round(prev_peaks[i] + (next_peaks[i] - prev_peaks[i]) / 2) for i in range(len(valid_indices))]
+
+    corrected_peaks = np.insert(corrected_peaks, missed_indices, added_peaks)
+
+
+    return corrected_peaks
+
+def update_indices(source_indices, update_indices, update):
+    '''update_indices: updates the indices in update_indices based on the values in source_indices and update.
+
+    Parameters
+    ----------
+        source_indices: array
+            Vector containing original indices.
+        update_indices : array
+            Vector containing update_indices.
+        update: int
+            Update index 
+
+    Returns
+    -------
+        list(np.unique(update_indices)): array
+            Vector containing unique updated indices.
+    '''
+    if not update_indices:
+        return update_indices
+    for s in source_indices:
+        update_indices = [u + update if u > s else u for u in update_indices]
+    return list(np.unique(update_indices))
+
+def correct_artifacts(artifacts, peaks):
+    '''correct_artifacts: correct artifacts according to its type.
+
+    Parameters
+    ----------
+        artifacts: dictionary
+            Struct containing indices of detected artifacts.
+        peaks: array
+            Vector containing indices of detected peaks (R waves locations) 
+
+    Returns
+    -------
+        peaks: array
+            Vector containing indices of corrected R peaks.
+    '''
+    extra_indices = artifacts['extra']
+    missed_indices = artifacts['missed']
+    ectopic_indices = artifacts['ectopic']
+    longshort_indices = artifacts['longshort']
+
+    if extra_indices:
+        peaks = correct_extra(extra_indices, peaks)
+        missed_indices = update_indices(extra_indices, missed_indices, -1)
+        ectopic_indices = update_indices(extra_indices, ectopic_indices, -1)
+        longshort_indices = update_indices(extra_indices, longshort_indices, -1)
+
+    if missed_indices:
+        peaks = correct_missed(missed_indices, peaks)
+        ectopic_indices = update_indices(missed_indices, ectopic_indices, 1)
+        longshort_indices = update_indices(missed_indices, longshort_indices, 1)
+
+    if ectopic_indices:
+        peaks = correct_misaligned(ectopic_indices, peaks)
+
+    if longshort_indices:
+        peaks = correct_misaligned(longshort_indices, peaks)
+
+    return peaks
+
+def plot_artifacts(artifacts, subspaces):
+    '''plot_artifacts: plot artifacts according to its type.
+
+    Parameters
+    ----------
+        artifacts: dictionary
+            Struct containing indices of detected artifacts.
+        subspaces: dictionary
+            Subspaces containing rr, drrs, mrrs, s12, s22, c1, c2 used to classify artifacts.
+
+    Returns
+    -------
+        None
+    '''
+    ectopic_indices = artifacts['ectopic']
+    missed_indices = artifacts['missed']
+    extra_indices = artifacts['extra']
+    longshort_indices = artifacts['longshort']
+
+    rr = subspaces['rr']
+    drrs = subspaces['drrs']
+    mrrs = subspaces['mrrs']
+    s12 = subspaces['s12']
+    s22 = subspaces['s22']
+    c1 = subspaces['c1']
+    c2 = subspaces['c2']
+
+    fig, axs = plt.subplots(3, 2, figsize=(10, 15))
+
+    # Artifact types
+    axs[0, 0].plot(rr, 'k')
+    axs[0, 0].scatter(longshort_indices, rr[longshort_indices], 15, 'c')
+    axs[0, 0].scatter(ectopic_indices, rr[ectopic_indices], 15, 'r')
+    axs[0, 0].scatter(extra_indices, rr[extra_indices], 15, 'm')
+    axs[0, 0].scatter(missed_indices, rr[missed_indices], 15, 'g')
+    axs[0, 0].legend(['', 'Long/Short', 'Ectopic', 'False positive', 'False negative'], loc='upper right')
+    axs[0, 0].set_title('Artifact types')
+
+    # Th1
+    axs[1, 0].plot(abs(drrs))
+    axs[1, 0].axhline(y=1, color='r', linestyle='--')
+    axs[1, 0].set_title('Consecutive-difference criterion')
+
+    # Th2
+    axs[1, 1].plot(abs(mrrs))
+    axs[1, 1].axhline(y=3, color='r', linestyle='--')
+    axs[1, 1].set_title('Difference-from-median criterion')
+
+    # Subspace S12
+    axs[2, 0].scatter(drrs, s12, 15, 'k')
+    axs[2, 0].scatter(drrs[longshort_indices], s12[longshort_indices], 15, 'c')
+    axs[2, 0].scatter(drrs[ectopic_indices], s12[ectopic_indices], 15, 'r')
+    axs[2, 0].scatter(drrs[extra_indices], s12[extra_indices], 15, 'm')
+    axs[2, 0].scatter(drrs[missed_indices], s12[missed_indices], 15, 'g')
+    axs[2, 0].add_patch(patches.Polygon([[-10, 5], [-10, -c1 * -10 + c2], [-1, -c1 * -1 + c2], [-1, 5]], alpha=0.05, color='k'))
+    axs[2, 0].add_patch(patches.Polygon([[1, -c1 * 1 - c2], [1, -5], [10, -5], [10, -c1 * 10 - c2]], alpha=0.05, color='k'))
+    axs[2, 0].set_title('Subspace S12')
+
+    # Subspace S21
+    axs[2, 1].scatter(drrs, s22, 15, 'k')
+    axs[2, 1].scatter(drrs[longshort_indices], s22[longshort_indices], 15, 'c')
+    axs[2, 1].scatter(drrs[ectopic_indices], s22[ectopic_indices], 15, 'r')
+    axs[2, 1].scatter(drrs[extra_indices], s22[extra_indices], 15, 'm')
+    axs[2, 1].scatter(drrs[missed_indices], s22[missed_indices], 15, 'g')
+    axs[2, 1].add_patch(patches.Polygon([[-10, 10], [-10, 1], [-1, 1], [-1, 10]], alpha=0.05, color='k'))
+    axs[2, 1].add_patch(patches.Polygon([[1, -1], [1, -10], [10, -10], [10, -1]], alpha=0.05, color='k'))
+    axs[2, 1].set_title('Subspace S21')
+
+    plt.tight_layout()
+    plt.show()
+
+# função principal
+def fixpeaks(peaks, sampling_rate=1000, iterative=True, show=False):
+    '''FIXPEAKS: HRV time series artifact correction.
+
+    Follows the approach by Lipponen et. al, 2019 [Lipp19].
+    Matlab implementation by Marek Sokol, 2022.
+
+    Parameters
+    ----------
+        peaks: array
+            Vector containing indices of detected peaks (R waves locations)
+        sampling_rate : int, float, optional
+            ECG sampling frequency, in Hz.
+        iterative: boolean, optional
+            Repeatedly apply the artifact correction (default = true).
+        show: boolean, optional
+            Visualize artifacts and artifact thresholds (default = false).
+
+    Returns
+    -------
+        artifacts: dictionary
+            Struct containing indices of detected artifacts.
+        peaks_clean: array
+            Vector of corrected peak values (indices)
+    
+    References
+    ----------
+    .. [Lipp19] Jukka A. Lipponen & Mika P. Tarvainen (2019): A robust algorithm for heart rate variability 
+       time series artefact correction using novel beat classification, Journal of Medical Engineering & Technology
+    '''
+
+    # check inputs
+    if peaks is None:
+        raise TypeError("Please specify an input R peaks array.")
+
+    artifacts, subspaces = find_artifacts(peaks, sampling_rate)
+    peaks_clean = correct_artifacts(artifacts, peaks)
+
+    if iterative:
+        n_artifacts_current = sum([len(v) for v in artifacts.values()])
+
+        while True:
+            new_artifacts, new_subspaces = find_artifacts(peaks_clean, sampling_rate)
+            n_artifacts_previous = n_artifacts_current
+            n_artifacts_current = sum([len(v) for v in new_artifacts.values()])
+
+            if n_artifacts_current >= n_artifacts_previous:
+                break
+
+            artifacts = new_artifacts
+            subspaces = new_subspaces
+            peaks_clean = correct_artifacts(artifacts, peaks_clean)
+
+    if show:
+        plot_artifacts(artifacts, subspaces)
+    
+    return utils.ReturnTuple((artifacts, peaks_clean), ("artifacts", "peaks_clean"))
+
+
 def getQPositions(ecg_proc=None, show=False):
     """Different ECG Waves (Q, R, S, ...) are not present or are not so clear to identify in all ECG signals (I II III V1 V2 V3, ...)
     For Q wave we suggest to use signals I, aVL . Avoid II, III, V1, V2, V3, V4, aVR, aVF
