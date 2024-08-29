@@ -20,6 +20,7 @@ from .signals import ecg, tools
 # 3rd party
 import numpy as np
 from scipy import stats
+from scipy.signal import resample
 
 def quality_eda(x=None, methods=['bottcher'], sampling_rate=None, verbose=1):
     """Compute the quality index for one EDA segment.
@@ -127,6 +128,143 @@ def quality_ecg(segment, methods=['Level3'], sampling_rate=None,
         names += (method,)
 
     return utils.ReturnTuple(args, names)
+
+
+def quality_resp(segment, methods=['charlton'], sampling_rate=None):
+    """
+    Compute the quality index for one Respiration segment.
+    
+    Parameters
+    ----------
+    segment : array
+        Input signal to test.
+    methods : list
+        Method to assess quality. One or more of the following: ''.
+    sampling_rate : int
+        Sampling frequency (Hz).
+    
+    Returns
+    -------
+    args : tuple
+        Tuple containing the quality index for each method.
+    names : tuple
+        Tuple containing the name of each method.
+    """
+    args, names = (), ()
+    available_methods = ['charlton']
+
+    for method in methods:
+
+        assert method in available_methods, 'Method should be one of the following: ' + ', '.join(available_methods)
+
+        if method == 'charlton':
+            quality = resp_sqi(segment, sampling_rate)
+
+        args += (quality,)
+        names += (method,)
+
+    return utils.ReturnTuple(args, names)
+
+
+def resp_sqi(segment, sampling_rate):
+
+    """
+    Calculate the SQI of the respiratory signal following the approach of:
+    (Charlton et al. 2021) "An impedance pneumography signal quality index: 
+    Design, assessment and application to respiratory rate monitoring"
+    ---
+    Parameters:
+        segment: np.array. The segment of the signal to be analyzed
+        sampling_rate: int. The sampling rate of the signal
+    ---
+    Returns:
+        sqi: float. The SQI of the signal
+    """
+    
+    if sampling_rate is None:
+        raise IOError('Sampling frequency is required')
+    if sum(segment) < 1:
+        return 0
+    
+    if len(segment) != sampling_rate * 32:
+        raise IOError('Segment must be 32s long')
+    
+    # BREATH DETECTION
+    # divide into 32s segments
+    # 1) Low pass filtered above 1Hz and downsampled to 5Hz
+    segment_filt = tools.filter_signal(segment, ftype='butter', band='bandpass', frequency=[0.1, 1.], order=2,
+                                sampling_rate=sampling_rate)['signal']
+    # downsampling to 5 Hz
+    segment_filt_downsampled = resample(segment_filt, int(len(segment_filt)*5 / sampling_rate))
+
+    # 2) Normalisation (mean=0, std=1)
+    norm_sig = (segment_filt_downsampled - np.mean(segment_filt_downsampled)) / np.std(segment_filt_downsampled)
+    # 3) Count Orig algorithm
+
+    # 1) Identify peaks and troughs as local extremas
+    peaks = tools.find_extrema(norm_sig, mode='max')['extrema']
+    troughs = tools.find_extrema(norm_sig, mode='min')['extrema']
+    peaks_amplitudes = norm_sig[peaks]
+    troughs_amplitudes = norm_sig[troughs]
+
+    # 2) relevant peaks identified
+    peaks_rel = np.array(peaks)[peaks_amplitudes > 0.2 * np.percentile(peaks_amplitudes, 75)]
+    # 3) relevant troughs identified
+    troughs_rel = np.array(troughs)[troughs_amplitudes < 0.2 * np.percentile(troughs_amplitudes, 25)]
+
+    # 4) 1 peak per consecutive troughs
+    try:
+        peaks_idx = np.hstack([np.where(((peaks_rel > troughs_rel[i]) * (peaks_rel < troughs_rel[i + 1])))[0] for i in
+                            range(len(troughs_rel) - 1)])
+    except:
+        return 0
+    # find peaks rel values of the indexes identified in peaks_idx
+    peaks_val = peaks_rel[peaks_idx]
+    # breaths will be the times between consecutive peaks found between troughs
+    time_breaths = np.diff(peaks_val)
+    if len(time_breaths) < 1:
+        return 0
+
+    # Evaluate valid breaths
+    # 1) std time breaths > 0.25
+    quality = True
+    if np.std(time_breaths) < 0.25:
+        quality = False
+        return 1 if quality else 0 # there is signal but with low quality
+    # 2) 15% of time breaths > 1.5 or < 0.5 * median breath duration
+    bad_breaths = time_breaths[
+        ((time_breaths > (1.5 * np.median(time_breaths))) & (time_breaths < (0.5 * np.median(time_breaths))))]
+    ratio = len(bad_breaths) / len(time_breaths)
+    if ratio >= 0.15:
+        quality = False
+        return 1 if quality else 0.1 # there is signal but with low quality
+    # 3) 60% of segment is occupied by valid breaths
+    if (sum(time_breaths) / len(norm_sig)) < 0.6:
+        quality = False
+        return 1 if quality else 0 # there is signal but with low quality
+
+    # assess similarity of breath morphologies
+    # calculate template breath
+    # calculate correlation between individual breaths and the template
+    # 4) is the mean correlation coeffient > 0.75?
+    # get mean breath interval
+    mean_breath_interval = np.mean(time_breaths)
+    breaths = [norm_sig[int(peaks_val[i] - mean_breath_interval // 2): int(peaks_val[i] + mean_breath_interval // 2)]
+            for i in range(len(peaks_val)) if ((peaks_val[i] - mean_breath_interval//2) >= 0)
+            and (peaks_val[i] + mean_breath_interval//2 <= len(norm_sig))]
+
+    mean_template = np.mean(breaths, axis=0)
+
+
+    # compute correlation and mean correlation coefficient
+    mean_corr = np.mean([stats.pearsonr(breath, mean_template)[0] for breath in breaths])
+    # check if mean corr > 0.75
+    if mean_corr < 0.75:
+        quality = False
+
+    return 1 if quality else 0 # there is signal but with low quality
+
+
 
 
 def ecg_sqi_level3(segment, sampling_rate, threshold, bit):
@@ -251,7 +389,7 @@ def cSQI(rpeaks=None, verbose=1):
 
     if verbose == 1:
         print('-------------------------------------------------------') 
-        print('cSQI Advice (remove this by setting verbose=0) -> The original segment should be more than 30s long for optimal results.')
+        print('cSQI Advice (comment this by setting verbose=0) -> The original segment should be more than 30s long for optimal results.')
 
         if cSQI < 0.45:
             str_level = "Optimal"
@@ -302,7 +440,7 @@ def hosSQI(signal=None, quantitative=False, verbose=1):
 
     if verbose == 1:
         print('-------------------------------------------------------') 
-        print('hosSQI Advice (remove this by setting verbose=0) -> The signal must be at least 5s long and should be filtered before applying this function.')
+        print('hosSQI Advice (comment this by setting verbose=0) -> The signal should be filtered before this SQI and 5s long.')
         print('hosSQI is a measure without an upper limit.')
         if hosSQI > 0.8:
             str_level = "Optimal"
@@ -314,3 +452,4 @@ def hosSQI(signal=None, quantitative=False, verbose=1):
         print('-------------------------------------------------------') 
     
     return hosSQI
+    
