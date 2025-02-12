@@ -26,6 +26,7 @@ import h5py
 import numpy as np
 import shortuuid
 import joblib
+import pyedflib
 
 # local
 from . import utils
@@ -436,6 +437,57 @@ def load_txt(path):
     data = np.genfromtxt(values, dtype=dtype, delimiter=b'\t')
 
     return data, mdata
+
+
+def load_edf(path):
+    """Load data from an EDF file.
+
+    Parameters
+    ----------
+    path : str
+        Path to file.
+
+    Returns
+    -------
+    signals : array
+        Loaded signals.
+    mdata : dict
+        Metadata, including:
+        - labels: list of signal labels;
+        - sampling_rate: signal sampling rate;
+        - units: list of signal units.
+
+    """
+
+    # normalize path
+    path = utils.normpath(path)
+
+    # open file
+    with pyedflib.EdfReader(path) as fid:
+        mdata = dict()
+
+        # get signal labels
+        labels = fid.getSignalLabels()
+        mdata['labels'] = labels
+
+        # get sampling rates
+        sampling_rates = fid.getSampleFrequencies()
+        # if all sampling rates are the same, store a single value
+        if len(set(sampling_rates)) == 1:
+            mdata['sampling_rate'] = float(sampling_rates[0])
+        else:
+            mdata['sampling_rate'] = list(sampling_rates)
+
+        # get signal data
+        signals = []
+        units = []
+        for i in range(len(labels)):
+            signals.append(fid.readSignal(i))
+            units.append(fid.getPhysicalDimension(i))
+        signals = np.array(signals).T
+        mdata['units'] = units
+
+    return signals, mdata
 
 
 class HDF(object):
