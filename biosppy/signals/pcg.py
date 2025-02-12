@@ -80,7 +80,7 @@ def pcg(signal=None, sampling_rate=1000., units=None, path=None, show=True):
     filtered, fs, params = st.filter_signal(signal, 'butter', 'bandpass', order, passBand, sampling_rate)
 
     # find peaks
-    peaks, envelope = find_peaks(signal=filtered, sampling_rate=sampling_rate)
+    peaks, envelope = find_peaks(signal=filtered, sampling_rate=sampling_rate, filter=False)
     
     # classify heart sounds
     hs, = identify_heart_sounds(beats=peaks, sampling_rate=sampling_rate)
@@ -119,7 +119,7 @@ def pcg(signal=None, sampling_rate=1000., units=None, path=None, show=True):
 
     return utils.ReturnTuple(args, names)
 
-def find_peaks(signal=None,sampling_rate=1000.):
+def find_peaks(signal=None,sampling_rate=1000.,filter=True):
     
     """Finds the peaks of the heart sounds from the homomorphic envelope
 
@@ -140,7 +140,7 @@ def find_peaks(signal=None,sampling_rate=1000.):
     """
     
     # Compute homomorphic envelope
-    envelope, = homomorphic_filter(signal,sampling_rate)
+    envelope, = homomorphic_filter(signal,sampling_rate,filter=filter)
     envelope, = st.normalize(envelope)
     
     # Find the prominent peaks of the envelope
@@ -152,7 +152,7 @@ def find_peaks(signal=None,sampling_rate=1000.):
                              ('peaks','homomorphic_envelope'))
 
 
-def homomorphic_filter(signal=None, sampling_rate=1000., f_LPF=8, order=2):
+def homomorphic_filter(signal=None, sampling_rate=1000., f_LPF=8, order=2, filter=True):
     """Finds the homomorphic envelope of a signal.
 
     Adapted to Python from original MATLAB code written by David Springer, 2016 (C), for
@@ -196,8 +196,12 @@ def homomorphic_filter(signal=None, sampling_rate=1000., f_LPF=8, order=2):
     # Filter Design
     passBand = np.array([25, 400])
     
+    if filter:
     # Band-Pass filtering of the PCG:        
-    signal, fs, params = st.filter_signal(signal, 'butter', 'bandpass', order, passBand, sampling_rate)
+        signal, fs, params = st.filter_signal(signal, 'butter', 'bandpass', order, passBand, sampling_rate)
+        
+    else:
+        fs = sampling_rate
     
     # LP-filter Design (to reject the oscillating component of the signal):
     b, a = ss.butter(order, 2 * f_LPF / fs, 'low')
