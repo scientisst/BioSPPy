@@ -20,13 +20,13 @@ import datetime
 import json
 import os
 import zipfile
+import struct
 
 # 3rd party
 import h5py
 import numpy as np
 import shortuuid
 import joblib
-import pyedflib
 
 # local
 from . import utils
@@ -440,54 +440,153 @@ def load_txt(path):
 
 
 def load_edf(path):
-    """Load data from an EDF file.
+    """Load data from an EDF+ (European Data Format) file.
 
     Parameters
     ----------
     path : str
-        Path to file.
+        Path to the EDF file.
 
     Returns
     -------
     signals : array
-        Loaded signals.
+        Array of signals read from the EDF file. Each column represents a signal.
     mdata : dict
-        Metadata, including:
-        - labels: list of signal labels;
-        - sampling_rate: signal sampling rate;
-        - units: list of signal units.
+        Metadata extracted from the EDF file, including:
+        - version : str
+        - patient_id : str
+        - recording_id : str
+        - start_date : str
+        - start_time : str
+        - header_bytes : str
+        - reserved : str
+        - num_data_records : int
+        - duration_per_data_record : float
+        - num_signals : int
+        - labels : list of str
+        - units : list of str
+        - sampling_rates : list of int
+        - physical_min : list of float
+        - physical_max : list of float
+        - digital_min : list of int
+        - digital_max : list of int
+        - annotations : list of tuples (onset, duration, annotation)
 
+    Notes
+    -----
+    This function reads the EDF file header and data records, scales the signals
+    into physical units, and parses the annotations according to the EDF+ specification.
     """
 
-    # normalize path
-    path = utils.normpath(path)
+    def parse_annotations(data):
+        annotations = []
+        i = 0
+        while i < len(data):
+            if data[i] == 0:
+                break
+            onset = ''
+            duration = ''
+            while data[i] != 20:
+                onset += chr(data[i])
+                i += 1
+            i += 1
+            if data[i] == 21:
+                i += 1
+                while data[i] != 20:
+                    duration += chr(data[i])
+                    i += 1
+                i += 1
+            annotation = ''
+            while data[i] != 0:
+                if data[i] == 20:
+                    # convert to string in HH:MM:SS string format
+                    onset = float(onset)  # seconds
+                    onset = str(datetime.timedelta(seconds=onset))
 
-    # open file
-    with pyedflib.EdfReader(path) as fid:
-        mdata = dict()
+                    duration = float(duration) if duration else 0
+                    duration = str(datetime.timedelta(seconds=duration))
 
-        # get signal labels
-        labels = fid.getSignalLabels()
-        mdata['labels'] = labels
+                    # remove leading and trailing white space
+                    annotation = annotation.strip()
+                    if annotation != '':
+                        annotations.append((onset, duration, annotation))
+                    annotation = ''
+                    i += 1
+                else:
+                    annotation += chr(data[i])
+                    i += 1
+            i += 1
+        return annotations
 
-        # get sampling rates
-        sampling_rates = fid.getSampleFrequencies()
-        # if all sampling rates are the same, store a single value
-        if len(set(sampling_rates)) == 1:
-            mdata['sampling_rate'] = float(sampling_rates[0])
-        else:
-            mdata['sampling_rate'] = list(sampling_rates)
+    with open(path, 'rb') as f:
+        # Read the header
+        header = f.read(256)
 
-        # get signal data
-        signals = []
-        units = []
-        for i in range(len(labels)):
-            signals.append(fid.readSignal(i))
-            units.append(fid.getPhysicalDimension(i))
-        signals = np.array(signals).T
-        mdata['units'] = units
+        # Extract fixed fields
+        version = header[:8].decode('ascii').strip()
+        patient_id = header[8:88].decode('ascii').strip()
+        recording_id = header[88:168].decode('ascii').strip()
+        start_date = header[168:176].decode('ascii').strip()
+        start_time = header[176:184].decode('ascii').strip()
+        header_bytes = header[184:192].decode('ascii').strip()
+        reserved = header[192:236].decode('ascii').strip()
+        num_data_records = int(header[236:244].decode('ascii').strip())
+        duration_per_data_record = float(header[244:252].decode('ascii').strip())
+        num_signals = int(header[252:256].decode('ascii').strip())
 
-    return signals, mdata
+        # Read signal metadata
+        labels = [f.read(16).decode('ascii').strip() for _ in range(num_signals)]
+        transducer_types = [f.read(80).decode('ascii').strip() for _ in range(num_signals)]
+        units = [f.read(8).decode('ascii').strip() for _ in range(num_signals)]
+        physical_min = [float(f.read(8).decode('ascii').strip()) for _ in range(num_signals)]
+        physical_max = [float(f.read(8).decode('ascii').strip()) for _ in range(num_signals)]
+        digital_min = [int(f.read(8).decode('ascii').strip()) for _ in range(num_signals)]
+        digital_max = [int(f.read(8).decode('ascii').strip()) for _ in range(num_signals)]
+        prefiltering = [f.read(80).decode('ascii').strip() for _ in range(num_signals)]
+        num_samples_per_data_record = [int(f.read(8).decode('ascii').strip()) for _ in range(num_signals)]
+        reserved_space = f.read(32 * num_signals).decode('ascii').strip()
+        sampling_rates = [int(num_samples / duration_per_data_record) for num_samples in num_samples_per_data_record]
+
+        # Read data records
+        signals = [[] for _ in range(num_signals)]
+        annotations = []
+        for _ in range(num_data_records):
+            for i in range(num_signals):
+                num_samples = num_samples_per_data_record[i]
+                if labels[i] == 'EDF Annotations':
+                    annotation_data = f.read(num_samples * 2)
+                    annotations.extend(parse_annotations(annotation_data))
+                else:
+                    for _ in range(num_samples):
+                        signals[i].append(struct.unpack('<h', f.read(2))[0])
+
+        # Scale the signals into physical units
+        for i in range(num_signals-1):
+            signals[i] = np.array(signals[i])
+            signals[i] = (signals[i] - digital_min[i]) / (digital_max[i] - digital_min[i]) * (physical_max[i] - physical_min[i]) + physical_min[i]
+
+        mdata = {
+            'version': version,
+            'patient_id': patient_id,
+            'recording_id': recording_id,
+            'start_date': start_date,
+            'start_time': start_time,
+            'header_bytes': header_bytes,
+            'reserved': reserved,
+            'num_data_records': num_data_records,
+            'duration_per_data_record': duration_per_data_record,
+            'num_signals': num_signals,
+            'labels': labels,
+            'units': units,
+            'sampling_rates': sampling_rates,
+            'physical_min': physical_min,
+            'physical_max': physical_max,
+            'digital_min': digital_min,
+            'digital_max': digital_max,
+            'annotations': annotations
+        }
+
+        return np.array(signals[:-1]).T, mdata
 
 
 class HDF(object):

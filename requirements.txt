@@ -8,4 +8,3 @@ shortuuid>=0.5.0
 six>=1.11.0
 joblib>=0.11
 pywavelets>=1.4.1
-pyedflib>=0.1.39
