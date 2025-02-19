@@ -499,7 +499,7 @@ def load_edf(path):
             annotation = ''
             while data[i] != 0:
                 if data[i] == 20:
-                    # convert to string in HH:MM:SS string format
+                    # convert to string in HH:MM:SS format
                     onset = float(onset)  # seconds
                     onset = str(datetime.timedelta(seconds=onset))
 
@@ -565,6 +565,18 @@ def load_edf(path):
             signals[i] = np.array(signals[i])
             signals[i] = (signals[i] - digital_min[i]) / (digital_max[i] - digital_min[i]) * (physical_max[i] - physical_min[i]) + physical_min[i]
 
+        # remove annotation from signals
+        if 'EDF Annotations' in labels:
+            num_signals -= 1
+            signals = signals[:-1]
+            labels = labels[:-1]
+            units = units[:-1]
+            sampling_rates = sampling_rates[:-1]
+            physical_min = physical_min[:-1]
+            physical_max = physical_max[:-1]
+            digital_min = digital_min[:-1]
+            digital_max = digital_max[:-1]
+
         mdata = {
             'version': version,
             'patient_id': patient_id,
@@ -586,7 +598,7 @@ def load_edf(path):
             'annotations': annotations
         }
 
-        return np.array(signals[:-1]).T, mdata
+        return np.array(signals).T, mdata
 
 
 class HDF(object):
