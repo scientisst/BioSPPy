@@ -309,6 +309,15 @@ def rri_correction(rri=None, threshold=250):
 
     # find artifacts
     artifacts = np.abs(rri - rri_filt) > threshold
+    
+    # before interpolating, check if the artifacts are at the beginning or end of the sequence
+    if min(np.where(artifacts)[0]) < min(np.where(~artifacts)[0]):
+        rri = rri[min(np.where(~artifacts)[0]):]
+        artifacts = artifacts[min(np.where(~artifacts)[0]):]
+    
+    if max(np.where(artifacts)[0]) > max(np.where(~artifacts)[0]):
+        rri = rri[:max(np.where(~artifacts)[0])]
+        artifacts = artifacts[:max(np.where(~artifacts)[0])]
 
     # replace artifacts with cubic spline interpolation
     rri[artifacts] = interp1d(np.where(~artifacts)[0], rri[~artifacts],
