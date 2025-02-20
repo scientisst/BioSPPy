@@ -18,6 +18,10 @@
 
 ### 🎙️ Announcements
 ```
+🗒️ BioSPPy can now read EDF files directly! 
+With the biosppy.storage module you can now load your EDF files!
+```
+```
 🌀 New module for signal quality assessment 🌀
 With the biosppy.quality module you can now evaluate the quality of your signals!
 So far, the EDA and ECG quality are available, but more could be added soon. 
