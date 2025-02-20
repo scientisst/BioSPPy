@@ -18,7 +18,7 @@
 
 ### 🎙️ Announcements
 ```
-🗒️ BioSPPy can now read EDG files directly! 
+🗒️ BioSPPy can now read EDF files directly! 
 With the biosppy.storage module you can now load your EDF files!
 ```
 ```
