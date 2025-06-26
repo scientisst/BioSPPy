@@ -38,7 +38,7 @@ MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot','matplotlib.
                 'scipy.spatial.distance', 'sklearn', 'sklearn.cluster',
                 'sklearn.model_selection', 'sklearn.externals',
                 'matplotlib.gridspec', 'h5py', 'shortuuid', 'bidict', 'svm',
-                'sksvm','pywt','joblib','scipy.linalg','scipy.integrate','scipy.ndimage']
+                'sksvm','pywt','joblib','scipy.linalg','scipy.integrate','scipy.ndimage','peakutils']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
