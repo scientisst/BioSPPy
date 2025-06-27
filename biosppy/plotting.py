@@ -24,7 +24,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 import matplotlib.lines as lines
 import numpy as np
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 # local
 from . import utils
