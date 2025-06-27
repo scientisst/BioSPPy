@@ -16,6 +16,9 @@ from __future__ import absolute_import, division, print_function
 from six.moves import range
 import six
 
+# built-in
+import warnings
+
 # 3rd party
 import sys
 import numpy as np
@@ -592,7 +595,8 @@ def smoother(signal=None, kernel="boxzen", size=10, mirror=True, **kwargs):
         elif kernel == "median":
             # median filter
             if size % 2 == 0:
-                raise ValueError("When the kernel is 'median', size must be odd.")
+                size -= 1
+                warnings.warn("When the kernel is 'median', size must be odd, so the size was decremented by one.")
 
             smoothed = ss.medfilt(signal, kernel_size=size)
 
