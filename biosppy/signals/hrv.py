@@ -311,13 +311,14 @@ def rri_correction(rri=None, threshold=250):
     artifacts = np.abs(rri - rri_filt) > threshold
     
     # before interpolating, check if the artifacts are at the beginning or end of the sequence
-    if min(np.where(artifacts)[0]) < min(np.where(~artifacts)[0]):
-        rri = rri[min(np.where(~artifacts)[0]):]
-        artifacts = artifacts[min(np.where(~artifacts)[0]):]
-    
-    if max(np.where(artifacts)[0]) > max(np.where(~artifacts)[0]):
-        rri = rri[:max(np.where(~artifacts)[0])]
-        artifacts = artifacts[:max(np.where(~artifacts)[0])]
+    if len(np.argwhere(artifacts)) >0:
+        if min(np.where(artifacts)[0]) < min(np.where(~artifacts)[0]):
+            rri = rri[min(np.where(~artifacts)[0]):]
+            artifacts = artifacts[min(np.where(~artifacts)[0]):]
+        
+        if max(np.where(artifacts)[0]) > max(np.where(~artifacts)[0]):
+            rri = rri[:max(np.where(~artifacts)[0])]
+            artifacts = artifacts[:max(np.where(~artifacts)[0])]
 
     # replace artifacts with cubic spline interpolation
     rri[artifacts] = interp1d(np.where(~artifacts)[0], rri[~artifacts],
@@ -956,9 +957,21 @@ def sample_entropy(rri, m=2, r=0.2):
     xm = np.array([rri[i: i + m] for i in range(n - m + 1)])
 
     a = np.sum([np.sum(np.abs(xmi - xm).max(axis=1) <= r) - 1 for xmi in xm])
+    if a > 0 and b > 0:
+        sampen = -np.log(a / b)
+    else:
+        if a == 0 and b==0:
+            # both a and b are zero => cannot determine saen
+            sampen = np.nan
+        elif a == 0:
+            # a is zero => log would be infinite or undefined => cannot determine saen
+            sampen = -np.inf
+        else:
+            # b is zero => a is not zero, but b is zero =>
+            sampen = np.inf
 
     # Return SampEn
-    return -np.log(a / b)
+    return sampen
 
 
 def approximate_entropy(rri, m=2, r=0.2):
