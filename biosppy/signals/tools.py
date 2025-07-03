@@ -2266,3 +2266,31 @@ def detrend_smoothness_priors(signal, smoothing_factor=10):
     z_detrended = np.array(signal) - z_trend
 
     return utils.ReturnTuple((z_detrended.T, z_trend.T), ('detrended', 'trend'))
+
+
+def resample_signal(signal, sampling_rate, resampling_rate):
+    """
+    Resample a signal to a new sampling frequency. It assumes that the input signal is uniformly sampled.
+
+    Parameters
+    ----------
+    signal : array-like
+        The signal to resample.
+    sampling_rate : float
+        The original sampling frequency of the signal.
+    resampling_rate : float
+        The new sampling frequency.
+
+    Returns
+    -------
+    resampled_signal : array-like
+        The resampled signal.
+    """
+
+    # check inputs
+    if signal is None:
+        raise TypeError("Please specify a signal to resample.")
+
+    resampled_signal = ss.resample(signal, int(len(signal) * resampling_rate / sampling_rate))
+
+    return utils.ReturnTuple((resampled_signal,), ('signal',))
