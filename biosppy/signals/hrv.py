@@ -245,7 +245,7 @@ def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
         rri = rri_filter(rri)
 
     # check if rri is within physiological parameters
-    if rri.min() < 400 or rri.min() > 1400:
+    if rri.min() < 400 or rri.max() > 1400:
         warnings.warn("RR-intervals appear to be out of normal parameters."
                       "Check input values.")
 
