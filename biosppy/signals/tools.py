@@ -2268,7 +2268,7 @@ def detrend_smoothness_priors(signal, smoothing_factor=10):
     return utils.ReturnTuple((z_detrended.T, z_trend.T), ('detrended', 'trend'))
 
 
-def resample_signal(signal, sampling_rate, resampling_rate, lowpass_filter=True, **kwargs):
+def resample_signal(signal, sampling_rate, resampling_rate):
     """
     Resample a signal to a new sampling frequency. It assumes that the input signal is uniformly sampled.
 
@@ -2280,12 +2280,6 @@ def resample_signal(signal, sampling_rate, resampling_rate, lowpass_filter=True,
         The original sampling frequency of the signal.
     resampling_rate : float
         The new sampling frequency.
-    lowpass_filter : bool, optional
-        If True, apply a low-pass filter before downsampling to avoid aliasing (decimation). Default is True.
-    **kwargs : dict, optional
-        Additional keyword arguments to pass to the `filter_signal` function if it is applied.
-        - ftype : type of filter to use (default is 'FIR').
-        - order : order of the filter (default is 4).
 
     Returns
     -------
@@ -2296,18 +2290,6 @@ def resample_signal(signal, sampling_rate, resampling_rate, lowpass_filter=True,
     # check inputs
     if signal is None:
         raise TypeError("Please specify a signal to resample.")
-
-    # filter if necessary
-    if lowpass_filter and resampling_rate < sampling_rate:
-        cutoff_freq = resampling_rate / 2.0
-        signal, _, _ = filter_signal(
-                            signal=signal,
-                            ftype=kwargs.get('ftype', 'FIR'),
-                            band="lowpass",
-                            order=kwargs.get('order', 4),
-                            frequency=cutoff_freq,
-                            sampling_rate=sampling_rate,
-        )
 
     resampled_signal = ss.resample(signal, int(len(signal) * resampling_rate / sampling_rate))
 
