@@ -1820,6 +1820,187 @@ def plot_pcg(ts=None,
     else:
         # close
         plt.close(fig)
+        
+def plot_egm(ts=None,
+             raw=None,
+             filtered=None,
+             rhythm=None,
+             active_regions=None,
+             ts_windowed = None,
+             windowed = None,
+             lat_index=None,
+             lat=None,
+             df = None,
+             freqs = None,
+             power = None,
+             entropy = None,
+             oi = None,
+             ri = None,
+             units=None,
+             path=None,
+             show=False):
+    """Create a summary plot from the output of signals.egm.egm.
+    
+    Parameters
+    ----------
+    ts : array
+        Signal time axis reference (seconds).
+    raw : array
+        Raw EGM signal.
+    filtered : array
+        Filtered EGM signal.
+    rhythm : str
+        Rhythm of the EGM signal. Must be 'sinus' or 'af'.
+    active_regions : array
+        Active regions of the EGM signal.
+    ts_windowed : array, optional
+        Signal time axis reference (seconds) for windowed signal.
+    windowed : array, optional
+        Windowed EGM signal.
+    act : int, optional
+        Index corresponding to the activation time of the EGM signal.
+    lat : float, optional
+        Activation time in milliseconds (ms).
+    df : float, optional
+        Dominant frequency of the EGM signal (Hz).
+    freqs : array, optional
+        Frequencies of the dominant frequency spectrum.
+    power : array, optional
+        Power of the dominant frequency spectrum.
+    entropy : float, optional
+        Entropy of the EGM signal.
+    oi : float, optional
+        Organization index of the EGM signal.
+    ri : float, optional
+        Regularity index of the EGM signal.
+    units : str, optional
+        Units of the vertical axis. If provided, the plot title will include
+        the units information. Default is None.
+    path : str, optional
+        If provided, the plot will be saved to the specified file.
+    show : bool, optional
+        If True, show the plot immediately.
+        
+    """
+    # get matplotlib parameters
+    plt.rcParams.update(_get_params())
+    
+    if rhythm == 'sinus':
+        attr = 'Sinus Rhythm'
+    elif rhythm == 'af':
+        attr = 'Atrial Fibrillation'
+
+    fig = plt.figure(figsize=(12, 5))
+    fig.suptitle('EGM Summary - ' + attr, fontsize=12, fontweight='bold')
+    gs = gridspec.GridSpec(6, 2)
+    fig.subplots_adjust(top=0.88, bottom=0.12, hspace=0.9, wspace=0.3,
+                        left=0.1, right=0.96)
+
+    # signal
+    ax1 = fig.add_subplot(gs[:4, 0])
+    ax1.set_title('Signal')
+
+    ax1.plot(ts, raw, linewidth=MED_LW, label='Raw',
+             color=color_palette('blue'))
+    ax1.plot(ts, filtered+np.mean(raw), linewidth=MINOR_LW, label='Filtered',
+                color=color_palette('dark-red'))
+
+    ax1.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
+    ax1.legend(loc='upper right')
+    ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax1.spines['bottom'].set_visible(False)
+
+    # filtered signal
+    ax2 = fig.add_subplot(gs[4:8, 0], sharex=ax1)
+    ax2.set_title('Active EGM regions')
+
+    ymin = np.min(filtered)
+    ymax = np.max(filtered)
+    alpha = 0.1 * (ymax - ymin)
+    ymax += alpha
+    ymin -= alpha
+
+    ax2.plot(ts, filtered, linewidth=MED_LW, color=color_palette('blue'))
+    ax2.plot(ts, active_regions*max(filtered), linewidth=MINOR_LW,
+             color=color_palette('dark-red'))
+    ax2.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
+    ax2.tick_params(axis='x', which='both', bottom=False, top=False,
+                    labelbottom=False)
+    ax2.spines['bottom'].set_visible(False)
+
+    # align y axis labels
+    fig.align_ylabels([ax1, ax2])
+
+    if rhythm == 'sinus':
+        # activation time
+        ax4 = fig.add_subplot(gs[1:5, 1])
+        ax4.set_title('Activation Time')
+        
+        if windowed is not None:
+            egm_windowed = windowed
+        else:
+            egm_windowed = filtered
+            ts_windowed = ts
+
+        ymin = np.min(egm_windowed)
+        ymax = np.max(egm_windowed)
+        alpha = 0.1 * (ymax - ymin)
+        ymax += alpha
+        ymin -= alpha
+        
+
+        
+        ax4.plot(ts_windowed, egm_windowed, linewidth=MINOR_LW, color=color_palette('blue'))
+        ax4.plot(ts_windowed[int(lat_index)], egm_windowed[int(lat_index)], label='Activation Time = ' + '%.2f' % lat + ' ms', marker='o', markersize=4, color=color_palette('dark-red'))
+        ax4.set_ylabel('Amplitude' if units is None else 'Amplitude (%s)' % units)
+        ax4.legend(loc='upper right')
+        ax4.set_xlabel('Time (s)')
+        
+    elif rhythm == 'af':
+        
+        ax3 = fig.add_subplot(gs[0:4, 1])        
+        egm_windowed = filtered
+        ymin = np.min(egm_windowed)
+        ymax = np.max(egm_windowed)
+        alpha = 0.1 * (ymax - ymin)
+        ymax += alpha
+        ymin -= alpha
+
+        ax3.plot(freqs,power, linewidth=MINOR_LW, color=color_palette('blue'))
+        ax3.axvline(df,linewidth=MINOR_LW, color=color_palette('dark-red'))
+        ax3.text(df+0.5, max(power)/2,'Dominant Frequency = ' + '%.2f' % df + ' Hz')
+        ax3.set_ylabel('Power')
+        ax3.set_xlim(0, 20)
+        ax3.set_xlabel('Frequency (Hz)')
+        
+        # text below ax4 left side
+        ax5 = fig.add_subplot(gs[4:5, 1])
+        ax5.text(0, 0, 'Entropy = %.2f' % entropy)
+        ax5.text(0, -1, 'Organization Index = %.2f' % oi)
+        ax5.text(0, -2, 'Regularity Index = %.2f' % ri)
+        ax5.axis('off')
+        
+
+    # add logo
+    add_logo(fig)
+
+    # save to file
+    if path is not None:
+        path = utils.normpath(path)
+        root, ext = os.path.splitext(path)
+        ext = ext.lower()
+        if ext not in ['png', 'jpg']:
+            path = root + '.png'
+
+        fig.savefig(path, dpi=200, bbox_inches='tight')
+
+    # show
+    if show:
+        plt.show()
+    else:
+        # close
+        plt.close(fig)
 
 
 def _plot_rates(thresholds, rates, variables,
