@@ -5,15 +5,17 @@ biosppy.signals.egm
 
 This module provides methods to process intracardiac EGM (Electrogram) signals.
 
-:copyright: (c) 2015-2016 by Instituto de Telecomunicacoes
+:copyright: (c) 2015-2026 by Instituto de Telecomunicacoes
 :license: BSD 3-clause, see LICENSE for more details.
 """
 # 3rd party
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import inspect
 import warnings
+import pyvista as pv
 
 # local
 from .. import plotting, utils
@@ -767,14 +769,13 @@ def dominant_frequency(signal=None, sampling_rate=1000., plot=False):
     nfft = 2**np.ceil(np.log2(n)).astype(int)
     # pad signal
     signal = np.pad(signal, (0, nfft - n), mode='constant')
-    from scipy.signal.windows import hann
-    from scipy.fft import fft, fftfreq
-    w = hann(nfft)
-    fft_vals = fft(signal*w)
+
+    w = scipy.signal.windows.hann(nfft)
+    fft_vals = scipy.fft.fft(signal*w)
     
     # sample spacing
     T = 1.0 / sampling_rate
-    fft_freqs = fftfreq(nfft, T)[:nfft // 2]
+    fft_freqs = scipy.fft.fftfreq(nfft, T)[:nfft // 2]
     fft_vals = fft_vals[:nfft // 2]
     psd = 2.0 / (nfft * T) * np.abs(fft_vals)**2
     
