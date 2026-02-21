@@ -39,7 +39,7 @@ NOT_FEATURES = ['rri', 'rri_trend', 'outliers_method', 'rri_det', 'hr', 'bins',
                 'q_hist', 'fbands', 'frequencies', 'powers', 'freq_method']
 
 
-def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
+def hrv(rpeaks=None, sampling_rate=1000., rri=None, rri_min=300, rri_max=1500, parameters='auto',
         outliers='interpolate', detrend_rri=True, features_only=True,
         show=True, show_individual=False, **kwargs):
     """Extracts the RR-interval sequence from a list of R-peak indexes and
@@ -54,6 +54,10 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
     rri : array, optional
         RR-intervals (ms). Providing this parameter overrides the computation of
         RR-intervals from rpeaks.
+    rri_min : int, optional
+        Minimum RR-interval (ms). Default: 300 ms.
+    rri_max : int, optional
+        Maximum RR-interval (ms). Default: 1500 ms.
     parameters : str, optional
         If 'auto' computes the recommended HRV features. If 'time' computes
         only time-domain features. If 'frequency' computes only
@@ -109,7 +113,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
     if rri is None:
         rpeaks = np.array(rpeaks, dtype=float)
         rri = compute_rri(rpeaks=rpeaks, sampling_rate=sampling_rate,
-                          filter_rri=False)
+                          filter_rri=False, rri_min=rri_min, rri_max=rri_max)
 
     # compute duration
     duration = np.sum(rri) / 1000.  # seconds
@@ -214,7 +218,7 @@ def hrv(rpeaks=None, sampling_rate=1000., rri=None, parameters='auto',
     return out
 
 
-def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
+def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, rri_min=300, rri_max=1500, show=False):
     """Computes RR intervals in milliseconds from a list of R-peak indexes.
 
     Parameters
@@ -245,7 +249,7 @@ def compute_rri(rpeaks, sampling_rate=1000., filter_rri=True, show=False):
         rri = rri_filter(rri)
 
     # check if rri is within physiological parameters
-    if rri.min() < 400 or rri.max() > 1400:
+    if rri.min() < rri_min or rri.max() > rri_max:
         warnings.warn("RR-intervals appear to be out of normal parameters."
                       "Check input values.")
 
