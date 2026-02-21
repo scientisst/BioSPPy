@@ -1204,3 +1204,366 @@ class HDF(object):
 
         # close
         self._file.close()
+
+
+def _read_mesh_vertices(filepath):
+    """
+    Auxiliary function to read the data of a Biosense Webster .mesh file
+    Returns the vertices, triangles, and data.
+    
+    Parameters
+    ----------
+    filepath : str
+        Path to the .mesh file.
+        
+    Returns
+    -------
+    vertices : pandas.DataFrame
+        DataFrame containing the vertices information.
+    triangles : pandas.DataFrame
+        DataFrame containing the triangles information.
+    data : pandas.DataFrame
+        DataFrame containing the vertices colors information.
+        
+    """
+    vertices = []
+    triangles = []
+    data = []
+    section = "empty"
+    
+    import pandas as pd
+
+    with open(filepath, "r", errors="ignore") as f:
+        for line in f:
+            line = line.strip()
+
+            # Start after VerticesSection header
+            if line == "[VerticesSection]":
+                section = "vertices"
+                next(f)  # skip comment line
+            
+            if line == "[TrianglesSection]":
+                section = "triangles"
+                next(f)  # skip comment line
+            
+            if line == "[VerticesColorsSection]":
+                section = "data"
+                next(f)  # skip comment line
+                next(f)  # skip another comment line
+            
+            if line == "[VerticesAttributesSection]":
+                break  # End of relevant sections
+            
+            if section == "vertices":
+                values = line.split()
+                temp = [float(v) for v in values[2:]]
+                if len(temp) > 0:
+                    vertices.append([float(v) for v in values[2:]])
+                
+            elif section == "triangles":
+                values = line.split()
+                temp = [float(v) for v in values[2:]]
+                if len(temp) > 0:
+                    triangles.append(temp)
+                
+            elif section == "data":
+                values = line.split()
+                temp = [float(v) for v in values[2:]]
+                if len(temp) > 0:
+                    data.append(temp)
+
+    columns_vertices = [
+        "X", "Y", "Z",
+        "NormalX", "NormalY", "NormalZ",
+        "GroupID"
+    ]
+    columns_triangles = ["Vertex0", "Vertex1", "Vertex2", "NormalX", "NormalY", "NormalZ", "GroupID"]
+    columns_data = ["Unipolar", "Bipolar", "LAT", "Impedance", "A1", "A2", "A2-A1", "SCI", "ICL", "ACL", "Force", "Paso", "µBi"]
+    return pd.DataFrame(vertices, columns=columns_vertices), pd.DataFrame(triangles, columns=columns_triangles), pd.DataFrame(data, columns=columns_data)
+
+def _read_ecg_files(ECG_file):
+    """ Auxiliary function to read the data of a Biosense Webster ECG_Export.txt file.
+    Returns the channel names, reference channel, and voltages.
+    
+    Parameters
+    ----------
+    ECG_file : str
+        Path to the ECG_Export.txt file.
+        
+    Returns
+    ----------
+    channel_names : list
+        List of channel names.
+    reference_channel : str
+        Name of the reference channel.
+    voltages : numpy.ndarray
+        Signals of each channel.
+        
+    """
+    if ECG_file is not None:
+        with open(ECG_file, 'r') as f:
+            data = f.readlines()
+            line1 = data[0].strip().split(',')
+            line2 = data[1].strip().split(',')
+            line3 = data[2].strip().split(',')
+            
+            lib_chars = ('m1', 'wc')
+
+            if not line3[:2] in lib_chars:
+                # another version of the ecg file
+                # try the next line
+                reference_channel = data[2].split('=')[-1].split('\n')[0]
+                line3 = data[3].strip().split(',')
+                
+        # check if line1 matches string
+        if line1[0] != 'ECG_Export_4.0':
+            print(f"Warning: Unexpected file format in {ECG_file}")
+            
+        gain = float(line2[0].split('= ')[1])
+        
+        channel_names = line3[0].split()
+        
+        voltages = data[4:]
+        
+        for i in range(len(voltages)):
+            voltages[i] = voltages[i].split()
+        
+        voltages = np.array(voltages, dtype=float) * gain  # apply gain
+        
+        return channel_names, reference_channel, voltages
+
+
+def _find_file(directory, start_str=None, end_str=None):
+    """ Auxiliary function to find a file in a directory that starts with start_str and ends with end_str. 
+    If start_str or end_str is None, it will be ignored in the search.
+    
+    Parameters
+    ----------
+    directory : str
+        Directory to search in.
+        start_str : str, optional
+        String that the file should start with.
+        end_str : str, optional
+        String that the file should end with.
+        
+    Returns
+    ----------
+    str
+        Path to the found file, or None if no file is found.
+    """
+    for file in os.listdir(directory):
+        if start_str is not None and end_str is not None:
+            if file.startswith(start_str) and file.endswith(end_str):
+                return os.path.join(directory, file)
+        elif start_str is not None:
+            if file.startswith(start_str):
+                return os.path.join(directory, file)
+        elif end_str is not None:
+            if file.endswith(end_str):
+                return os.path.join(directory, file)
+    return None
+
+
+def _find_all_files(directory, start_str=None, end_str=None):
+    """ Auxiliary function to find all files in a directory that start with start_str and end with end_str.
+    If start_str or end_str is None, it will be ignored in the search.
+    
+    Parameters
+    ----------
+    directory : str
+        Directory to search in.
+    start_str : str, optional
+        String that the file should start with.
+    end_str : str, optional
+        String that the file should end with.
+        
+    Returns
+    ----------
+    list of str
+        List of paths to the found files, or an empty list if no file is found.
+    """
+    files_found = []
+    for file in os.listdir(directory):
+        if start_str is not None and end_str is not None:
+            if file.startswith(start_str) and file.endswith(end_str):
+                files_found.append(os.path.join(directory, file))
+        elif start_str is not None:
+            if file.startswith(start_str):
+                files_found.append(os.path.join(directory, file))
+        elif end_str is not None:
+            if file.endswith(end_str):
+                files_found.append(os.path.join(directory, file))
+    return files_found
+
+
+def load_carto_study(filename, verbose = 1): 
+    """
+    Loads a CARTO study from a .xml file. The function extracts the relevant information about the maps,
+    points, and signals, and saves them as .csv files in a subfolder for each map. 
+    
+    Adapted to Python from original MATLAB code written by the OpenEP team [OpenEP]_ [OpenEP2]_.
+    Available at: https://github.com/openep/openep-core
+    
+    Parameters:
+    filename : str
+        Path to the CARTO .xml file.
+    
+    References
+    ----------
+    .. [OpenEP] Williams SE and Linton NWF (Feb. 2026). OpenEP/openep-core: v1.0.03 (Version v1.0.03). Zenodo. https://doi.org/10.5281/zenodo.4471318
+    .. [OpenEP2] Williams SE, Roney CH, Connolly A, Sim I, Whitaker J, O’Hare D, Kotadia I, O’Neill L, Corrado C, Bishop M, Niederer SA, Wright M, O’Neill M and Linton NWF (2021) OpenEP: A Cross-Platform Electroanatomic Mapping Data Format and Analysis Platform for Electrophysiology Research. Front. Physiol. 12:646023. doi: 10.3389/fphys.2021.646023
+
+    """
+    import pandas as pd
+    import xml.etree.ElementTree as ET
+
+    directory = filename.rsplit('\\', 1)[0]
+    
+    # load and parse the XML file
+
+    tree = ET.parse(filename)
+
+    map_branch = tree.find('Maps')
+
+    nmaps = int(map_branch.attrib['Count'])
+        
+    for i in range(nmaps):
+        
+        map = map_branch.findall('Map')[i]
+        map_name = map.attrib['Name']
+        map_meshfile = map.attrib['FileNames']
+        
+        if verbose > 0:
+        
+            print(f"Loading map {i+1}/{nmaps}: {map_name}")
+        
+        n_points = int(map.findall('CartoPoints')[0].attrib['Count'])
+        
+        if int(n_points) > 0:
+            ECG_file = _find_file(directory, map_name, "ECG_Export.txt")
+            
+            [channel_names, reference_channel, voltages] = _read_ecg_files(ECG_file)
+            
+            map_coordinates = np.zeros((n_points, 3))
+            map_ids = np.zeros((n_points,), dtype=int)
+            
+            points_woi = np.zeros((n_points, 2))
+            points_reference = np.zeros((n_points, 1))
+            points_unipolar = np.zeros((n_points, 1))
+            points_bipolar = np.zeros((n_points, 1))
+            points_map_annotation = np.zeros((n_points, 1))
+            
+            signals = np.zeros((n_points, voltages.shape[0], voltages.shape[1]))
+            
+            points_filename = map_name + '_Points_Export.xml'
+            all_points = ET.parse(os.path.join(directory, points_filename))
+            
+            for k in range(n_points):
+                map_coordinates[k,:] = [float(j) for j in map.findall('CartoPoints')[0].findall('Point')[k].attrib['Position3D'].split()]
+                map_ids[k] = int(map.findall('CartoPoints')[0].findall('Point')[k].attrib['Id'])
+                
+                point_filename = map_name + '_P' + str(map_ids[k]) + '_Point_Export.xml'
+                point_tree = ET.parse(os.path.join(directory, point_filename))
+                points_woi[k,0] = float(point_tree.find("WOI").attrib['From'])
+                points_woi[k,1] = float(point_tree.find("WOI").attrib['To'])
+                points_reference[k,0] = int(point_tree.find("Annotations").attrib['Reference_Annotation'])
+                points_map_annotation[k,0] = int(point_tree.find("Annotations").attrib['Map_Annotation'])
+                points_unipolar[k,0] = float(point_tree.find("Voltages").attrib['Unipolar'])
+                points_bipolar[k,0] = float(point_tree.find("Voltages").attrib['Bipolar'])
+                
+                
+                point_ecg_filename = (os.path.join(directory, map_name + '_P' + str(map_ids[k]) + '_ECG_Export.txt'))
+                
+                [channel_names, reference_channel, voltages] = _read_ecg_files(point_ecg_filename)
+                
+                for m in range(len(channel_names)):
+                    try:
+                        signals[k, :, m] = voltages[:, m]
+                    except:
+                        print(f"Warning: Could not load signal for point {map_ids[k]}, channel {channel_names[m]}")
+                
+                point_filename = all_points.findall('Point')[k].attrib['File_Name']
+                point_filename = os.path.join(directory, point_filename)           
+            
+        # check if RF files exist
+        RF_files = _find_all_files(directory, start_str='RF_'+map_name)
+        
+        contact_force = _find_all_files(directory, start_str='ContactForceInRF_'+map_name)
+
+        for j in range(len(RF_files)):
+            if j == 0:
+                RF_df = pd.read_table(RF_files[j])
+            else:
+                RF_df = pd.concat([RF_df, pd.read_table(RF_files[j])])  
+                
+        for j in range(len(contact_force)):
+            if j == 0:
+                CF_df = pd.read_table(contact_force[j])
+            else:
+                CF_df = pd.concat([CF_df, pd.read_table(contact_force[j])])
+                
+        try:
+            df_vertices, df_triangles, df_data = _read_mesh_vertices(os.path.join(directory,map_meshfile))
+        except:
+            print(f"Could not read mesh file: {map_meshfile} for map {map_name}")
+            continue
+        
+        # create a subfolder for each map
+        
+        subfolder = os.path.join(directory, map_name)
+        if not os.path.exists(subfolder):
+            os.makedirs(subfolder)
+        df_vertices.to_csv(os.path.join(subfolder, map_name+'_vertices.csv'), index=False)
+        df_triangles.to_csv(os.path.join(subfolder, map_name+'_triangles.csv'), index=False)
+        df_data.to_csv(os.path.join(subfolder, map_name+'_data.csv'), index=False)
+        
+        # save channel names (point 1 header) as csv
+        channel_names_df = pd.DataFrame(channel_names, columns=['Channel_Name'])
+        channel_names_df.to_csv(os.path.join(subfolder, map_name+'_channel_names.csv'), index=False)
+
+        # save woi as csv
+        points_woi = pd.DataFrame(points_woi, columns=['From', 'To'])
+        points_woi.to_csv(os.path.join(subfolder, map_name+'_woi.csv'), index=False)
+        
+        # save reference annotations as csv
+        points_reference = pd.DataFrame(points_reference, columns=['Reference_Annotation'])
+        points_reference.to_csv(os.path.join(subfolder, map_name+'_reference_annotations.csv'), index=False)
+        
+        # save map annotations as csv
+        points_map_annotation = pd.DataFrame(points_map_annotation, columns=['Map_Annotation'])
+        points_map_annotation.to_csv(os.path.join(subfolder, map_name+'_map_annotations.csv'), index=False)
+        
+        # save point ids as csv
+        points_df = pd.DataFrame(map_ids, columns=['Point_ID'])
+        points_df.to_csv(os.path.join(subfolder, map_name+'_point_ids.csv'), index=False)
+        
+        # save map coordinates as csv
+        map_coords_df = pd.DataFrame(map_coordinates, columns=['X','Y','Z'])
+        map_coords_df.to_csv(os.path.join(subfolder, map_name+'_point_coords.csv'), index=False)
+
+        # save unipolar and bipolar voltages as csv
+        points_unipolar_df = pd.DataFrame(points_unipolar, columns=['Unipolar'])
+        points_unipolar_df.to_csv(os.path.join(subfolder, map_name+'_unipolar.csv'), index=False)
+        points_bipolar_df = pd.DataFrame(points_bipolar, columns=['Bipolar'])
+        points_bipolar_df.to_csv(os.path.join(subfolder, map_name+'_bipolar.csv'), index=False)
+
+        # new subfolder inside each map's directory for signals per point
+        subsubfolder = os.path.join(subfolder, 'signals_per_point')
+        if not os.path.exists(subsubfolder):
+            os.makedirs(subsubfolder)
+        for p in range(n_points):
+            point_signals = pd.DataFrame(signals[p, :, :], columns=channel_names)
+            point_signals.to_csv(os.path.join(subsubfolder, f'Point_{map_ids[p]}_signals.csv'), index=False)
+        
+        try: 
+            CF_df.to_csv(os.path.join(subfolder, map_name+'_contact_force.csv'), index=False)
+        except:
+            pass
+        try:    
+            RF_df.to_csv(os.path.join(subfolder, map_name+'_rf_data.csv'), index=False)
+        except:
+            pass
+        
+    if verbose > 0:
+        print("Done")
+
