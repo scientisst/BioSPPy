@@ -380,7 +380,7 @@ def nleo(signal=None, sampling_rate=1000., woi = None, reference = None, thresho
         nleo_threshold[region] = 1
     
     # activation time 
-    x = np.linspace(1, len(nleo_filt), len(nleo_filt))
+    x =  np.arange(len(nleo_filt))
     auc = scipy.integrate.cumulative_trapezoid(nleo_filt, x, initial=0)
     lat_index = np.interp(auc[-1] / 2, auc, x)
     
@@ -826,7 +826,7 @@ def shannon_entropy(signal=None, sampling_rate=1000., plot=False):
     # calculate Shannon entropy. If counts = 0, probability = 0
     probabilities = counts / np.sum(counts)
     probabilities = probabilities[probabilities != 0]
-    entropy = -np.sum(probabilities * np.log2(probabilities))
+    entropy = -np.sum(probabilities * (np.log2(probabilities))/np.log2(len(probabilities)))
     
     if plot:
         plt.figure()

@@ -1279,7 +1279,13 @@ def _read_mesh_vertices(filepath):
     ]
     columns_triangles = ["Vertex0", "Vertex1", "Vertex2", "NormalX", "NormalY", "NormalZ", "GroupID"]
     columns_data = ["Unipolar", "Bipolar", "LAT", "Impedance", "A1", "A2", "A2-A1", "SCI", "ICL", "ACL", "Force", "Paso", "µBi"]
-    return pd.DataFrame(vertices, columns=columns_vertices), pd.DataFrame(triangles, columns=columns_triangles), pd.DataFrame(data, columns=columns_data)
+    
+    try:
+        data_df = pd.DataFrame(data, columns=columns_data)
+    except:
+        data_df = pd.DataFrame(data, columns=columns_data+["ColorID"])
+        
+    return pd.DataFrame(vertices, columns=columns_vertices), pd.DataFrame(triangles, columns=columns_triangles), data_df
 
 def _read_ecg_files(ECG_file):
     """ Auxiliary function to read the data of a Biosense Webster ECG_Export.txt file.
@@ -1313,6 +1319,8 @@ def _read_ecg_files(ECG_file):
                 # another version of the ecg file
                 # try the next line
                 reference_channel = data[2].split('=')[-1].split('\n')[0]
+                unipolar_channel = data[2].split('=')[1].split(' ')[0]
+                bipolar_channel = data[2].split('=')[2].split(' ')[0]
                 line3 = data[3].strip().split(',')
                 
         # check if line1 matches string
@@ -1330,7 +1338,7 @@ def _read_ecg_files(ECG_file):
         
         voltages = np.array(voltages, dtype=float) * gain  # apply gain
         
-        return channel_names, reference_channel, voltages
+        return channel_names, reference_channel, bipolar_channel, unipolar_channel, voltages
 
 
 def _find_file(directory, start_str=None, end_str=None):
@@ -1440,10 +1448,17 @@ def load_carto_study(filename, verbose = 1):
         n_points = int(map.findall('CartoPoints')[0].attrib['Count'])
         
         if int(n_points) > 0:
+            
+            subfolder = os.path.join(directory, map_name)
+            if not os.path.exists(subfolder):
+                os.makedirs(subfolder)
+                
             ECG_file = _find_file(directory, map_name, "ECG_Export.txt")
             
-            [channel_names, reference_channel, voltages] = _read_ecg_files(ECG_file)
+            [channel_names, reference_channel, bipolar_channel, unipolar_channel, voltages] = _read_ecg_files(ECG_file)
             
+            
+            channel_names_to_save = channel_names
             map_coordinates = np.zeros((n_points, 3))
             map_ids = np.zeros((n_points,), dtype=int)
             
@@ -1452,11 +1467,11 @@ def load_carto_study(filename, verbose = 1):
             points_unipolar = np.zeros((n_points, 1))
             points_bipolar = np.zeros((n_points, 1))
             points_map_annotation = np.zeros((n_points, 1))
-            
-            signals = np.zeros((n_points, voltages.shape[0], voltages.shape[1]))
-            
-            points_filename = map_name + '_Points_Export.xml'
-            all_points = ET.parse(os.path.join(directory, points_filename))
+
+            # new subfolder inside each map's directory for signals per point
+            subsubfolder = os.path.join(subfolder, 'signals_per_point')
+            if not os.path.exists(subsubfolder):
+                os.makedirs(subsubfolder)
             
             for k in range(n_points):
                 map_coordinates[k,:] = [float(j) for j in map.findall('CartoPoints')[0].findall('Point')[k].attrib['Position3D'].split()]
@@ -1474,16 +1489,27 @@ def load_carto_study(filename, verbose = 1):
                 
                 point_ecg_filename = (os.path.join(directory, map_name + '_P' + str(map_ids[k]) + '_ECG_Export.txt'))
                 
-                [channel_names, reference_channel, voltages] = _read_ecg_files(point_ecg_filename)
+                [channel_names, reference_channel1, bipolar_channel1, unipolar_channel1, voltages] = _read_ecg_files(point_ecg_filename)
                 
-                for m in range(len(channel_names)):
-                    try:
-                        signals[k, :, m] = voltages[:, m]
-                    except:
-                        print(f"Warning: Could not load signal for point {map_ids[k]}, channel {channel_names[m]}")
+                    
+                if len(channel_names) > len(channel_names_to_save):
+                    channel_names_to_save = channel_names
+                        
+                signals = voltages
+                      
+                try:
+                    point_signals = pd.DataFrame(signals, columns=channel_names)
+                    # append columns with reference, bipolar, and unipolar channels. columns with channel names
+                    point_signals['Reference_Channel'] = reference_channel1
+                    point_signals['Bipolar_Channel'] = bipolar_channel1
+                    point_signals['Unipolar_Channel'] = unipolar_channel1
+                    point_signals.to_csv(os.path.join(subsubfolder, f'Point_{map_ids[k]}_signals.csv'), index=False)
+                except:
+                    if verbose > 1:
+                        print(f"Warning: Could not save signals for point {map_ids[k]} in map {map_name}")
+                    pass
                 
-                point_filename = all_points.findall('Point')[k].attrib['File_Name']
-                point_filename = os.path.join(directory, point_filename)           
+                      
             
         # check if RF files exist
         RF_files = _find_all_files(directory, start_str='RF_'+map_name)
@@ -1506,54 +1532,68 @@ def load_carto_study(filename, verbose = 1):
             df_vertices, df_triangles, df_data = _read_mesh_vertices(os.path.join(directory,map_meshfile))
         except:
             print(f"Could not read mesh file: {map_meshfile} for map {map_name}")
-            continue
+            pass
         
         # create a subfolder for each map
         
-        subfolder = os.path.join(directory, map_name)
-        if not os.path.exists(subfolder):
-            os.makedirs(subfolder)
-        df_vertices.to_csv(os.path.join(subfolder, map_name+'_vertices.csv'), index=False)
-        df_triangles.to_csv(os.path.join(subfolder, map_name+'_triangles.csv'), index=False)
-        df_data.to_csv(os.path.join(subfolder, map_name+'_data.csv'), index=False)
         
-        # save channel names (point 1 header) as csv
-        channel_names_df = pd.DataFrame(channel_names, columns=['Channel_Name'])
-        channel_names_df.to_csv(os.path.join(subfolder, map_name+'_channel_names.csv'), index=False)
-
-        # save woi as csv
-        points_woi = pd.DataFrame(points_woi, columns=['From', 'To'])
-        points_woi.to_csv(os.path.join(subfolder, map_name+'_woi.csv'), index=False)
+        try:
+            df_vertices.to_csv(os.path.join(subfolder, map_name+'_vertices.csv'), index=False)
+            df_triangles.to_csv(os.path.join(subfolder, map_name+'_triangles.csv'), index=False)
+            df_data.to_csv(os.path.join(subfolder, map_name+'_data.csv'), index=False)
+        except:
+            pass
         
-        # save reference annotations as csv
-        points_reference = pd.DataFrame(points_reference, columns=['Reference_Annotation'])
-        points_reference.to_csv(os.path.join(subfolder, map_name+'_reference_annotations.csv'), index=False)
+        try:
+            # save channel names (point 1 header) as csv
+            channel_names_df = pd.DataFrame(channel_names_to_save, columns=['Channel_Name'])
+            channel_names_df.to_csv(os.path.join(subfolder, map_name+'_channel_names.csv'), index=False)
+        except:
+            pass
+            
+        try:
+            # save woi as csv
+            points_woi = pd.DataFrame(points_woi, columns=['From', 'To'])
+            points_woi.to_csv(os.path.join(subfolder, map_name+'_woi.csv'), index=False)
+        except:
+            pass
         
+        try:
+            # save reference annotations as csv
+            points_reference = pd.DataFrame(points_reference, columns=['Reference_Annotation'])
+            points_reference.to_csv(os.path.join(subfolder, map_name+'_reference_annotations.csv'), index=False)
+        except:
+            pass
+        
+        try:
         # save map annotations as csv
-        points_map_annotation = pd.DataFrame(points_map_annotation, columns=['Map_Annotation'])
-        points_map_annotation.to_csv(os.path.join(subfolder, map_name+'_map_annotations.csv'), index=False)
+            points_map_annotation = pd.DataFrame(points_map_annotation, columns=['Map_Annotation'])
+            points_map_annotation.to_csv(os.path.join(subfolder, map_name+'_map_annotations.csv'), index=False)
+        except:
+            pass
         
-        # save point ids as csv
-        points_df = pd.DataFrame(map_ids, columns=['Point_ID'])
-        points_df.to_csv(os.path.join(subfolder, map_name+'_point_ids.csv'), index=False)
+        try:
+            # save point ids as csv
+            points_df = pd.DataFrame(map_ids, columns=['Point_ID'])
+            points_df.to_csv(os.path.join(subfolder, map_name+'_point_ids.csv'), index=False)
+        except:
+            pass
         
-        # save map coordinates as csv
-        map_coords_df = pd.DataFrame(map_coordinates, columns=['X','Y','Z'])
-        map_coords_df.to_csv(os.path.join(subfolder, map_name+'_point_coords.csv'), index=False)
-
-        # save unipolar and bipolar voltages as csv
-        points_unipolar_df = pd.DataFrame(points_unipolar, columns=['Unipolar'])
-        points_unipolar_df.to_csv(os.path.join(subfolder, map_name+'_unipolar.csv'), index=False)
-        points_bipolar_df = pd.DataFrame(points_bipolar, columns=['Bipolar'])
-        points_bipolar_df.to_csv(os.path.join(subfolder, map_name+'_bipolar.csv'), index=False)
-
-        # new subfolder inside each map's directory for signals per point
-        subsubfolder = os.path.join(subfolder, 'signals_per_point')
-        if not os.path.exists(subsubfolder):
-            os.makedirs(subsubfolder)
-        for p in range(n_points):
-            point_signals = pd.DataFrame(signals[p, :, :], columns=channel_names)
-            point_signals.to_csv(os.path.join(subsubfolder, f'Point_{map_ids[p]}_signals.csv'), index=False)
+        try:
+            # save map coordinates as csv
+            map_coords_df = pd.DataFrame(map_coordinates, columns=['X','Y','Z'])
+            map_coords_df.to_csv(os.path.join(subfolder, map_name+'_point_coords.csv'), index=False)
+        except:
+            pass
+        
+        try:
+            # save unipolar and bipolar voltages as csv
+            points_unipolar_df = pd.DataFrame(points_unipolar, columns=['Unipolar'])
+            points_unipolar_df.to_csv(os.path.join(subfolder, map_name+'_unipolar.csv'), index=False)
+            points_bipolar_df = pd.DataFrame(points_bipolar, columns=['Bipolar'])
+            points_bipolar_df.to_csv(os.path.join(subfolder, map_name+'_bipolar.csv'), index=False)
+        except:
+            pass                
         
         try: 
             CF_df.to_csv(os.path.join(subfolder, map_name+'_contact_force.csv'), index=False)

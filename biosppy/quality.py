@@ -117,10 +117,10 @@ def quality_ecg(segment, methods=['Level3'], sampling_rate=None,
         
         elif method == 'cSQI':
             rpeaks = ecg.hamilton_segmenter(segment, sampling_rate=sampling_rate)['rpeaks']
-            quality = cSQI(rpeaks, verbose)
+            quality = cSQI(rpeaks, verbose=verbose)
         
         elif method == 'hosSQI':
-            quality = hosSQI(segment, verbose)
+            quality = hosSQI(segment, verbose=verbose)
 
         args += (quality,)
         names += (method,)
@@ -296,12 +296,13 @@ def hosSQI(signal=None, quantitative=False, verbose=1):
 
     kSQI = stats.kurtosis(signal)
     sSQI = stats.skew(signal)
-    print('kurtosis: ', kSQI)
-    print('skewness: ', sSQI)
-
+    
     hosSQI = abs(sSQI) * kSQI / 5
 
     if verbose == 1:
+        print('kurtosis: ', kSQI)
+        print('skewness: ', sSQI)
+
         print('-------------------------------------------------------') 
         print('hosSQI Advice (remove this by setting verbose=0) -> The signal must be at least 5s long and should be filtered before applying this function.')
         print('hosSQI is a measure without an upper limit.')
