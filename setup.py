@@ -44,6 +44,7 @@ REQUIRED = [
     'opencv-python',
     'pywavelets',
     'mock',
+    'peakutils',
 ]
 
 # What packages are optional?
