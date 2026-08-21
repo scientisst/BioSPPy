@@ -1,12 +1,29 @@
-<a href="https://biosppy.readthedocs.org/">
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo_400.png">
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo_inverted_400.png">
-  <img alt="Image" title="I know you're listening! - xkcd.com/525">
-</picture>
-</a>
+<p align="center">
+  <a href="https://biosppy.readthedocs.org/">
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset="docs/_static/logo_light.png">
+      <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo_dark.png">
+      <img src="docs/_static/logo_light.png"
+           alt="BioSPPy"
+           title="I know you're listening! - xkcd.com/525"
+           width="400">
+    </picture>
+  </a>
+</p>
 
-*A toolbox for biosignal processing written in Python.*
+<p align="center">
+  <a href="https://biosppy.readthedocs.org/">
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset="docs/images/biosppy_stats.svg">
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/biosppy_stats-dark.svg">
+      <img src="docs/images/biosppy_stats.svg"
+           alt="BioSPPy statistics"
+           width="400">
+    </picture>
+  </a>
+</p>
+
+<div align="center">
 
 [![PyPI version](https://badgen.net/pypi/v/biosppy)](https://pypi.org/project/biosppy/)
 [![PyPI downloads](https://badgen.net/pypi/dm/biosppy/?color=blue)](https://pypi.org/project/biosppy/)
@@ -14,23 +31,9 @@
 
 [![GitHub stars](https://badgen.net/github/stars/scientisst/BioSPPy?color=yellow)]()
 [![GitHub issues](https://badgen.net/github/open-issues/scientisst/BioSPPy?color=cyan)](https://github.com/scientisst/BioSPPy/issues)
+[![Documentation](https://img.shields.io/readthedocs/biosppy)](https://biosppy.readthedocs.io/)
 
-
-### 🎙️ Announcements
-```
-🗒️ BioSPPy can now read EDF files directly! 
-With the biosppy.storage module you can now load your EDF files!
-```
-```
-🌀 New module for signal quality assessment 🌀
-With the biosppy.quality module you can now evaluate the quality of your signals!
-So far, the EDA and ECG quality are available, but more could be added soon. 
-```
-```
-🫀 New module for heart rate variability (biosppy.signals.hrv)
-🎊 New module for feature extraction (biosppy.features)
-```
-
+</div>
 
 # BioSPPy - Biosignal Processing in Python
 The toolbox bundles together various signal processing and pattern recognition
@@ -80,7 +83,7 @@ out = ecg.ecg(signal=signal, sampling_rate=1000., show=True)
 
 This should produce a plot similar to the one below.
 
-![ECG summary example](docs/images/ECG_summary.png)
+![ECG summary example](docs/images/ECG_processed.png)
 
 ## Dependencies
 
@@ -115,7 +118,7 @@ P. Bota, R. Silva, C. Carreiras, A. Fred, and H. P. da Silva, "BioSPPy: A Python
 
 However, if you want to cite a specific version of BioSPPy, you can use Zenodo's DOI:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11048615.svg)](https://doi.org/10.5281/zenodo.11048615)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17551774-blue)](https://doi.org/10.5281/zenodo.17551774)
 
 
 ## License
