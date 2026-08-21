@@ -83,7 +83,7 @@ out = ecg.ecg(signal=signal, sampling_rate=1000., show=True)
 
 This should produce a plot similar to the one below.
 
-![ECG summary example](docs/images/ecg_processed.png)
+![ECG summary example](docs/images/ECG_processed.png)
 
 ## Dependencies
 
