@@ -118,7 +118,7 @@ P. Bota, R. Silva, C. Carreiras, A. Fred, and H. P. da Silva, "BioSPPy: A Python
 
 However, if you want to cite a specific version of BioSPPy, you can use Zenodo's DOI:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11048615.svg)](https://doi.org/10.5281/zenodo.11048615)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.17551774-blue)](https://doi.org/10.5281/zenodo.17551774)
 
 
 ## License
