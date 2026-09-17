@@ -609,6 +609,118 @@ def kbk_scr(signal=None, sampling_rate=1000.0, min_amplitude=0.1):
     return utils.ReturnTuple(args, names)
 
 
+def scl_sd_10s(signal=None, sampling_rate=100.0):
+    """Compute the mean standard deviation of tonic SCL across 10-second windows.
+
+    The tonic skin conductance signal is divided into consecutive, non-overlapping
+    10-second windows. The standard deviation is calculated within each window,
+    and the mean of the resulting standard deviations is returned as a measure
+    of short-term variability in tonic skin conductance.
+
+    NaN values are ignored when calculating the standard deviation. Windows
+    containing only NaN values are excluded from the calculation.
+
+    Parameters
+    ----------
+    signal : array
+        Tonic skin conductance level (SCL) signal.
+    sampling_rate : int, float
+        Sampling frequency of the signal in Hz.
+
+    Returns
+    -------
+    float
+        Mean standard deviation of tonic SCL across the valid 10-second windows.
+        Returns NaN if no valid windows are available.
+
+    References
+    ----------
+    .. [Boucsein2012] Boucsein, W., Fowles, D. C., Grimnes, S., Ben-Shakhar,
+       G., Roth, W. T., Dawson, M. E., & Filion, D. L. (2012).
+       Publication recommendations for electrodermal measurements.
+       Psychophysiology, 49(8), 1017-1034.
+       DOI: 10.1111/j.1469-8986.2012.01384.x
+
+    .. [Ogden2022] Ogden, R. S., et al. (2022).
+       The psychophysiological mechanisms of real-world time experience.
+       Scientific Reports, 12, 12890.
+    """
+
+    window = int(10 * sampling_rate)
+    n = len(signal)
+    sds = []
+
+    for i in range(0, n - window + 1, window):
+
+        seg = signal[i:i+window]
+
+        if np.all(np.isnan(seg)):
+            continue
+
+        sds.append(np.nanstd(seg))
+
+    if len(sds) == 0:
+        return np.nan
+
+    return np.nanmean(sds)
+
+
+def delta_scl(signal=None, sampling_rate=100.0, baseline_minutes=10):
+    """Calculate the change in mean tonic SCL relative to an initial baseline.
+
+    The change in tonic skin conductance level (ΔSCL) is calculated as the
+    difference between the mean SCL across the complete recording and the
+    mean SCL during an initial baseline period.
+
+    In this implementation, ΔSCL is intended to quantify the difference in
+    overall mean tonic SCL relative to the initial baseline period:
+
+        ΔSCL = mean(SCL_recording) - mean(SCL_baseline)
+
+    Positive values indicate a higher overall mean SCL relative to baseline,
+    whereas negative values indicate a lower overall mean SCL.
+
+    Parameters
+    ----------
+    signal : array
+        Tonic skin conductance level (SCL) signal.
+    sampling_rate : int, float, optional
+        Sampling frequency of the signal in Hz. Default is 100.0 Hz.
+    baseline_minutes : int, float, optional
+        Duration of the initial baseline period in minutes. If the requested
+        baseline duration exceeds the length of the recording, the entire
+        recording is used as the baseline. Default is 10 minutes.
+
+    Returns
+    -------
+    float
+        Difference between the mean SCL across the recording and the mean
+        SCL during the initial baseline period.
+
+    References
+    ----------
+    .. [Boucsein2012] Boucsein, W., Fowles, D. C., Grimnes, S., Ben-Shakhar,
+       G., Roth, W. T., Dawson, M. E., & Filion, D. L. (2012).
+       Publication recommendations for electrodermal measurements.
+       Psychophysiology, 49(8), 1017-1034.
+       DOI: 10.1111/j.1469-8986.2012.01384.x
+    """
+
+    scl_mean = np.nanmean(signal)
+
+    baseline_samples = min(
+        int(baseline_minutes * 60 * sampling_rate),
+        len(signal)
+    )
+
+    scl_baseline = np.nanmean(
+        signal[:baseline_samples]
+    )
+
+    return scl_mean - scl_baseline
+
+
+
 def emotiphai_eda(signal=None, sampling_rate=1000., min_amplitude=0.1,
                   filt=True, size=1.):
     """Returns characteristic EDA events.
