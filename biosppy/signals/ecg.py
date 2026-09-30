@@ -420,9 +420,6 @@ def compare_segmentation(
                         locations."
         )
 
-    if minRR is None:
-        minRR = np.inf
-
     sampling_rate = float(sampling_rate)
 
     # ensure numpy
@@ -430,7 +427,8 @@ def compare_segmentation(
     test = np.array(test)
 
     # convert to samples
-    minRR = minRR * sampling_rate
+    if minRR is not None:
+        minRR = minRR * sampling_rate
     tol = tol * sampling_rate
 
     TP = 0
@@ -449,7 +447,7 @@ def compare_segmentation(
             matchIdx.append(i)
             dev.append(error)
         else:
-            if len(matchIdx) > 0:
+            if minRR is not None and len(matchIdx) > 0:
                 bdf = r - test[matchIdx[-1]]
                 if bdf < minRR:
                     # false positive, but removable with RR interval check
