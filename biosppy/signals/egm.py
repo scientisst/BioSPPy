@@ -16,6 +16,9 @@ import matplotlib.colors as colors
 import inspect
 import warnings
 import pyvista as pv
+from scipy import signal
+
+from biosppy.storage import HDF
 
 # local
 from .. import plotting, utils
@@ -556,6 +559,202 @@ def min_lat(signal=None, sampling_rate=1000., woi = None, reference = None, plot
 
     return utils.ReturnTuple((lat_index, lat),
                              ('lat_index', 'lat'))
+    
+    
+def hilbert_envelope_lat(signal=None, sampling_rate=1000.0, woi=None, reference=None, plot=False):
+    """
+    Estimate LAT using the Hilbert envelope of the EGM.
+
+    Parameters
+    ----------
+    signal : array
+        Windowed EGM signal.
+    sampling_rate : int, float
+        Sampling frequency (Hz).
+
+    Returns
+    -------
+    lat_index : int
+        Index corresponding to the activation time of the EGM signal.
+    lat : float
+        Activation time in milliseconds. If woi is provided, time is centered in the window.
+    """
+    
+    warnings.warn("Activation time can only be calculated for sinus rhythm signals.")
+    
+    if woi is not None:
+        signal, = get_woi(signal, int(woi[0]), int(woi[1]), int(reference))
+    
+    # Band-pass filter (30–300 Hz)
+    b, a = scipy.signal.butter(
+        4, [30, 300], btype='bandpass', fs=sampling_rate
+    )
+    filtered = scipy.signal.filtfilt(b, a, signal)
+
+    # Hilbert envelope
+    analytic_signal = scipy.signal.hilbert(filtered)
+    envelope = np.abs(analytic_signal)
+
+    # Smooth with a 20-ms moving average
+    window_size = max(1, int(round(0.020 * sampling_rate)))
+    kernel = np.ones(window_size) / window_size
+    envelope_smooth = np.convolve(envelope, kernel, mode='same')
+
+    # LAT: maximum envelope
+    lat_index = np.argmax(envelope_smooth)
+    lat = lat_index / sampling_rate * 1000  # convert to milliseconds
+    
+    if plot:
+        time = np.arange(len(signal)) / sampling_rate
+        plt.plot(time, signal, label='EGM Signal')
+        plt.plot(time[lat_index], signal[lat_index], label='Activation Time', marker='o', markersize=8, color='red')
+        plt.tight_layout()
+        plt.show()
+
+    return utils.ReturnTuple((lat_index, lat),
+                       ('lat_index', 'lat'))
+
+
+
+def cwt_lat(signal=None, sampling_rate=1000., woi=None, reference=None, plot=False):
+    """
+    Estimate LAT using Continuous Wavelet Transform (CWT) power maxima.
+
+    Parameters
+    ----------
+    signal : array
+        Windowed EGM signal.
+    sampling_rate : int, float
+        Sampling frequency (Hz).
+    woi : list, optional
+        Window of interest as [from, to] in samples. If provided, the EGM signal will be cropped to this window.
+    reference : int, optional
+        Reference sample index for the window of interest. If provided, the window will be centered around this reference.
+    plot : bool, optional
+        If True, plots the EGM signal with activation time marked.
+
+    Returns
+    -------
+    lat_index : int
+        Index corresponding to the activation time of the EGM signal.
+    lat : float
+        Activation time in milliseconds. If woi is provided, time is centered in the window.
+    """
+    
+    warnings.warn("Activation time can only be calculated for sinus rhythm signals.")
+    
+    if woi is not None:
+        signal, = get_woi(signal, int(woi[0]), int(woi[1]), int(reference))
+        
+    import pywt
+
+    signal = np.asarray(signal, dtype=float)
+
+    # Complex Morlet wavelet
+    wavelet = 'cmor1.5-1.0'
+
+    # Frequencies of interest (Hz)
+    frequencies = np.linspace(50, min(250, 0.99 * sampling_rate / 2), 64)
+
+    # Convert frequencies to scales
+    scales = (
+        pywt.central_frequency(wavelet)
+        * sampling_rate / frequencies
+    )
+
+    # Continuous wavelet transform
+    coef, _ = pywt.cwt(
+        signal,
+        scales,
+        wavelet,
+        sampling_period=1.0 / sampling_rate
+    )
+
+    # Retain coefficients in the 50–250 Hz band
+    power_curve = np.sum(np.abs(coef) ** 2, axis=0)
+
+    # LAT: maximum of summed CWT power
+    lat_index = int(np.argmax(power_curve))
+    lat = lat_index / sampling_rate * 1000  # convert to milliseconds
+    
+    if plot:
+        time = np.arange(len(signal)) / sampling_rate
+        plt.plot(time, signal, label='EGM Signal')
+        plt.plot(time[lat_index], signal[lat_index], label='Activation Time', marker='o', markersize=8, color='red')
+        plt.tight_layout()
+        plt.show()
+
+    return utils.ReturnTuple((lat_index, lat),
+                       ('lat_index', 'lat'))
+
+
+
+
+def ste_lat(signal=None, sampling_rate=1000., woi=None, reference=None, plot=False):
+    """
+    Estimate LAT using Short-Time Energy (STE).
+
+    Parameters
+    ----------
+    signal : array
+        Windowed EGM signal.
+    sampling_rate : int, float
+        Sampling frequency (Hz).
+    woi : list, optional
+        Window of interest as [from, to] in samples. If provided, the EGM signal will be cropped to this window.
+    reference : int, optional
+        Reference sample index for the window of interest. If provided, the window will be centered around this reference.
+    plot : bool, optional
+        If True, plots the EGM signal with activation time marked.
+
+    Returns
+    -------
+    lat_index : int
+        LAT sample index (1-based, matching MATLAB).
+    lat : float
+        LAT in milliseconds.
+    """
+    
+    warnings.warn("Activation time can only be calculated for sinus rhythm signals.")
+    
+    if woi is not None:
+        signal, = get_woi(signal, int(woi[0]), int(woi[1]), int(reference))
+        
+    # Band-pass filter: 30–300 Hz
+    b, a = scipy.signal.butter(
+        4, [30, 300],
+        btype='bandpass',
+        fs=sampling_rate
+    )
+    signal_filt = scipy.signal.filtfilt(b, a, signal)
+
+    # Short-time energy with a 10-ms rectangular window
+    win_len = max(1, int(round(0.01 * sampling_rate)))
+    ste = np.convolve(
+        signal_filt ** 2,
+        np.ones(win_len) / win_len,
+        mode='same'
+    )
+
+    # Centre of mass of STE with trapezoid
+    n_lat = int(np.round(np.sum(np.arange(len(ste)) * ste) / np.sum(ste)))
+    
+    x =  np.arange(len(ste))
+    auc = scipy.integrate.cumulative_trapezoid(ste, x, initial=0)
+    lat_index = np.interp(auc[-1] / 2, auc, x)
+
+    lat_index = int(lat_index)  # Ensure lat_index is an integer
+    lat = lat_index / sampling_rate * 1000  # convert to milliseconds
+
+    if plot:
+        time = np.arange(len(signal)) / sampling_rate
+        plt.plot(time, signal, label='EGM Signal')
+        plt.plot(time[int(lat_index)], signal[int(lat_index)], label='Activation Time', marker='o', markersize=8, color='red')
+        plt.tight_layout()
+        plt.show()
+        
+    return utils.ReturnTuple((lat_index, lat),
+                       ('lat_index', 'lat'))
 
 def get_activation_times(signals=None, sampling_rate=1000., woi=None, reference=None, method='nleo'):
     """
@@ -571,6 +770,8 @@ def get_activation_times(signals=None, sampling_rate=1000., woi=None, reference=
         Window of interest as [from, to] in samples. If provided, each EGM signal will be cropped to this window.
     reference : int, optional
         Reference sample index for the window of interest. If provided, the window will be centered around this reference.
+    method : str, optional
+        Method to calculate activation time. Must be 'nleo', 'dvdt', 'max', 'min', 'hilbert', 'cwt', or 'ste' (default is 'nleo').
     
     Returns
     -------
@@ -595,8 +796,14 @@ def get_activation_times(signals=None, sampling_rate=1000., woi=None, reference=
             lat_index, lat = max_lat(signals[i, :], sampling_rate, woi=woi, reference=reference)
         elif method == 'min':
             lat_index, lat = min_lat(signals[i, :], sampling_rate, woi=woi, reference=reference)
+        elif method == 'hilbert':
+            lat_index, lat = hilbert_envelope_lat(signals[i, :], sampling_rate, woi=woi, reference=reference)
+        elif method == 'cwt':
+            lat_index, lat = cwt_lat(signals[i, :], sampling_rate, woi=woi, reference=reference)
+        elif method == 'ste':
+            lat_index, lat = ste_lat(signals[i, :], sampling_rate, woi=woi, reference=reference)
         else:
-            raise ValueError("Invalid method. Must be 'nleo', 'dvdt','max', or 'min'.")
+            raise ValueError("Invalid method. Must be 'nleo', 'dvdt','max', 'min', 'hilbert', 'cwt', or 'ste'.")
         lat_idx[i] = lat_index
         lat_times[i] = lat
     return utils.ReturnTuple((lat_idx, lat_times),
@@ -629,6 +836,12 @@ def compare_activation_times(signal=None, sampling_rate=1000., woi=None, referen
         Index corresponding to the activation time from maximum amplitude method.
     lat_index_min : int
         Index corresponding to the activation time from minimum amplitude method.
+    lat_index_hilbert : int
+        Index corresponding to the activation time from Hilbert envelope method.
+    lat_index_cwt : int
+        Index corresponding to the activation time from CWT energy method.
+    lat_index_ste : int
+        Index corresponding to the activation time from short-time energy method.
     lat_nleo : float
         Activation time in milliseconds from NLEO method.
     lat_dvdt : float
@@ -637,6 +850,12 @@ def compare_activation_times(signal=None, sampling_rate=1000., woi=None, referen
         Activation time in milliseconds from maximum amplitude method.
     lat_min : float
         Activation time in milliseconds from minimum amplitude method.
+    lat_hilbert : float
+        Activation time in milliseconds from Hilbert envelope method.
+    lat_cwt : float
+        Activation time in milliseconds from CWT energy method.
+    lat_ste : float
+        Activation time in milliseconds from short-time energy method.
     """
     
     warnings.warn("Activation time can only be calculated for sinus rhythm signals.")
@@ -646,6 +865,9 @@ def compare_activation_times(signal=None, sampling_rate=1000., woi=None, referen
     lat_index_dvdt, lat_dvdt = dvdt_lat(signal, sampling_rate, woi=woi, reference=reference)
     lat_index_max, lat_max = max_lat(signal, sampling_rate, woi=woi, reference=reference)
     lat_index_min, lat_min = min_lat(signal, sampling_rate, woi=woi, reference=reference)
+    lat_index_hilbert, lat_hilbert = hilbert_envelope_lat(signal, sampling_rate, woi=woi, reference=reference)
+    lat_index_cwt, lat_cwt = cwt_lat(signal, sampling_rate, woi=woi, reference=reference)
+    lat_index_ste, lat_ste = ste_lat(signal, sampling_rate, woi=woi, reference=reference)
     
     if plot:
         if woi is not None:
@@ -657,12 +879,17 @@ def compare_activation_times(signal=None, sampling_rate=1000., woi=None, referen
         plt.plot(time[int(lat_index_dvdt)], signal[int(lat_index_dvdt)], label='-dv/dt Activation Time', marker='o', markersize=8)
         plt.plot(time[int(lat_index_max)], signal[int(lat_index_max)], label='Max Amplitude Activation Time', marker='o', markersize=8)
         plt.plot(time[int(lat_index_min)], signal[int(lat_index_min)], label='Min Amplitude Activation Time', marker='o', markersize=8)
+        plt.plot(time[int(lat_index_hilbert)], signal[int(lat_index_hilbert)], label='Hilbert Envelope Activation Time', marker='o', markersize=8)
+        plt.plot(time[int(lat_index_cwt)], signal[int(lat_index_cwt)], label='CWT Energy Activation Time', marker='o', markersize=8)
+        plt.plot(time[int(lat_index_ste)], signal[int(lat_index_ste)], label='Short-Time Energy Activation Time', marker='o', markersize=8)
+        plt.xlabel('Time (s)')
+        plt.ylabel('Amplitude')
         plt.legend()
         plt.tight_layout()
         plt.show()
     
-    return utils.ReturnTuple((lat_index_nleo, lat_index_dvdt, lat_index_max, lat_index_min, lat_nleo, lat_dvdt, lat_max, lat_min),
-                             ('lat_index_nleo', 'lat_index_dvdt', 'lat_index_max', 'lat_index_min', 'lat_nleo', 'lat_dvdt', 'lat_max', 'lat_min'))
+    return utils.ReturnTuple((lat_index_nleo, lat_index_dvdt, lat_index_max, lat_index_min, lat_index_hilbert, lat_index_cwt, lat_index_ste, lat_nleo, lat_dvdt, lat_max, lat_min, lat_hilbert, lat_cwt, lat_ste),
+                             ('lat_index_nleo', 'lat_index_dvdt', 'lat_index_max', 'lat_index_min', 'lat_index_hilbert', 'lat_index_cwt', 'lat_index_ste', 'lat_nleo', 'lat_dvdt', 'lat_max', 'lat_min', 'lat_hilbert', 'lat_cwt', 'lat_ste'))
 
 def get_voltage(signal=None, woi=None, reference=None):
     """
@@ -925,3 +1152,42 @@ def regularity_index(signal=None, sampling_rate=1000.):
     
     return utils.ReturnTuple((ri,),
                              ('regularity_index',))
+    
+def phase_hilbert(signal=None, sampling_rate=1000.):
+    """
+    Calculate the phase signal of the EGM signal using the Hilbert transform.
+    
+    Parameters:
+    ----------
+    signal : array
+        An array with the EGM signal.
+    sampling_rate : int, float, optional
+        Sampling frequency (Hz) of the EGM signal (default is 1000 Hz).
+    
+    Returns:
+    ----------
+    phase_signal : array
+        The phase signal of the EGM signal.
+    """
+    
+    HDF, _, _ = dominant_frequency(signal, sampling_rate=sampling_rate, plot=False)
+    
+    low = (HDF - 1) 
+    high = (HDF + 1) 
+
+    b, a = scipy.signal.ellip(
+        N=4,              # filter order
+        rp=1,             # passband ripple (dB)
+        rs=40,            # stopband attenuation (dB)
+        Wn=[low, high],
+        btype='bandpass',
+        fs = sampling_rate
+    )
+
+    filtered = scipy.signal.filtfilt(b, a, signal)
+    
+    analytic_signal = scipy.signal.hilbert(filtered)
+    phase_signal = np.angle(analytic_signal)
+    
+    return utils.ReturnTuple((phase_signal,),
+                             ('phase_signal',))

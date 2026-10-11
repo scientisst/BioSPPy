@@ -213,7 +213,7 @@ def cv_triangulation(egmX, lat, min_dist = 2, min_lat = 2, verbose = 1):
                              ('cvs', 'vecs', 'cv_X'))
 
 
-def interpolator(X, y, X_new, kernel='multiquadric'):
+def interpolator(X, y, X_new, kernel='multiquadric', max_distance = 10):
     """Interpolates values at new points using Radial Basis Function (RBF) interpolation.
     
     Parameters
@@ -226,6 +226,8 @@ def interpolator(X, y, X_new, kernel='multiquadric'):
         An MxD array of new data points where interpolation is to be performed.
     kernel : str, optional
         The type of RBF kernel to use. Defaults to 'multiquadric'.
+    max_distance : float, optional
+        The maximum distance for neighbor selection. Defaults to 10.
         
     Returns
     -------
@@ -238,9 +240,16 @@ def interpolator(X, y, X_new, kernel='multiquadric'):
     y = y.ravel()
     mask = ~np.isnan(y)
     X = X[mask]
-    y = y[mask]
+    y = y[mask]  
     
     y_new = scipy.interpolate.RBFInterpolator(X, y, kernel=kernel, epsilon=1.0)(X_new)
+    
+    # set values to nan where there are no neighbors within max_distance
+    for i, x in enumerate(X_new):
+        dists = np.linalg.norm(X - x, axis=1)
+        
+        if np.min(dists) > max_distance:
+            y_new[i] = np.nan
     
     return utils.ReturnTuple((y_new,), 
                              ('y_new',))
