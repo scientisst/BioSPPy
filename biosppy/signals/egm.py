@@ -735,9 +735,6 @@ def ste_lat(signal=None, sampling_rate=1000., woi=None, reference=None, plot=Fal
         np.ones(win_len) / win_len,
         mode='same'
     )
-
-    # Centre of mass of STE with trapezoid
-    n_lat = int(np.round(np.sum(np.arange(len(ste)) * ste) / np.sum(ste)))
     
     x =  np.arange(len(ste))
     auc = scipy.integrate.cumulative_trapezoid(ste, x, initial=0)
