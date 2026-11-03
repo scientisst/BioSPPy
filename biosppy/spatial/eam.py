@@ -17,11 +17,12 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 import pyvista as pv
+import itertools
 
 # local
 from .. import utils
 
-def plot_geometry(X, triang, values=None, cmap = plt.get_cmap('gist_rainbow', 200), lims = None, type = 'activation', center = None, vec = None):
+def plot_geometry(X, triang, values=None, cmap = plt.get_cmap('gist_rainbow', 200), lims = None, type = 'activation', position='PA',center = None, vec = None, save_path = None):
     
     """
     Plots a 3D mesh using PyVista.
@@ -40,6 +41,10 @@ def plot_geometry(X, triang, values=None, cmap = plt.get_cmap('gist_rainbow', 20
         A tuple specifying the min and max limits for truncating the colormap.
     type : str, optional
         A string specifying the type of map (e.g., 'activation', 'voltage', 'cv', 'cv_vec' or any other custom label). Defaults to 'activation'. 
+    position : str, optional
+        A string specifying the view position ('PA' for posterior-anterior, 'AP' for anterior-posterior). Defaults to 'PA'.
+    save_path : str, optional
+        A string specifying the path to save the plot as an image. If None, the plot is not saved. Defaults to None.
     center : np.ndarray, optional
         An Nx3 array of coordinates for the center points of the vectors (required if type is 'cv_vec').
     vec : np.ndarray, optional
@@ -63,6 +68,19 @@ def plot_geometry(X, triang, values=None, cmap = plt.get_cmap('gist_rainbow', 20
     elif type == 'cv_vec':
         label = type
         
+    if position == 'PA':
+        # flip 180 horizontally around the y-axis
+        X[:, 2] = -X[:, 2]
+        
+        if vec is not None:
+            vec[:, 2] = -vec[:, 2]
+            center[:, 2] = -center[:, 2]
+        
+    elif position == 'AP':
+        pass
+    else:
+        raise ValueError("Invalid position. Use 'PA' or 'AP'.")
+        
     mesh = pv.PolyData(X, triang)
     
     plotter = pv.Plotter()
@@ -83,7 +101,9 @@ def plot_geometry(X, triang, values=None, cmap = plt.get_cmap('gist_rainbow', 20
         plotter.add_mesh(mesh, color='black')
         
     plotter.view_xy()  # Force XY view
+    plotter.add_key_event('s', lambda: plotter.screenshot(save_path))
     plotter.show()
+
     
     
 def _conduction_velocity(p, latp, q, latq, r, latr):
@@ -119,8 +139,8 @@ def _conduction_velocity(p, latp, q, latq, r, latr):
     
     # compute relative activation times
     
-    lat_a = abs(latq - latp)
-    lat_b = abs(latr - latp)
+    lat_a = latq - latp
+    lat_b = latr - latp
     
     
     theta = np.arccos((np.linalg.norm(a)**2 + np.linalg.norm(b)**2 - np.linalg.norm(c)**2) / (2*(np.linalg.norm(a) * np.linalg.norm(b))))
@@ -202,45 +222,328 @@ def cv_triangulation(egmX, lat, min_dist = 2, min_lat = 2, verbose = 1):
                 if abs(delta_pq) > min_lat and abs(delta_pr) > min_lat and dist_pq > min_dist and dist_pr > min_dist:
                     count += 1
                     cv, vec = _conduction_velocity(mesh.points[neighbor[0]], lat[neighbor[0]], mesh.points[neighbor[1]], lat[neighbor[1]], mesh.points[neighbor[2]], lat[neighbor[2]])
-                    cvs[neighbor[0]] = cv[0]
+                    cvs[neighbor[0]] = cv
                     vecs[neighbor[0]] = vec
                     cv_X[neighbor[0]] = mesh.points[neighbor[0]]
                     
                
         found.append(i)
-    print()                
+        
     return utils.ReturnTuple((cvs, vecs, cv_X),
                              ('cvs', 'vecs', 'cv_X'))
 
 
-def interpolator(X, y, X_new, kernel='multiquadric'):
-    """Interpolates values at new points using Radial Basis Function (RBF) interpolation.
+
+
+def _remove_duplicate_data_points(x, f_x):
+    """Removes duplicate data points from the input arrays x and f_x.
+    If there are duplicate coordinates in x, the corresponding values in f_x are averaged. 
+    If any of the values in f_x are equal to the minimum or maximum value, those values are preserved instead of averaging.
     
     Parameters
     ----------
-    X : np.ndarray
-        An NxD array of original data points.
-    y : np.ndarray
-        An array of values corresponding to each point in X.
-    X_new : np.ndarray
-        An MxD array of new data points where interpolation is to be performed.
-    kernel : str, optional
-        The type of RBF kernel to use. Defaults to 'multiquadric'.
+    x : array
+        An NxM array of coordinates.
+    f_x : array
+        An array of values corresponding to each coordinate in x.
         
     Returns
     -------
-    y_new : np.ndarray
-        An array of interpolated values corresponding to each point in X_new.
+    x : array
+        An array of unique coordinates.
+    f_x : array
+        An array of values corresponding to each unique coordinate in x.
     """
+    x = np.asarray(x, float)
+    f_x = np.asarray(f_x, float)
+    _, first, inv = np.unique(x, axis=0, return_index=True, return_inverse=True)
+    inv = inv.ravel()
+    if len(first) == len(x):
+        return x, f_x
+
+    fmin, fmax = f_x.min(), f_x.max()
+    f_new = f_x.copy()
+    counts = np.bincount(inv)
+    for g in np.where(counts > 1)[0]:
+        idx = np.where(inv == g)[0]
+        v = f_x[idx]
+        has_min, has_max = v.min() == fmin, v.max() == fmax
+        if has_min and has_max:
+            val = v.mean()
+        elif has_min:
+            val = v.min()
+        elif has_max:
+            val = v.max()
+        else:
+            val = v.mean()
+        f_new[idx[0]] = val          # keep the first occurrence
+
+    keep = np.zeros(len(x), bool)
+    keep[first] = True
+    return utils.ReturnTuple((x[keep], f_new[keep]), ('x', 'f_x'))
+
+
+def interpolator(X, y, X_new, kernel='multiquadric', shape_parameter=1.0, distance_threshold=10.0):
+    """OpenEP-style RBF interpolation: dedupe -> drop NaNs -> exact RBF -> blank far vertices."""
+    X = np.asarray(X, float)
+    y = np.asarray(y, float).ravel()
+
+    m = ~np.isnan(y)                                   # drop NaNs first
+    X, y = _remove_duplicate_data_points(X[m], y[m])
+
+    # MATLAB multiquadric is sqrt(r^2 + c^2); SciPy's is sqrt((eps*r)^2 + 1), so eps = 1/c
+    rbf = scipy.interpolate.RBFInterpolator(X, y, kernel=kernel, epsilon=1.0 / shape_parameter, smoothing=0.0)
+    y_new = rbf(np.asarray(X_new, float))
+
+    d, _ = scipy.spatial.cKDTree(X).query(X_new)
+    y_new[d > distance_threshold] = np.nan
+
+    return utils.ReturnTuple((y_new,), ('y_new',))
+
+
+def _to_o3d(points, voxel_size=None):
+    """Convert an (N, 3) array to an Open3D point cloud, optionally voxel-downsampled."""
+
+    try:
+        import open3d as o3d
+    except ImportError:
+        raise ImportError("Open3D is required for registration (pip install open3d).")
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+
+    if voxel_size:
+        pcd = pcd.voxel_down_sample(voxel_size)
+
+    return pcd
+
+
+def _apply_transform(points, transformation):
+    """Apply a 4x4 homogeneous transformation to an array of 3D points.
+
+    Parameters
+    ----------
+    points : array
+        Point coordinates, with shape (N, 3).
+    transformation : array
+        Homogeneous transformation matrix, with shape (4, 4).
+
+    Returns
+    -------
+    points : array
+        Transformed point coordinates, with shape (N, 3).
+
+    """
+
+    points = np.asarray(points, dtype=float)
+    transformation = np.asarray(transformation, dtype=float)
+    
+    rotation = transformation[:3, :3]     # 3x3 rotation block
+    translation = transformation[:3, 3]   # last column: shift in x, y, z
+
+    # rotate each point (one point per row), then shift
+    rotated = points @ rotation.T
+    
+    return utils.ReturnTuple((rotated + translation,), ('points',))
+
+
+
+def _faces_to_pv(faces):
+    """Convert an (K, 3) triangle index array to PyVista's flat face format."""
+    faces = np.asarray(faces, dtype=np.int64)
+    return np.hstack([np.full((len(faces), 1), 3, dtype=np.int64), faces]).ravel()
+
+
+def _build_mesh(points, faces=None):
+    """Return a surface mesh: from faces if given, otherwise reconstructed from points."""
+    points = np.asarray(points, dtype=float)
+    if faces is not None:
+        return pv.PolyData(points, _faces_to_pv(faces))
+    return pv.PolyData(points).reconstruct_surface()
+
+
+def _plot_registration(eam_points, registered_points, reference_points,
+                       path=None, reference_faces=None, eam_faces=None):
+    """Plot an EAM mesh before and after registration, superimposed on a CT reference.
+
+    Parameters
+    ----------
+    eam_points : array
+        Original EAM point coordinates, with shape (N, 3).
+    registered_points : array
+        Registered EAM point coordinates, with shape (N, 3).
+    reference_points : array
+        Reference (CT) mesh vertices, with shape (M, 3).
+    path : str, optional
+        If provided, the figure is saved to this file instead of shown.
+    reference_faces : array, optional
+        Triangle indices of the reference mesh, with shape (K, 3). If omitted,
+        a surface is reconstructed from `reference_points`.
+    eam_faces : array, optional
+        Triangle indices of the EAM mesh, with shape (L, 3). The same faces are
+        used before and after registration. If omitted, a surface is
+        reconstructed from the points.
+
+    """
+
+    reference_mesh = _build_mesh(reference_points, reference_faces)
+    eam_before = _build_mesh(eam_points, eam_faces)
+    eam_after = _build_mesh(registered_points, eam_faces)
+
+    plotter = pv.Plotter(shape=(1, 2), off_screen=path is not None)
+
+    for col, (title, eam_mesh) in enumerate((("Before", eam_before), ("After", eam_after))):
+        plotter.subplot(0, col)
+        plotter.add_text(title, font_size=10)
+
+        plotter.add_mesh(
+            reference_mesh,
+            color="lightgray",
+            opacity=0.4,
+            show_edges=True,
+            edge_color="gray",
+            line_width=0.5,
+            label="CT",
+        )
+        plotter.add_mesh(
+            eam_mesh,
+            color="red",
+            opacity=0.5,
+            show_edges=True,
+            edge_color="darkred",
+            line_width=0.5,
+            label="EAM",
+        )
+        # make legend letters black
+        legend=plotter.add_legend(bcolor="black", border=True, size=(0.15, 0.1), loc="lower right")
         
+        plotter.reset_camera()
+        
+    if path is not None:
+        plotter.screenshot(path)
+        plotter.close()
+    else:
+        plotter.show()
+
+
+def register_icp(eam_points, reference_points, voxel_size=2.0, threshold=10.0, permutations=None, flips=None, center=None, show=False, save_path=None):
+    """Register EAM points to a reference anatomy.
+
+    Different orientations of the EAM coordinates (axis permutations and axis
+    reflections) are explored. Each candidate is centered on the reference and
+    refined with point-to-point ICP. The best candidate is the one with the
+    highest fitness and, in case of a tie, the lowest inlier RMSE.
     
-    # remove nans from y
-    y = y.ravel()
-    mask = ~np.isnan(y)
-    X = X[mask]
-    y = y[mask]
+    Adapted from code developed by Sylvia Frints, 2026.
+
+    Parameters
+    ----------
+    eam_points : array
+        EAM point coordinates, with shape (N, 3).
+    reference_points : array
+        Reference mesh vertices (e.g., from a CT segmentation), with shape (M, 3).
+    voxel_size : float, optional
+        Voxel size used to downsample both point sets before ICP, in the same
+        units as the coordinates. If None or 0, no downsampling is performed.
+    threshold : float, optional
+        Maximum correspondence distance for ICP, in the same units as the
+        coordinates.
+    permutations : list, optional
+        Axis permutations to test. Defaults to all 6 permutations of (0, 1, 2).
+    flips : list, optional
+        Axis sign combinations to test. Defaults to all 8 combinations of +1/-1,
+        which includes reflections.
+    center : array, optional
+        Point on which the EAM centroid is placed before ICP. Defaults to the
+        centroid of `reference_points`.
+    show : bool, optional
+        If True, a plot of the EAM before and after registration is shown.
+    save_path : str, optional
+        If provided, the plot is saved to this file instead of shown.
+        
+    Returns
+    -------
+    transformation : array
+        4x4 matrix mapping the original EAM coordinates to the reference frame
+        (orientation, centering and ICP combined). It can be applied to
+        full-resolution meshes with `apply_transform`.
+    registered_points : array
+        `eam_points` after registration, with shape (N, 3).
+    permutation : tuple
+        Selected axis permutation.
+    flip : tuple
+        Selected axis signs.
+    fitness : float
+        ICP fitness of the selected candidate (fraction of inlier correspondences).
+    rmse : float
+        ICP inlier RMSE of the selected candidate.
+
+    """
+
+    # check inputs
+    eam_points = np.asarray(eam_points, dtype=float)
+    reference_points = np.asarray(reference_points, dtype=float)
+
+    for name, pts in (("eam_points", eam_points), ("reference_points", reference_points)):
+        if pts.ndim != 2 or pts.shape[1] != 3:
+            raise ValueError("`%s` must have shape (N, 3)." % name)
+
+    if permutations is None:
+        permutations = list(itertools.permutations(range(3)))
+
+    if flips is None:
+        flips = list(itertools.product([1, -1], repeat=3))
+
+    if center is None:
+        center = reference_points.mean(axis=0)
+    center = np.asarray(center, dtype=float)
+
+    import open3d as o3d
+
+    source = _to_o3d(eam_points, voxel_size)
+    target = _to_o3d(reference_points, voxel_size)
+    estimation = o3d.pipelines.registration.TransformationEstimationPointToPoint()
+
+    eam_mean = eam_points.mean(axis=0)
+
+    best_fitness = -1.0
+    best_rmse = np.inf
+    best_perm = None
+    best_flip = None
+    best_transform = None
+
+    for perm in permutations:
+        for flip in flips:
+            # signed permutation: oriented[:, j] = flip[j] * points[:, perm[j]]
+            orient = np.zeros((3, 3))
+            orient[np.arange(3), perm] = flip
+
+            # initial transform: orient, then center on the reference
+            init = np.eye(4)
+            init[:3, :3] = orient
+            init[:3, 3] = center - orient @ eam_mean
+
+            result = o3d.pipelines.registration.registration_icp(
+                source, target, threshold, init, estimation
+            )
+
+            if result.fitness > best_fitness or (
+                np.isclose(result.fitness, best_fitness)
+                and result.inlier_rmse < best_rmse
+            ):
+                best_fitness = result.fitness
+                best_rmse = result.inlier_rmse
+                best_perm = tuple(perm)
+                best_flip = tuple(flip)
+                best_transform = np.asarray(result.transformation)
+
+    registered_points, = _apply_transform(eam_points, best_transform)
     
-    y_new = scipy.interpolate.RBFInterpolator(X, y, kernel=kernel, epsilon=1.0)(X_new)
-    
-    return utils.ReturnTuple((y_new,), 
-                             ('y_new',))
+    if show:
+        _plot_registration(eam_points, registered_points, reference_points, path=save_path)
+
+    # output
+    args = (best_transform, registered_points, best_perm, best_flip, best_fitness, best_rmse)
+    names = ("transformation", "registered_points", "permutation", "flip", "fitness", "rmse")
+
+    return utils.ReturnTuple(args, names)
