@@ -348,8 +348,23 @@ def _apply_transform(points, transformation):
 
 
 
-def _plot_registration(eam_points, registered_points, reference_points, path=None):
-    """Plot an EAM point cloud before and after registration to a reference.
+def _faces_to_pv(faces):
+    """Convert an (K, 3) triangle index array to PyVista's flat face format."""
+    faces = np.asarray(faces, dtype=np.int64)
+    return np.hstack([np.full((len(faces), 1), 3, dtype=np.int64), faces]).ravel()
+
+
+def _build_mesh(points, faces=None):
+    """Return a surface mesh: from faces if given, otherwise reconstructed from points."""
+    points = np.asarray(points, dtype=float)
+    if faces is not None:
+        return pv.PolyData(points, _faces_to_pv(faces))
+    return pv.PolyData(points).reconstruct_surface()
+
+
+def _plot_registration(eam_points, registered_points, reference_points,
+                       path=None, reference_faces=None, eam_faces=None):
+    """Plot an EAM mesh before and after registration, superimposed on a CT reference.
 
     Parameters
     ----------
@@ -358,29 +373,52 @@ def _plot_registration(eam_points, registered_points, reference_points, path=Non
     registered_points : array
         Registered EAM point coordinates, with shape (N, 3).
     reference_points : array
-        Reference mesh vertices, with shape (M, 3).
+        Reference (CT) mesh vertices, with shape (M, 3).
     path : str, optional
         If provided, the figure is saved to this file instead of shown.
+    reference_faces : array, optional
+        Triangle indices of the reference mesh, with shape (K, 3). If omitted,
+        a surface is reconstructed from `reference_points`.
+    eam_faces : array, optional
+        Triangle indices of the EAM mesh, with shape (L, 3). The same faces are
+        used before and after registration. If omitted, a surface is
+        reconstructed from the points.
 
     """
 
+    reference_mesh = _build_mesh(reference_points, reference_faces)
+    eam_before = _build_mesh(eam_points, eam_faces)
+    eam_after = _build_mesh(registered_points, eam_faces)
+
     plotter = pv.Plotter(shape=(1, 2), off_screen=path is not None)
 
-    for col, (title, pts) in enumerate((("Before", eam_points), ("After", registered_points))):
+    for col, (title, eam_mesh) in enumerate((("Before", eam_before), ("After", eam_after))):
         plotter.subplot(0, col)
         plotter.add_text(title, font_size=10)
+
         plotter.add_mesh(
-            pv.PolyData(np.asarray(reference_points, dtype=float)),
-            color="lightgray", point_size=3,
+            reference_mesh,
+            color="lightgray",
+            opacity=0.4,
+            show_edges=True,
+            edge_color="gray",
+            line_width=0.5,
+            label="CT",
         )
         plotter.add_mesh(
-            pv.PolyData(np.asarray(pts, dtype=float)),
-            color="red", point_size=6,
+            eam_mesh,
+            color="red",
+            opacity=0.5,
+            show_edges=True,
+            edge_color="darkred",
+            line_width=0.5,
+            label="EAM",
         )
+        # make legend letters black
+        legend=plotter.add_legend(bcolor="black", border=True, size=(0.15, 0.1), loc="lower right")
+        
         plotter.reset_camera()
-
-    plotter.link_views()
-
+        
     if path is not None:
         plotter.screenshot(path)
         plotter.close()
@@ -395,6 +433,8 @@ def register_icp(eam_points, reference_points, voxel_size=2.0, threshold=10.0, p
     reflections) are explored. Each candidate is centered on the reference and
     refined with point-to-point ICP. The best candidate is the one with the
     highest fitness and, in case of a tie, the lowest inlier RMSE.
+    
+    Adapted from code developed by Sylvia Frints, 2026.
 
     Parameters
     ----------
