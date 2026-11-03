@@ -908,13 +908,18 @@ def get_voltage(signal=None, woi=None, reference=None):
     """
     warnings.filterwarnings("ignore")
 
-    idx, _ = max_lat(signal, woi=woi, reference=reference)
+    idx_max, _ = max_lat(signal, woi=woi, reference=reference)
+    idx_min, _ = min_lat(signal, woi=woi, reference=reference)
+    
     
     warnings.resetwarnings()
     
     if woi is not None:
         signal, = get_woi(signal, int(woi[0]), int(woi[1]), int(reference))
-    voltage = signal[int(idx)]
+        
+        
+        
+    voltage = signal[idx_max] - signal[idx_min]
     
     
     
@@ -923,7 +928,7 @@ def get_voltage(signal=None, woi=None, reference=None):
 
 def get_voltages(signals=None, woi=None, reference=None):
     """
-    Get the maximum voltages for multiple EGM signals.
+    Get the voltages for multiple EGM signals.
     
     Parameters
     ----------
